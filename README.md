@@ -1,6 +1,6 @@
-# Víla Fojalka (Fairy Fojalka)
+# Víla Fojálka (Fairy Fojalka)
 
-Víla Fojalka (Fairy Fojalka) is an online tool for learning about formal languages and automata theory 
+Víla Fojálka (Fairy Fojalka) is an online tool for learning about formal languages and automata theory 
 
 ## Local deployment
 
