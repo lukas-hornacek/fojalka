@@ -1,8 +1,8 @@
-/* This sets the cytoscape element to fill the entire window */
+/* This sets the size and position of the cytoscape element */
 #cy {
-    width: 100%;
-    height: 100%;
+    width: 80%;
+    height: 80%;
     position: absolute;
-    top: 0px;
-    left: 0px;
+    top: 100px;
+    left: 100px;
 }
