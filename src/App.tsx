@@ -1,9 +1,14 @@
-import './App.css'
+import { CytoscapeProvider } from "./CytoscapeContext";
+import "./App.css";
+import AutomatonWindow from "./AutomatonWindow";
+import AddStateButton from "./AddStateButton";
 
-function App() {
-  return (
-    <div>Víla Fojálka</div>
-  )
+export default function App() {
+    return (
+        <CytoscapeProvider>
+            <h1>Víla Fojálka</h1>
+            <AddStateButton />
+            <AutomatonWindow />
+        </CytoscapeProvider>
+    );
 }
-
-export default App

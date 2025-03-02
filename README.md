@@ -7,3 +7,7 @@ Víla Fojálka (Fairy Fojalka) is an online tool for learning about formal langu
 1. Clone the repository
 2. Install dependencies using `npm install`
 3. Deploy the app on local development server using `npm run dev`
+
+## Notes
+Pre-commit hook enforces eslint rules. Eslint errors
+are automatically fixed on commit.
