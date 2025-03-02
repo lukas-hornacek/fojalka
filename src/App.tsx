@@ -1,7 +1,7 @@
-import { CytoscapeProvider } from './CytoscapeContext';
-import './App.css';
-import AutomatonWindow from './AutomatonWindow';
-import AddStateButton from './AddStateButton';
+import { CytoscapeProvider } from "./CytoscapeContext";
+import "./App.css";
+import AutomatonWindow from "./AutomatonWindow";
+import AddStateButton from "./AddStateButton";
 
 export default function App() {
     return (

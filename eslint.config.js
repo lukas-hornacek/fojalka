@@ -27,7 +27,7 @@ export default tseslint.config(
       ],
       "@stylistic/semi": "error",
       "no-extra-parens": ["error", "all"],
-      "quotes": [2, "single", { "avoidEscape": true }]
+      "quotes": [2, "double", { "avoidEscape": true }]
     },
   },
 );
