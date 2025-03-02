@@ -1,12 +1,19 @@
 import { useEffect, useContext } from "react";
 import { CytoscapeContext } from "./CytoscapeContext";
 
-// component that holds and initializes the cytoscape element
 export default function AutomatonWindow() {
-    const cy = useContext(CytoscapeContext);
+    const cytoscapeContext = useContext(CytoscapeContext);
+
+    if (!cytoscapeContext) {
+        throw new Error("AutomatonWindow must be used within a CytoscapeProvider");
+    }
+
+    const { cy } = cytoscapeContext;
 
     useEffect(() => {
-        cy.init();
+        if (cy) {
+            cy.mount(document.getElementById("cy")!);
+        }
     }, [cy]);
 
     return (
