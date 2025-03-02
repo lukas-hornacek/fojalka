@@ -3,10 +3,14 @@ import { CytoscapeContext } from "./CytoscapeContext";
 
 // example button that will be replaced
 export default function AddStateButton() {
-    const cy = useContext(CytoscapeContext);
+    const cytoscapeContext = useContext(CytoscapeContext);
+
+    if (!cytoscapeContext) {
+        throw new Error("AutomatonWindow must be used within a CytoscapeProvider");
+    }
 
     function addState() {
-        cy.addNode("z", { x: 200, y: 50 });
+        cytoscapeContext?.addNode("z", { x: 200, y: 50 });
     }
 
     return (
