@@ -26,6 +26,7 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       '@stylistic/semi': 'error',
+    'no-extra-parens': ['error', 'all'],
     },
   },
 );
