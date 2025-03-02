@@ -1,5 +1,5 @@
-import React, { createContext, useEffect, useRef, useState } from "react";
-import cytoscape, { Core } from "cytoscape";
+import React, { createContext, useEffect, useRef, useState } from 'react';
+import cytoscape, { Core } from 'cytoscape';
 
 interface CytoscapeContextType {
     cy: Core | null;
@@ -15,41 +15,41 @@ export const CytoscapeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     useEffect(() => {
         if (!cyRef.current) {
             cyRef.current = cytoscape({
-                container: document.getElementById("cy"),
+                container: document.getElementById('cy'),
                 // example elements, that should be removed once user can add them themselves
                 elements: [
-                    { group: "nodes", data: { id: "x" }, position: { x: 100, y: 100 } },
-                    { group: "nodes", data: { id: "y" }, position: { x: 300, y: 100 } },
-                    { group: "edges", data: { id: "a", source: "x", target: "y" } },
+                    { group: "nodes", data: { id: 'x' }, position: { x: 100, y: 100 } },
+                    { group: 'nodes', data: { id: 'y' }, position: { x: 300, y: 100 } },
+                    { group: 'edges', data: { id: 'a', source: 'x', target: 'y' } },
                 ],
                 style: [
                     {
-                        selector: "node",
+                        selector: 'node',
                         style: {
-                            "background-color": "#666",
-                            label: "data(id)",
+                            'background-color': '#666',
+                            label: 'data(id)',
                         },
                     },
                     {
-                        selector: "edge",
+                        selector: 'edge',
                         style: {
                             width: 3,
-                            "line-color": "#ccc",
-                            "target-arrow-color": "#ccc",
-                            "target-arrow-shape": "triangle",
-                            "curve-style": "bezier",
-                            label: "data(id)",
+                            'line-color': '#ccc',
+                            'target-arrow-color': '#ccc',
+                            'target-arrow-shape': 'triangle',
+                            'curve-style': 'bezier',
+                            label: 'data(id)',
                         },
                     },
                 ],
-                layout: { name: "preset" },
+                layout: { name: 'preset' },
             });
             setCy(cyRef.current);
         }
     }, []);
 
     const addNode = (id: string, position: { x: number; y: number }) => {
-        cyRef.current?.add({ group: "nodes", data: { id }, position });
+        cyRef.current?.add({ group: 'nodes', data: { id }, position });
     };
 
     return (
