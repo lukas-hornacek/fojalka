@@ -46,6 +46,8 @@ export interface Automaton {
 
 interface AutomatonConfiguration {
     accept(automaton: Automaton): void;
+    save(): ConfigurationMemento;
+    restore(memento: ConfigurationMemento): void;
 }
 
 class FiniteConfiguration implements AutomatonConfiguration {
@@ -59,6 +61,15 @@ class FiniteConfiguration implements AutomatonConfiguration {
 
     accept(automaton: Automaton): void {
         automaton.visitFiniteConfiguration(this);
+    }
+
+    save(): FiniteConfigurationMemento {
+        return new FiniteConfigurationMemento(this.stateId, this.remainingInput);
+    }
+
+    restore(memento: FiniteConfigurationMemento): void {
+        this.stateId = memento.stateId;
+        this.remainingInput = memento.remainingInput;
     }
 }
 
@@ -76,12 +87,77 @@ class PDAConfiguration implements AutomatonConfiguration {
     accept(automaton: Automaton): void {
         automaton.visitPDAConfiguration(this);
     }
+
+    save(): PDAConfigurationMemento {
+        return new PDAConfigurationMemento(this.stateId, this.remainingInput, this.stack);
+    }
+
+    restore(memento: PDAConfigurationMemento): void {
+        this.stateId = memento.stateId;
+        this.remainingInput = memento.remainingInput;
+        this.stack = memento.stack;
+    }
+}
+
+interface ConfigurationMemento {
+    stateId: number;
+}
+
+class FiniteConfigurationMemento implements ConfigurationMemento {
+    stateId: number;
+    remainingInput: string[];
+
+    constructor(_stateId: number, _remainingInput: string[]) {
+        this.stateId = _stateId;
+        this.remainingInput = _remainingInput;
+    }
+}
+
+class PDAConfigurationMemento implements ConfigurationMemento {
+    stateId: number;
+    remainingInput: string[];
+    stack: string[];
+
+    constructor(_stateId: number, _remainingInput: string[], _stack: string[]) {
+        this.stateId = _stateId;
+        this.remainingInput = _remainingInput;
+        this.stack = _stack;
+    }
 }
 
 export interface Simulation {
     automaton: Automaton;
     configuration: AutomatonConfiguration;
 
-    nextStep(): void;
+    nextStep(): void; // Create and execute a NextStepCommand
     run(): void;
+}
+
+abstract class Command {
+    simulation: Simulation;
+    backup?: ConfigurationMemento;
+
+    protected constructor(_simulation: Simulation) {
+        this.simulation = _simulation;
+    }
+
+    saveBackup() {
+        this.backup = this.simulation.configuration.save();
+    }
+
+    undo() {
+        if (this.backup) {
+            this.simulation.configuration.restore(this.backup);
+        }
+    }
+
+    abstract execute(): void; // backup = simulation.save(); ...perform command...
+}
+
+ 
+export class NextStepCommand extends Command {
+    execute() {
+        this.saveBackup();
+        // TODO use this.simulation to perform the next step now
+    }
 }
