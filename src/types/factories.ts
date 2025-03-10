@@ -127,11 +127,20 @@ export class Automaton implements IAutomaton {
             this.commandHistory.push(command);
         }
     }
+
     undo(): void {
         const command = this.commandHistory.pop();
         if (command) {
             command.undo();
         }
+    }
+
+    getStartingState(): IState {
+        const startingState = this.states.find(state => state.id === this.startingStateId);
+        if (!startingState) {
+            throw new Error("No starting state found.");
+        }
+        return startingState;
     }
 
     visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration {

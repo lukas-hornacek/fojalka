@@ -61,6 +61,8 @@ export interface IAutomaton {
     executeCommand(command: EditModeCommand): void; // if (command.execute()) { commandHistory.push(command); }
     undo(): void; // command = commandHistory.pop(); command.undo();
 
+    getStartingState(): IState;
+
     visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
     visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration;
 
