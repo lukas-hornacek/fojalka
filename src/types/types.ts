@@ -64,7 +64,7 @@ export interface IAutomaton {
     restore(memento: IAutomatonMemento): void;
 }
 
-interface IAutomatonMemento {
+export interface IAutomatonMemento {
     states: IState[];
     finalStateIds: number[];
     startingStateId: number;
@@ -77,7 +77,7 @@ interface IAutomatonConfiguration {
     restore(memento: IConfigurationMemento): void;
 }
 
-class FiniteConfiguration implements IAutomatonConfiguration {
+export class FiniteConfiguration implements IAutomatonConfiguration {
     stateId: number;
     remainingInput: string[];
 
@@ -100,7 +100,7 @@ class FiniteConfiguration implements IAutomatonConfiguration {
     }
 }
 
-class PDAConfiguration implements IAutomatonConfiguration {
+export class PDAConfiguration implements IAutomatonConfiguration {
     stateId: number;
     remainingInput: string[];
     stack: string[];
@@ -181,7 +181,7 @@ export abstract class InteractiveModeCommand {
         }
     }
 
-    abstract execute(): void; // this.saveBackup(); ...perform command...
+    abstract execute(): boolean; // this.saveBackup(); ...perform command...
 }
 
 export abstract class EditModeCommand {
@@ -202,5 +202,5 @@ export abstract class EditModeCommand {
         }
     }
 
-    abstract execute(): void; // this.saveBackup(); ...perform command...
+    abstract execute(): boolean; // this.saveBackup(); ...perform command...
 }

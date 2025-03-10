@@ -8,8 +8,9 @@ export class AddEdgeCommand extends EditModeCommand {
         this.edge = _edge;
     }
 
-    execute() {
+    execute(): boolean {
         this.saveBackup();
+        // TODO check if needed states exist (return false if they do not)
         this.automaton.states = this.automaton.states.map(state => {
             if (state.id === this.edge.fromStateId) {
                 return {
@@ -25,6 +26,7 @@ export class AddEdgeCommand extends EditModeCommand {
             }
             return state;
         });
+        return true;
     }
 }
 
@@ -36,8 +38,10 @@ export class AddStateCommand extends EditModeCommand {
         this.state = _state;
     }
 
-    execute() {
+    execute(): boolean {
+        // TODO check if a state with this label does not exist yet (return false if it does)
         this.saveBackup();
         this.automaton.states.push(this.state);
+        return true;
     }
 }
