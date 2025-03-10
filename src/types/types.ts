@@ -24,6 +24,22 @@ export class FiniteAutomatonEdge implements IEdge {
     }
 }
 
+export class PDAEdge implements IEdge {
+    id: number;
+    fromStateId: number;
+    toStateId: number;
+    inputChar: string;
+    stackChar: string;
+
+    constructor(_id: number, _fromStateId: number, _toStateId: number, _inputChar: string, _stackChar: string) {
+        this.id = _id;
+        this.fromStateId = _fromStateId;
+        this.toStateId = _toStateId;
+        this.inputChar = _inputChar;
+        this.stackChar = _stackChar;
+    }
+}
+
 export interface IState {
     id: number;
     outgoing: IEdge[];
@@ -42,7 +58,7 @@ export interface IAutomaton {
     undo(): void; // command = commandHistory.pop(); command.undo();
 
     addState(state: IState): void;
-    addEdge(id1: number, id2: number): void;
+    addEdge(edge: IEdge): void;
 
     visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
     visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration;
@@ -87,8 +103,8 @@ class FiniteConfiguration implements IAutomatonConfiguration {
         this.remainingInput = _remainingInput;
     }
 
-    accept(automaton: IAutomaton): void {
-        automaton.visitFiniteConfiguration(this);
+    accept(automaton: IAutomaton): FiniteConfiguration {
+        return automaton.visitFiniteConfiguration(this);
     }
 
     save(): FiniteConfigurationMemento {
@@ -112,8 +128,8 @@ class PDAConfiguration implements IAutomatonConfiguration {
         this.stack = _stack;
     }
 
-    accept(automaton: IAutomaton): void {
-        automaton.visitPDAConfiguration(this);
+    accept(automaton: IAutomaton): PDAConfiguration {
+        return automaton.visitPDAConfiguration(this);
     }
 
     save(): PDAConfigurationMemento {
@@ -215,17 +231,15 @@ abstract class EditModeCommand {
 }
 
 export class AddEdgeCommand extends EditModeCommand {
-    fromStateId: number;
-    toStateId: number;
+    edge: IEdge;
 
-    constructor(_automaton: IAutomaton, _fromStateId: number, _toStateId: number) {
+    constructor(_automaton: IAutomaton, _edge: IEdge) {
         super(_automaton);
-        this.fromStateId = _fromStateId;
-        this.toStateId = _toStateId;
+        this.edge = _edge;
     }
 
     execute() {
         this.saveBackup();
-        this.automaton.addEdge(this.fromStateId, this.toStateId);
+        this.automaton.addEdge(this.edge);
     }
 }
