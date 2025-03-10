@@ -1,34 +1,99 @@
 import {
     AutomatonType,
     EditModeCommand,
+    FiniteAutomatonEdge,
+    FiniteConfiguration,
     IAutomaton,
+    IAutomatonMemento,
     IEdge,
     IState,
-    FiniteConfiguration,
     PDAConfiguration,
-    IAutomatonMemento,
+    PDAEdge,
 } from "./types.ts";
 
-export interface IAutomatonFactory {
-    createAutomaton(): IAutomaton;
-    createEdge(): IEdge;
+interface IUniversalEdgeProps {
+    id: number;
+    fromStateId: number;
+    toStateId: number;
+    inputChar: string;
+    stackChar?: string;
 }
 
-// class FiniteAutomatonFactory implements IAutomatonFactory {
-//     createAutomaton(): IAutomaton {
-//         // TODO implement
-//         // return new Automaton({...});
-//     }
-//     createEdge(): IEdge {
-//         // TODO implement
-//         // return new FiniteAutomatonEdge(...);
-//     }
-// }
+export interface IAutomatonFactory {
+    createAutomaton(startingStateId: number, finalStateIds: number[]): IAutomaton;
+    createEdge(edgeProps: IUniversalEdgeProps): IEdge;
+}
 
-// TODO PDAFactory, similar to FiniteAutomatonFactory
+export class AbstractAutomatonFactory implements IAutomatonFactory {
+    internalFactory: IAutomatonFactory;
+
+    constructor(automatonType: AutomatonType) {
+        if (automatonType === AutomatonType.FINITE) {
+            this.internalFactory = new FiniteAutomatonFactory();
+        } else if (automatonType === AutomatonType.PDA) {
+            this.internalFactory = new PDAFactory();
+        } else {
+            const supportedTypes = [AutomatonType.FINITE, AutomatonType.PDA];
+            throw new Error(
+                `Unsupported automaton type: ${automatonType}. Supported types are ${JSON.stringify(supportedTypes)}.`
+            );
+        }
+    }
+
+    createAutomaton(startingStateId: number, finalStateIds: number[]): IAutomaton {
+       return this.internalFactory.createAutomaton(startingStateId, finalStateIds);
+    }
+
+    createEdge(edgeProps: IUniversalEdgeProps): IEdge {
+        return this.internalFactory.createEdge(edgeProps);
+    }
+}
+
+export class FiniteAutomatonFactory implements IAutomatonFactory {
+    createAutomaton(startingStateId: number, finalStateIds: number[]): IAutomaton {
+        return new Automaton({
+            states: [],
+            deltaFunctionMatrix: {},
+            finalStateIds,
+            startingStateId,
+            automatonType: AutomatonType.FINITE,
+        });
+    }
+
+    createEdge(edgeProps: IUniversalEdgeProps): IEdge {
+        return new FiniteAutomatonEdge(
+            edgeProps.id,
+            edgeProps.inputChar,
+        );
+    }
+}
+
+export class PDAFactory implements IAutomatonFactory {
+    createAutomaton(startingStateId: number, finalStateIds: number[]): IAutomaton {
+        return new Automaton({
+            states: [],
+            deltaFunctionMatrix: {},
+            finalStateIds,
+            startingStateId,
+            automatonType: AutomatonType.PDA,
+        });
+    }
+
+    createEdge(edgeProps: IUniversalEdgeProps): IEdge {
+        if (!edgeProps.stackChar) {
+            throw new Error("Cannot create PDAEdge without stack char argument");
+        }
+        return new PDAEdge(
+            edgeProps.id,
+            edgeProps.inputChar,
+            edgeProps.stackChar,
+        );
+    }
+}
 
 type AutomatonParams = {
     states: IState[];
+    deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
     finalStateIds: number[];
     startingStateId: number;
     automatonType: AutomatonType;
@@ -36,6 +101,7 @@ type AutomatonParams = {
 
 export class Automaton implements IAutomaton {
     states: IState[];
+    deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
     finalStateIds: number[];
     startingStateId: number;
     automatonType: AutomatonType;
@@ -43,6 +109,7 @@ export class Automaton implements IAutomaton {
 
     constructor({
         states = [],
+        deltaFunctionMatrix = {},
         finalStateIds,
         startingStateId,
         automatonType,
@@ -52,6 +119,7 @@ export class Automaton implements IAutomaton {
         this.finalStateIds = finalStateIds;
         this.startingStateId = startingStateId;
         this.automatonType = automatonType;
+        this.deltaFunctionMatrix = deltaFunctionMatrix;
     }
 
     executeCommand(command: EditModeCommand): void {

@@ -1,3 +1,5 @@
+import {IErrorMessage} from "./common.ts";
+
 export enum AutomatonType {
     FINITE = "FINITE",
     PDA = "PDA",
@@ -6,50 +8,52 @@ export enum AutomatonType {
 
 export interface IEdge {
     id: number;
-    fromStateId: number;
-    toStateId: number;
+    inputChar: string;
+
+    equals(otherEdge: IEdge): boolean;
 }
 
 export class FiniteAutomatonEdge implements IEdge {
     id: number;
-    fromStateId: number;
-    toStateId: number;
     inputChar: string;
 
-    constructor(_id: number, _fromStateId: number, _toStateId: number, _inputChar: string) {
+    constructor(_id: number, _inputChar: string) {
         this.id = _id;
-        this.fromStateId = _fromStateId;
-        this.toStateId = _toStateId;
         this.inputChar = _inputChar;
+    }
+
+    equals(otherEdge: IEdge): boolean {
+        return this.id === otherEdge.id;
     }
 }
 
 export class PDAEdge implements IEdge {
     id: number;
-    fromStateId: number;
-    toStateId: number;
     inputChar: string;
     stackChar: string;
 
-    constructor(_id: number, _fromStateId: number, _toStateId: number, _inputChar: string, _stackChar: string) {
+    constructor(_id: number, _inputChar: string, _stackChar: string) {
         this.id = _id;
-        this.fromStateId = _fromStateId;
-        this.toStateId = _toStateId;
         this.inputChar = _inputChar;
         this.stackChar = _stackChar;
+    }
+
+    equals(otherEdge: IEdge): boolean {
+        return this.id === otherEdge.id;
     }
 }
 
 export interface IState {
     id: number;
-    outgoing: IEdge[];
-    incoming: IEdge[];
 }
 
 export interface IAutomaton {
     states: IState[];
     finalStateIds: number[];
     startingStateId: number;
+
+    // Encodes matrix[stateFrom.id][stateTo.id] = Edge[]
+    deltaFunctionMatrix: Record<number, Record<number, Array<IEdge>>>;
 
     automatonType: AutomatonType;
 
@@ -72,6 +76,9 @@ export interface IAutomatonMemento {
 }
 
 interface IAutomatonConfiguration {
+    stateId: number;
+    remainingInput: string[];
+
     accept(automaton: IAutomaton): IAutomatonConfiguration;
     save(): IConfigurationMemento;
     restore(memento: IConfigurationMemento): void;
@@ -181,7 +188,7 @@ export abstract class InteractiveModeCommand {
         }
     }
 
-    abstract execute(): boolean; // this.saveBackup(); ...perform command...
+    abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...
 }
 
 export abstract class EditModeCommand {
@@ -202,5 +209,5 @@ export abstract class EditModeCommand {
         }
     }
 
-    abstract execute(): boolean; // this.saveBackup(); ...perform command...
+    abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...
 }
