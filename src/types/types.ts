@@ -57,9 +57,6 @@ export interface IAutomaton {
     executeCommand(command: EditModeCommand): void; // if (command.execute()) { commandHistory.push(command); }
     undo(): void; // command = commandHistory.pop(); command.undo();
 
-    addState(state: IState): void;
-    addEdge(edge: IEdge): void;
-
     visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
     visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration;
 
@@ -240,6 +237,34 @@ export class AddEdgeCommand extends EditModeCommand {
 
     execute() {
         this.saveBackup();
-        this.automaton.addEdge(this.edge);
+        this.automaton.states = this.automaton.states.map(state => {
+            if (state.id === this.edge.fromStateId) {
+                return {
+                    ...state,
+                    outgoing: [...state.outgoing, this.edge],
+                };
+            }
+            if (state.id === this.edge.toStateId) {
+                return {
+                    ...state,
+                    incoming: [...state.incoming, this.edge],
+                };
+            }
+            return state;
+        });
+    }
+}
+
+export class AddStateCommand extends EditModeCommand {
+    state: IState;
+
+    constructor(_automaton: IAutomaton, _state: IState) {
+        super(_automaton);
+        this.state = _state;
+    }
+
+    execute() {
+        this.saveBackup();
+        this.automaton.states.push(this.state);
     }
 }
