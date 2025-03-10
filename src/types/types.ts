@@ -86,7 +86,7 @@ export class AutomatonMemento implements IAutomatonMemento {
 }
 
 interface IAutomatonConfiguration {
-    accept(automaton: IAutomaton): void;
+    accept(automaton: IAutomaton): IAutomatonConfiguration;
     save(): IConfigurationMemento;
     restore(memento: IConfigurationMemento): void;
 }
@@ -202,7 +202,7 @@ abstract class InteractiveModeCommand {
 export class NextStepCommand extends InteractiveModeCommand {
     execute() {
         this.saveBackup();
-        // TODO use this.simulation to perform the next step now
+        this.simulation.configuration = this.simulation.configuration.accept(this.simulation.automaton);
     }
 }
 
