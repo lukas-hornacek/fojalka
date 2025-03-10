@@ -4,13 +4,13 @@ export enum AutomatonType {
     TURING = "TURING",
 }
 
-interface Edge {
+interface IEdge {
     id: number;
     fromStateId: number;
     toStateId: number;
 }
 
-export class FiniteAutomatonEdge implements Edge {
+export class FiniteAutomatonEdge implements IEdge {
     id: number;
     fromStateId: number;
     toStateId: number;
@@ -24,33 +24,61 @@ export class FiniteAutomatonEdge implements Edge {
     }
 }
 
-export interface State {
+export interface IState {
     id: number;
-    outgoing: Edge[];
-    incoming: Edge[];
+    outgoing: IEdge[];
+    incoming: IEdge[];
 }
 
-export interface Automaton {
-    states: State[];
+export interface IAutomaton {
+    states: IState[];
     finalStateIds: number[];
     startingStateId: number;
 
     automatonType: AutomatonType;
 
-    addState(state: State): void;
+    commandHistory: EditModeCommand[];
+    executeCommand(command: EditModeCommand): void; // if (command.execute()) { commandHistory.push(command); }
+    undo(): void; // command = commandHistory.pop(); command.undo();
+
+    addState(state: IState): void;
     addEdge(id1: number, id2: number): void;
 
     visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
     visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration;
+
+    save(): IAutomatonMemento;
+    restore(memento: IAutomatonMemento): void;
 }
 
-interface AutomatonConfiguration {
-    accept(automaton: Automaton): void;
-    save(): ConfigurationMemento;
-    restore(memento: ConfigurationMemento): void;
+interface IAutomatonMemento {
+    states: IState[];
+    finalStateIds: number[];
+    startingStateId: number;
+    automatonType: AutomatonType;
 }
 
-class FiniteConfiguration implements AutomatonConfiguration {
+export class AutomatonMemento implements IAutomatonMemento {
+    states: IState[];
+    finalStateIds: number[];
+    startingStateId: number;
+    automatonType: AutomatonType;
+
+    constructor(_states: IState[], _finalStateIds: number[], _startingStateId: number, _automatonType: AutomatonType) {
+        this.states = _states;
+        this.finalStateIds = _finalStateIds;
+        this.startingStateId = _startingStateId;
+        this.automatonType = _automatonType;
+    }
+}
+
+interface IAutomatonConfiguration {
+    accept(automaton: IAutomaton): void;
+    save(): IConfigurationMemento;
+    restore(memento: IConfigurationMemento): void;
+}
+
+class FiniteConfiguration implements IAutomatonConfiguration {
     stateId: number;
     remainingInput: string[];
 
@@ -59,7 +87,7 @@ class FiniteConfiguration implements AutomatonConfiguration {
         this.remainingInput = _remainingInput;
     }
 
-    accept(automaton: Automaton): void {
+    accept(automaton: IAutomaton): void {
         automaton.visitFiniteConfiguration(this);
     }
 
@@ -73,7 +101,7 @@ class FiniteConfiguration implements AutomatonConfiguration {
     }
 }
 
-class PDAConfiguration implements AutomatonConfiguration {
+class PDAConfiguration implements IAutomatonConfiguration {
     stateId: number;
     remainingInput: string[];
     stack: string[];
@@ -84,7 +112,7 @@ class PDAConfiguration implements AutomatonConfiguration {
         this.stack = _stack;
     }
 
-    accept(automaton: Automaton): void {
+    accept(automaton: IAutomaton): void {
         automaton.visitPDAConfiguration(this);
     }
 
@@ -99,11 +127,11 @@ class PDAConfiguration implements AutomatonConfiguration {
     }
 }
 
-interface ConfigurationMemento {
+interface IConfigurationMemento {
     stateId: number;
 }
 
-class FiniteConfigurationMemento implements ConfigurationMemento {
+class FiniteConfigurationMemento implements IConfigurationMemento {
     stateId: number;
     remainingInput: string[];
 
@@ -113,7 +141,7 @@ class FiniteConfigurationMemento implements ConfigurationMemento {
     }
 }
 
-class PDAConfigurationMemento implements ConfigurationMemento {
+class PDAConfigurationMemento implements IConfigurationMemento {
     stateId: number;
     remainingInput: string[];
     stack: string[];
@@ -125,19 +153,22 @@ class PDAConfigurationMemento implements ConfigurationMemento {
     }
 }
 
-export interface Simulation {
-    automaton: Automaton;
-    configuration: AutomatonConfiguration;
+export interface ISimulation {
+    automaton: IAutomaton;
+    configuration: IAutomatonConfiguration;
 
-    nextStep(): void; // Create and execute a NextStepCommand
+    commandHistory: InteractiveModeCommand[];
+    executeCommand(command: InteractiveModeCommand): void; // if (command.execute()) { commandHistory.push(command); }
+    undo(): void; // command = commandHistory.pop(); command.undo();
+
     run(): void;
 }
 
-abstract class Command {
-    simulation: Simulation;
-    backup?: ConfigurationMemento;
+abstract class InteractiveModeCommand {
+    simulation: ISimulation;
+    backup?: IConfigurationMemento;
 
-    protected constructor(_simulation: Simulation) {
+    protected constructor(_simulation: ISimulation) {
         this.simulation = _simulation;
     }
 
@@ -151,13 +182,50 @@ abstract class Command {
         }
     }
 
-    abstract execute(): void; // backup = simulation.save(); ...perform command...
+    abstract execute(): void; // this.saveBackup(); ...perform command...
 }
 
  
-export class NextStepCommand extends Command {
+export class NextStepCommand extends InteractiveModeCommand {
     execute() {
         this.saveBackup();
         // TODO use this.simulation to perform the next step now
+    }
+}
+
+abstract class EditModeCommand {
+    automaton: IAutomaton;
+    backup?: IAutomatonMemento;
+
+    protected constructor(_automaton: IAutomaton) {
+        this.automaton = _automaton;
+    }
+
+    saveBackup() {
+        this.backup = this.automaton.save();
+    }
+
+    undo() {
+        if (this.backup) {
+            this.automaton.restore(this.backup);
+        }
+    }
+
+    abstract execute(): void; // this.saveBackup(); ...perform command...
+}
+
+export class AddEdgeCommand extends EditModeCommand {
+    fromStateId: number;
+    toStateId: number;
+
+    constructor(_automaton: IAutomaton, _fromStateId: number, _toStateId: number) {
+        super(_automaton);
+        this.fromStateId = _fromStateId;
+        this.toStateId = _toStateId;
+    }
+
+    execute() {
+        this.saveBackup();
+        this.automaton.addEdge(this.fromStateId, this.toStateId);
     }
 }
