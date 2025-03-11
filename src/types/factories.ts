@@ -154,7 +154,9 @@ export class Automaton implements IAutomaton {
     }
 
     save(): IAutomatonMemento {
-        return new AutomatonMemento(this.states, this.finalStateIds, this.startingStateId, this.automatonType);
+        return new AutomatonMemento(
+            this.states, this.deltaFunctionMatrix, this.finalStateIds, this.startingStateId, this.automatonType
+        );
     }
     restore(memento: IAutomatonMemento): void {
         this.states = memento.states;
@@ -169,9 +171,17 @@ class AutomatonMemento implements IAutomatonMemento {
     finalStateIds: number[];
     startingStateId: number;
     automatonType: AutomatonType;
+    deltaFunctionMatrix: Record<number, Record<number, Array<IEdge>>>;
 
-    constructor(_states: IState[], _finalStateIds: number[], _startingStateId: number, _automatonType: AutomatonType) {
+    constructor(
+        _states: IState[],
+        _deltaFunctionMatrix: Record<number, Record<number, Array<IEdge>>>,
+        _finalStateIds: number[],
+        _startingStateId: number,
+        _automatonType: AutomatonType
+    ) {
         this.states = _states;
+        this.deltaFunctionMatrix = _deltaFunctionMatrix;
         this.finalStateIds = _finalStateIds;
         this.startingStateId = _startingStateId;
         this.automatonType = _automatonType;

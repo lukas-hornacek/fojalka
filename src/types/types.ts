@@ -53,7 +53,7 @@ export interface IAutomaton {
     startingStateId: number;
 
     // Encodes matrix[stateFrom.id][stateTo.id] = Edge[]
-    deltaFunctionMatrix: Record<number, Record<number, Array<IEdge>>>;
+    deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
 
     automatonType: AutomatonType;
 
@@ -72,6 +72,7 @@ export interface IAutomaton {
 
 export interface IAutomatonMemento {
     states: IState[];
+    deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
     finalStateIds: number[];
     startingStateId: number;
     automatonType: AutomatonType;
