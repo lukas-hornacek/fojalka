@@ -123,8 +123,11 @@ export class Automaton implements IAutomaton {
     }
 
     executeCommand(command: EditModeCommand): void {
-        if (command.execute()) {
+        const maybeErrorMessage = command.execute();
+        if (maybeErrorMessage === undefined) {
             this.commandHistory.push(command);
+        } else {
+            throw new Error(maybeErrorMessage.details);
         }
     }
 
