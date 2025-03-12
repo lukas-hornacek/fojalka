@@ -64,9 +64,6 @@ export interface IAutomaton {
 
     getInitialState(): IState;
 
-    visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
-    visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration;
-
     save(): IAutomatonMemento;
     restore(memento: IAutomatonMemento): void;
 }
@@ -77,11 +74,16 @@ export interface IAutomatonMemento {
     automatonType: AutomatonType;
 }
 
+export interface IConfigurationVisitor {
+    visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
+    visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration;
+}
+
 interface IAutomatonConfiguration {
     stateId: number;
     remainingInput: string[];
 
-    accept(automaton: IAutomaton): IAutomatonConfiguration;
+    accept(visitor: IConfigurationVisitor): IAutomatonConfiguration;
     save(): IConfigurationMemento;
     restore(memento: IConfigurationMemento): void;
 }
@@ -95,8 +97,8 @@ export class FiniteConfiguration implements IAutomatonConfiguration {
         this.remainingInput = _remainingInput;
     }
 
-    accept(automaton: IAutomaton): FiniteConfiguration {
-        return automaton.visitFiniteConfiguration(this);
+    accept(visitor: IConfigurationVisitor): FiniteConfiguration {
+        return visitor.visitFiniteConfiguration(this);
     }
 
     save(): FiniteConfigurationMemento {
@@ -120,8 +122,8 @@ export class PDAConfiguration implements IAutomatonConfiguration {
         this.stack = _stack;
     }
 
-    accept(automaton: IAutomaton): PDAConfiguration {
-        return automaton.visitPDAConfiguration(this);
+    accept(visitor: IConfigurationVisitor): PDAConfiguration {
+        return visitor.visitPDAConfiguration(this);
     }
 
     save(): PDAConfigurationMemento {

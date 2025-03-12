@@ -2,12 +2,10 @@ import {
     AutomatonType,
     EditModeCommand,
     FiniteAutomatonEdge,
-    FiniteConfiguration,
     IAutomaton,
     IAutomatonMemento,
     IEdge,
     IState,
-    PDAConfiguration,
     PDAEdge,
 } from "./types.ts";
 
@@ -127,16 +125,6 @@ export class Automaton implements IAutomaton {
             throw new Error("No initial state found.");
         }
         return initialState;
-    }
-
-    visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration {
-        // TODO implement
-        return configuration;
-    };
-
-    visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration {
-        // TODO implement
-        return configuration;
     }
 
     save(): IAutomatonMemento {
