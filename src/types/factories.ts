@@ -12,15 +12,12 @@ import {
 } from "./types.ts";
 
 interface IUniversalEdgeProps {
-    id: number;
-    fromStateId: number;
-    toStateId: number;
     inputChar: string;
     stackChar?: string;
 }
 
 export interface IAutomatonFactory {
-    createAutomaton(startingStateId: number, finalStateIds: number[]): IAutomaton;
+    createAutomaton(): IAutomaton;
     createEdge(edgeProps: IUniversalEdgeProps): IEdge;
 }
 
@@ -40,8 +37,8 @@ export class AbstractAutomatonFactory implements IAutomatonFactory {
         }
     }
 
-    createAutomaton(startingStateId: number, finalStateIds: number[]): IAutomaton {
-       return this.internalFactory.createAutomaton(startingStateId, finalStateIds);
+    createAutomaton(): IAutomaton {
+       return this.internalFactory.createAutomaton();
     }
 
     createEdge(edgeProps: IUniversalEdgeProps): IEdge {
@@ -50,31 +47,26 @@ export class AbstractAutomatonFactory implements IAutomatonFactory {
 }
 
 export class FiniteAutomatonFactory implements IAutomatonFactory {
-    createAutomaton(startingStateId: number, finalStateIds: number[]): IAutomaton {
+    createAutomaton(): IAutomaton {
         return new Automaton({
             states: [],
             deltaFunctionMatrix: {},
-            finalStateIds,
-            startingStateId,
             automatonType: AutomatonType.FINITE,
         });
     }
 
     createEdge(edgeProps: IUniversalEdgeProps): IEdge {
         return new FiniteAutomatonEdge(
-            edgeProps.id,
             edgeProps.inputChar,
         );
     }
 }
 
 export class PDAFactory implements IAutomatonFactory {
-    createAutomaton(startingStateId: number, finalStateIds: number[]): IAutomaton {
+    createAutomaton(): IAutomaton {
         return new Automaton({
             states: [],
             deltaFunctionMatrix: {},
-            finalStateIds,
-            startingStateId,
             automatonType: AutomatonType.PDA,
         });
     }
@@ -84,40 +76,31 @@ export class PDAFactory implements IAutomatonFactory {
             throw new Error("Cannot create PDAEdge without stack char argument");
         }
         return new PDAEdge(
-            edgeProps.id,
             edgeProps.inputChar,
             edgeProps.stackChar,
         );
     }
 }
 
-type AutomatonParams = {
+export type AutomatonParams = {
     states: IState[];
     deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
-    finalStateIds: number[];
-    startingStateId: number;
     automatonType: AutomatonType;
 };
 
 export class Automaton implements IAutomaton {
     states: IState[];
     deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
-    finalStateIds: number[];
-    startingStateId: number;
     automatonType: AutomatonType;
     commandHistory: EditModeCommand[];
 
     constructor({
         states = [],
         deltaFunctionMatrix = {},
-        finalStateIds,
-        startingStateId,
         automatonType,
     }: AutomatonParams) {
         this.states = states;
         this.commandHistory = [];
-        this.finalStateIds = finalStateIds;
-        this.startingStateId = startingStateId;
         this.automatonType = automatonType;
         this.deltaFunctionMatrix = deltaFunctionMatrix;
     }
@@ -138,12 +121,12 @@ export class Automaton implements IAutomaton {
         }
     }
 
-    getStartingState(): IState {
-        const startingState = this.states.find(state => state.id === this.startingStateId);
-        if (!startingState) {
-            throw new Error("No starting state found.");
+    getInitialState(): IState {
+        const initialState = this.states.find(state => state.isInitial);
+        if (!initialState) {
+            throw new Error("No initial state found.");
         }
-        return startingState;
+        return initialState;
     }
 
     visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration {
@@ -158,35 +141,28 @@ export class Automaton implements IAutomaton {
 
     save(): IAutomatonMemento {
         return new AutomatonMemento(
-            this.states, this.deltaFunctionMatrix, this.finalStateIds, this.startingStateId, this.automatonType
+            this.states, this.deltaFunctionMatrix, this.automatonType
         );
     }
     restore(memento: IAutomatonMemento): void {
         this.states = memento.states;
-        this.finalStateIds = memento.finalStateIds;
-        this.startingStateId = memento.startingStateId;
+        this.deltaFunctionMatrix = memento.deltaFunctionMatrix;
         this.automatonType = memento.automatonType;
     }
 }
 
 class AutomatonMemento implements IAutomatonMemento {
     states: IState[];
-    finalStateIds: number[];
-    startingStateId: number;
     automatonType: AutomatonType;
     deltaFunctionMatrix: Record<number, Record<number, Array<IEdge>>>;
 
     constructor(
         _states: IState[],
         _deltaFunctionMatrix: Record<number, Record<number, Array<IEdge>>>,
-        _finalStateIds: number[],
-        _startingStateId: number,
         _automatonType: AutomatonType
     ) {
         this.states = _states;
         this.deltaFunctionMatrix = _deltaFunctionMatrix;
-        this.finalStateIds = _finalStateIds;
-        this.startingStateId = _startingStateId;
         this.automatonType = _automatonType;
     }
 }

@@ -7,50 +7,51 @@ export enum AutomatonType {
 }
 
 export interface IEdge {
-    id: number;
     inputChar: string;
 
     equals(otherEdge: IEdge): boolean;
 }
 
 export class FiniteAutomatonEdge implements IEdge {
-    id: number;
     inputChar: string;
 
-    constructor(_id: number, _inputChar: string) {
-        this.id = _id;
+    constructor(_inputChar: string) {
         this.inputChar = _inputChar;
     }
 
     equals(otherEdge: IEdge): boolean {
-        return this.id === otherEdge.id;
+        if (!(otherEdge instanceof FiniteAutomatonEdge)) {
+            return false;
+        }
+        return this.inputChar === otherEdge.inputChar;
     }
 }
 
 export class PDAEdge implements IEdge {
-    id: number;
     inputChar: string;
     stackChar: string;
 
-    constructor(_id: number, _inputChar: string, _stackChar: string) {
-        this.id = _id;
+    constructor(_inputChar: string, _stackChar: string) {
         this.inputChar = _inputChar;
         this.stackChar = _stackChar;
     }
 
     equals(otherEdge: IEdge): boolean {
-        return this.id === otherEdge.id;
+        if (!(otherEdge instanceof PDAEdge)) {
+            return false;
+        }
+        return this.inputChar === otherEdge.inputChar && this.stackChar === otherEdge.stackChar;
     }
 }
 
 export interface IState {
     id: number;
+    isInitial: boolean;
+    isFinal: boolean;
 }
 
 export interface IAutomaton {
     states: IState[];
-    finalStateIds: number[];
-    startingStateId: number;
 
     // Encodes matrix[stateFrom.id][stateTo.id] = Edge[]
     deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
@@ -61,7 +62,7 @@ export interface IAutomaton {
     executeCommand(command: EditModeCommand): void; // if (command.execute()) { commandHistory.push(command); }
     undo(): void; // command = commandHistory.pop(); command.undo();
 
-    getStartingState(): IState;
+    getInitialState(): IState;
 
     visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
     visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration;
@@ -73,8 +74,6 @@ export interface IAutomaton {
 export interface IAutomatonMemento {
     states: IState[];
     deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
-    finalStateIds: number[];
-    startingStateId: number;
     automatonType: AutomatonType;
 }
 

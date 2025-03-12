@@ -24,6 +24,10 @@ export class AddEdgeCommand extends EditModeCommand {
             );
         }
 
+        if (this.automaton.deltaFunctionMatrix?.[this.fromStateId]?.[this.toStateId] === undefined) {
+            this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId] = [];
+        }
+
         if (this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].some(
             edge => edge.equals(this.edge))
         ) {
@@ -51,5 +55,49 @@ export class AddStateCommand extends EditModeCommand {
 
         this.saveBackup();
         this.automaton.states.push(this.state);
+    }
+}
+
+export class SetStateFinalFlagCommand extends EditModeCommand {
+    stateId: number;
+    shouldBeFinal: boolean;
+
+    constructor(_automaton: IAutomaton, _stateId: number, _shouldBeFinal: boolean) {
+        super(_automaton);
+        this.stateId = _stateId;
+        this.shouldBeFinal = _shouldBeFinal;
+    }
+
+    execute(): IErrorMessage | undefined {
+        if (this.automaton.states.every(state => state.id !== this.stateId)) {
+            return new ErrorMessage(`Cannot edit state ${this.stateId}, as it does not exist.`);
+        }
+
+        this.saveBackup();
+        this.automaton.states.forEach(state => {
+            if (state.id === this.stateId) {
+                state.isFinal = this.shouldBeFinal;
+            }
+        });
+    }
+}
+
+export class SetInitialStateCommand extends EditModeCommand {
+    stateId: number;
+
+    constructor(_automaton: IAutomaton, _stateId: number) {
+        super(_automaton);
+        this.stateId = _stateId;
+    }
+
+    execute(): IErrorMessage | undefined {
+        if (this.automaton.states.every(state => state.id !== this.stateId)) {
+            return new ErrorMessage(`Cannot edit state ${this.stateId}, as it does not exist.`);
+        }
+
+        this.saveBackup();
+        this.automaton.states.forEach(state => {
+            state.isInitial = state.id === this.stateId;
+        });
     }
 }
