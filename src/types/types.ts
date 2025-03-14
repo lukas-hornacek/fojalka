@@ -58,8 +58,8 @@ export interface IAutomaton {
 
     automatonType: AutomatonType;
 
-    commandHistory: EditCommand[];
-    executeCommand(command: EditCommand): void; // if (command.execute()) { commandHistory.push(command); }
+    commandHistory: EditCommand<unknown>[];
+    executeCommand<T>(command: EditCommand<T>): void; // if (command.execute()) { commandHistory.push(command); }
     undo(): void; // command = commandHistory.pop(); command.undo();
 
     getInitialState(): IState;
@@ -167,16 +167,17 @@ export interface ISimulation {
     automaton: IAutomaton;
     configuration: IAutomatonConfiguration;
 
-    commandHistory: RunCommand[];
-    executeCommand(command: RunCommand): void; // if (command.execute()) { commandHistory.push(command); }
+    commandHistory: RunCommand<unknown>[];
+    executeCommand<T>(command: RunCommand<T>): void; // if (command.execute()) { commandHistory.push(command); }
     undo(): void; // command = commandHistory.pop(); command.undo();
 
     run(): void;
 }
 
-export abstract class RunCommand {
+export abstract class RunCommand<T = void> {
     simulation: ISimulation;
     backup?: IConfigurationMemento;
+    result?: T;
 
     protected constructor(_simulation: ISimulation) {
         this.simulation = _simulation;
@@ -192,12 +193,17 @@ export abstract class RunCommand {
         }
     }
 
+    getResult(): T | undefined {
+        return this.result;
+    }
+
     abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...
 }
 
-export abstract class EditCommand {
+export abstract class EditCommand<T = void> {
     automaton: IAutomaton;
     backup?: IAutomatonMemento;
+    result?: T;
 
     protected constructor(_automaton: IAutomaton) {
         this.automaton = _automaton;
@@ -211,6 +217,10 @@ export abstract class EditCommand {
         if (this.backup) {
             this.automaton.restore(this.backup);
         }
+    }
+
+    getResult(): T | undefined {
+        return this.result;
     }
 
     abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...

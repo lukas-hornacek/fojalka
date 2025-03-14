@@ -90,7 +90,7 @@ export class Automaton implements IAutomaton {
     states: IState[];
     deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
     automatonType: AutomatonType;
-    commandHistory: EditCommand[];
+    commandHistory: EditCommand<unknown>[];
 
     constructor({
         states = [],
@@ -103,7 +103,7 @@ export class Automaton implements IAutomaton {
         this.deltaFunctionMatrix = deltaFunctionMatrix;
     }
 
-    executeCommand(command: EditCommand): void {
+    executeCommand(command: EditCommand<unknown>): void {
         const maybeErrorMessage = command.execute();
         if (maybeErrorMessage === undefined) {
             this.commandHistory.push(command);
