@@ -1,7 +1,7 @@
-import {IAutomaton, IState, IEdge, EditModeCommand} from "../types.ts";
+import {IAutomaton, IState, IEdge, EditCommand} from "../types.ts";
 import {ErrorMessage, IErrorMessage} from "../common.ts";
 
-export class AddEdgeCommand extends EditModeCommand {
+export class AddEdgeCommand extends EditCommand {
     fromStateId: number;
     toStateId: number;
     edge: IEdge;
@@ -40,7 +40,7 @@ export class AddEdgeCommand extends EditModeCommand {
     }
 }
 
-export class AddStateCommand extends EditModeCommand {
+export class AddStateCommand extends EditCommand {
     state: IState;
 
     constructor(_automaton: IAutomaton, _state: IState) {
@@ -58,7 +58,7 @@ export class AddStateCommand extends EditModeCommand {
     }
 }
 
-export class SetStateFinalFlagCommand extends EditModeCommand {
+export class SetStateFinalFlagCommand extends EditCommand {
     stateId: number;
     shouldBeFinal: boolean;
 
@@ -82,7 +82,7 @@ export class SetStateFinalFlagCommand extends EditModeCommand {
     }
 }
 
-export class SetInitialStateCommand extends EditModeCommand {
+export class SetInitialStateCommand extends EditCommand {
     stateId: number;
 
     constructor(_automaton: IAutomaton, _stateId: number) {

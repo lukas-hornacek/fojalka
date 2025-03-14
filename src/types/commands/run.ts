@@ -1,8 +1,8 @@
-import {InteractiveModeCommand} from "../types.ts";
+import {RunCommand} from "../types.ts";
 import {IErrorMessage} from "../common.ts";
 import {NextStepVisitor} from "../visitors/configuration.ts";
 
-export class NextStepCommand extends InteractiveModeCommand {
+export class NextStepCommand extends RunCommand {
     execute(): IErrorMessage | undefined {
         this.saveBackup();
         const nextStepVisitor = new NextStepVisitor(this.simulation.automaton);

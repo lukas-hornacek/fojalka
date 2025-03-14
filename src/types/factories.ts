@@ -1,6 +1,6 @@
 import {
     AutomatonType,
-    EditModeCommand,
+    EditCommand,
     FiniteAutomatonEdge,
     IAutomaton,
     IAutomatonMemento,
@@ -90,7 +90,7 @@ export class Automaton implements IAutomaton {
     states: IState[];
     deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
     automatonType: AutomatonType;
-    commandHistory: EditModeCommand[];
+    commandHistory: EditCommand[];
 
     constructor({
         states = [],
@@ -103,7 +103,7 @@ export class Automaton implements IAutomaton {
         this.deltaFunctionMatrix = deltaFunctionMatrix;
     }
 
-    executeCommand(command: EditModeCommand): void {
+    executeCommand(command: EditCommand): void {
         const maybeErrorMessage = command.execute();
         if (maybeErrorMessage === undefined) {
             this.commandHistory.push(command);

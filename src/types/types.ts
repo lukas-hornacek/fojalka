@@ -58,8 +58,8 @@ export interface IAutomaton {
 
     automatonType: AutomatonType;
 
-    commandHistory: EditModeCommand[];
-    executeCommand(command: EditModeCommand): void; // if (command.execute()) { commandHistory.push(command); }
+    commandHistory: EditCommand[];
+    executeCommand(command: EditCommand): void; // if (command.execute()) { commandHistory.push(command); }
     undo(): void; // command = commandHistory.pop(); command.undo();
 
     getInitialState(): IState;
@@ -167,14 +167,14 @@ export interface ISimulation {
     automaton: IAutomaton;
     configuration: IAutomatonConfiguration;
 
-    commandHistory: InteractiveModeCommand[];
-    executeCommand(command: InteractiveModeCommand): void; // if (command.execute()) { commandHistory.push(command); }
+    commandHistory: RunCommand[];
+    executeCommand(command: RunCommand): void; // if (command.execute()) { commandHistory.push(command); }
     undo(): void; // command = commandHistory.pop(); command.undo();
 
     run(): void;
 }
 
-export abstract class InteractiveModeCommand {
+export abstract class RunCommand {
     simulation: ISimulation;
     backup?: IConfigurationMemento;
 
@@ -195,7 +195,7 @@ export abstract class InteractiveModeCommand {
     abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...
 }
 
-export abstract class EditModeCommand {
+export abstract class EditCommand {
     automaton: IAutomaton;
     backup?: IAutomatonMemento;
 
