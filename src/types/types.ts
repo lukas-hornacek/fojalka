@@ -1,4 +1,5 @@
 import {IErrorMessage} from "./common.ts";
+import {arraysEqual} from "../utils.ts";
 
 export enum AutomatonType {
     FINITE = "FINITE",
@@ -34,9 +35,9 @@ export class PDAEdge implements IEdge {
     id: string;
     inputChar: string;
     readStackChar: string;
-    writeStackWord: string;
+    writeStackWord: string[];
 
-    constructor(_id: string, _inputChar: string, _readStackChar: string, _writeStackWord: string) {
+    constructor(_id: string, _inputChar: string, _readStackChar: string, _writeStackWord: string[]) {
         this.id = _id;
         this.inputChar = _inputChar;
         this.readStackChar = _readStackChar;
@@ -50,7 +51,7 @@ export class PDAEdge implements IEdge {
         return (
             this.inputChar === otherEdge.inputChar &&
             this.readStackChar === otherEdge.readStackChar &&
-            this.writeStackWord === otherEdge.writeStackWord
+            arraysEqual(this.writeStackWord, otherEdge.writeStackWord)
         );
     }
 }

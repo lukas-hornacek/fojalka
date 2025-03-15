@@ -12,7 +12,7 @@ interface IUniversalEdgeProps {
     id: string,
     inputChar: string;
     readStackChar?: string;
-    writeStackWord?: string;
+    writeStackWord?: string[];
 }
 
 export interface IAutomatonFactory {
