@@ -11,7 +11,8 @@ import {
 
 interface IUniversalEdgeProps {
     inputChar: string;
-    stackChar?: string;
+    readStackChar?: string;
+    writeStackWord?: string;
 }
 
 export interface IAutomatonFactory {
@@ -70,12 +71,13 @@ export class PDAFactory implements IAutomatonFactory {
     }
 
     createEdge(edgeProps: IUniversalEdgeProps): IEdge {
-        if (!edgeProps.stackChar) {
-            throw new Error("Cannot create PDAEdge without stack char argument");
+        if (!edgeProps.readStackChar || !edgeProps.writeStackWord) {
+            throw new Error("Cannot create PDAEdge without both readStackChar and writeStackWord arguments");
         }
         return new PDAEdge(
             edgeProps.inputChar,
-            edgeProps.stackChar,
+            edgeProps.readStackChar,
+            edgeProps.writeStackWord,
         );
     }
 }

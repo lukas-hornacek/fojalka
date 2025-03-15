@@ -29,18 +29,24 @@ export class FiniteAutomatonEdge implements IEdge {
 
 export class PDAEdge implements IEdge {
     inputChar: string;
-    stackChar: string;
+    readStackChar: string;
+    writeStackWord: string;
 
-    constructor(_inputChar: string, _stackChar: string) {
+    constructor(_inputChar: string, _readStackChar: string, _writeStackWord: string) {
         this.inputChar = _inputChar;
-        this.stackChar = _stackChar;
+        this.readStackChar = _readStackChar;
+        this.writeStackWord = _writeStackWord;
     }
 
     equals(otherEdge: IEdge): boolean {
         if (!(otherEdge instanceof PDAEdge)) {
             return false;
         }
-        return this.inputChar === otherEdge.inputChar && this.stackChar === otherEdge.stackChar;
+        return (
+            this.inputChar === otherEdge.inputChar &&
+            this.readStackChar === otherEdge.readStackChar &&
+            this.writeStackWord === otherEdge.writeStackWord
+        );
     }
 }
 
