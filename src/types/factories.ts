@@ -5,7 +5,6 @@ import {
     IAutomaton,
     IAutomatonMemento,
     IEdge,
-    IState,
     PDAEdge,
 } from "./types.ts";
 
@@ -17,7 +16,7 @@ interface IUniversalEdgeProps {
 }
 
 export interface IAutomatonFactory {
-    createAutomaton(): IAutomaton;
+    createAutomaton(initialStateId: string): IAutomaton;
     createEdge(edgeProps: IUniversalEdgeProps): IEdge;
 }
 
@@ -37,8 +36,8 @@ export class AbstractAutomatonFactory implements IAutomatonFactory {
         }
     }
 
-    createAutomaton(): IAutomaton {
-       return this.internalFactory.createAutomaton();
+    createAutomaton(initialStateId: string): IAutomaton {
+       return this.internalFactory.createAutomaton(initialStateId);
     }
 
     createEdge(edgeProps: IUniversalEdgeProps): IEdge {
@@ -47,11 +46,13 @@ export class AbstractAutomatonFactory implements IAutomatonFactory {
 }
 
 export class FiniteAutomatonFactory implements IAutomatonFactory {
-    createAutomaton(): IAutomaton {
+    createAutomaton(initialStateId: string): IAutomaton {
         return new Automaton({
             states: [],
             deltaFunctionMatrix: {},
             automatonType: AutomatonType.FINITE,
+            initialStateId,
+            finalStateIds: [],
         });
     }
 
@@ -64,11 +65,13 @@ export class FiniteAutomatonFactory implements IAutomatonFactory {
 }
 
 export class PDAFactory implements IAutomatonFactory {
-    createAutomaton(): IAutomaton {
+    createAutomaton(initialStateId: string): IAutomaton {
         return new Automaton({
             states: [],
             deltaFunctionMatrix: {},
             automatonType: AutomatonType.PDA,
+            initialStateId,
+            finalStateIds: [],
         });
     }
 
@@ -86,26 +89,34 @@ export class PDAFactory implements IAutomatonFactory {
 }
 
 export type AutomatonParams = {
-    states: IState[];
-    deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
+    states: string[];
+    deltaFunctionMatrix: Record<string, Record<string, IEdge[]>>;
     automatonType: AutomatonType;
+    initialStateId: string;
+    finalStateIds: string[];
 };
 
 export class Automaton implements IAutomaton {
-    states: IState[];
-    deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
+    states: string[];
+    deltaFunctionMatrix: Record<string, Record<string, IEdge[]>>;
     automatonType: AutomatonType;
     commandHistory: EditCommand<unknown>[];
+    initialStateId: string;
+    finalStateIds: string[];
 
     constructor({
         states = [],
         deltaFunctionMatrix = {},
         automatonType,
+        initialStateId,
+        finalStateIds = [],
     }: AutomatonParams) {
         this.states = states;
         this.commandHistory = [];
         this.automatonType = automatonType;
         this.deltaFunctionMatrix = deltaFunctionMatrix;
+        this.initialStateId = initialStateId;
+        this.finalStateIds = finalStateIds;
     }
 
     executeCommand(command: EditCommand<unknown>): void {
@@ -124,14 +135,6 @@ export class Automaton implements IAutomaton {
         }
     }
 
-    getInitialState(): IState {
-        const initialState = this.states.find(state => state.isInitial);
-        if (!initialState) {
-            throw new Error("No initial state found.");
-        }
-        return initialState;
-    }
-
     save(): IAutomatonMemento {
         return new AutomatonMemento(
             this.states, this.deltaFunctionMatrix, this.automatonType
@@ -145,13 +148,13 @@ export class Automaton implements IAutomaton {
 }
 
 class AutomatonMemento implements IAutomatonMemento {
-    states: IState[];
+    states: string[];
     automatonType: AutomatonType;
-    deltaFunctionMatrix: Record<number, Record<number, Array<IEdge>>>;
+    deltaFunctionMatrix: Record<string, Record<string, Array<IEdge>>>;
 
     constructor(
-        _states: IState[],
-        _deltaFunctionMatrix: Record<number, Record<number, Array<IEdge>>>,
+        _states: string[],
+        _deltaFunctionMatrix: Record<string, Record<string, Array<IEdge>>>,
         _automatonType: AutomatonType
     ) {
         this.states = _states;

@@ -1,12 +1,12 @@
-import {IAutomaton, IState, IEdge, EditCommand} from "../types.ts";
+import {IAutomaton, IEdge, EditCommand} from "../types.ts";
 import {ErrorMessage, IErrorMessage} from "../common.ts";
 
 export class AddEdgeCommand extends EditCommand {
-    fromStateId: number;
-    toStateId: number;
+    fromStateId: string;
+    toStateId: string;
     edge: IEdge;
 
-    constructor(_automaton: IAutomaton, _fromStateId: number, _toStateId: number, _edge: IEdge) {
+    constructor(_automaton: IAutomaton, _fromStateId: string, _toStateId: string, _edge: IEdge) {
         super(_automaton);
         this.fromStateId = _fromStateId;
         this.toStateId = _toStateId;
@@ -16,8 +16,8 @@ export class AddEdgeCommand extends EditCommand {
     execute(): IErrorMessage | undefined {
         this.saveBackup();
 
-        const fromStateExists = this.automaton.states.some(state => state.id === this.fromStateId);
-        const toStateExists = this.automaton.states.some(state => state.id === this.toStateId);
+        const fromStateExists = this.automaton.states.some(id => id === this.fromStateId);
+        const toStateExists = this.automaton.states.some(id => id === this.toStateId);
         if (!fromStateExists || !toStateExists) {
             return new ErrorMessage(
                 `Cannot add edge. Both ${this.fromStateId} and ${this.toStateId} state IDs have to exist.`
@@ -41,63 +41,70 @@ export class AddEdgeCommand extends EditCommand {
 }
 
 export class AddStateCommand extends EditCommand {
-    state: IState;
+    stateId: string;
 
-    constructor(_automaton: IAutomaton, _state: IState) {
+    constructor(_automaton: IAutomaton, _stateId: string) {
         super(_automaton);
-        this.state = _state;
+        this.stateId = _stateId;
     }
 
     execute(): IErrorMessage | undefined {
-        if (this.automaton.states.some(otherState => otherState.id === this.state.id)) {
-            return new ErrorMessage("Cannot add state, as it has already been added before.");
+        if (this.automaton.states.some(id => id === this.stateId)) {
+            return new ErrorMessage(`Cannot add state ${this.stateId}, as it has already been added before.`);
         }
 
         this.saveBackup();
-        this.automaton.states.push(this.state);
+        this.automaton.states.push(this.stateId);
     }
 }
 
 export class SetStateFinalFlagCommand extends EditCommand {
-    stateId: number;
+    stateId: string;
     shouldBeFinal: boolean;
 
-    constructor(_automaton: IAutomaton, _stateId: number, _shouldBeFinal: boolean) {
+    constructor(_automaton: IAutomaton, _stateId: string, _shouldBeFinal: boolean) {
         super(_automaton);
         this.stateId = _stateId;
         this.shouldBeFinal = _shouldBeFinal;
     }
 
     execute(): IErrorMessage | undefined {
-        if (this.automaton.states.every(state => state.id !== this.stateId)) {
+        if (this.automaton.states.every(id => id !== this.stateId)) {
             return new ErrorMessage(`Cannot edit state ${this.stateId}, as it does not exist.`);
         }
 
+        const isFinalAlready = this.automaton.finalStateIds.some(id => id === this.stateId);
+        if (isFinalAlready && this.shouldBeFinal) {
+            return;
+        }
+        if (!isFinalAlready && !this.shouldBeFinal) {
+            return;
+        }
+
         this.saveBackup();
-        this.automaton.states.forEach(state => {
-            if (state.id === this.stateId) {
-                state.isFinal = this.shouldBeFinal;
-            }
-        });
+
+        if (this.shouldBeFinal) {
+            this.automaton.finalStateIds.push(this.stateId);
+        } else {
+            this.automaton.finalStateIds = this.automaton.finalStateIds.filter(id => id !== this.stateId);
+        }
     }
 }
 
 export class SetInitialStateCommand extends EditCommand {
-    stateId: number;
+    stateId: string;
 
-    constructor(_automaton: IAutomaton, _stateId: number) {
+    constructor(_automaton: IAutomaton, _stateId: string) {
         super(_automaton);
         this.stateId = _stateId;
     }
 
     execute(): IErrorMessage | undefined {
-        if (this.automaton.states.every(state => state.id !== this.stateId)) {
+        if (this.automaton.states.every(id => id !== this.stateId)) {
             return new ErrorMessage(`Cannot edit state ${this.stateId}, as it does not exist.`);
         }
 
         this.saveBackup();
-        this.automaton.states.forEach(state => {
-            state.isInitial = state.id === this.stateId;
-        });
+        this.automaton.initialStateId = this.stateId;
     }
 }

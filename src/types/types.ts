@@ -55,17 +55,13 @@ export class PDAEdge implements IEdge {
     }
 }
 
-export interface IState {
-    id: number;
-    isInitial: boolean;
-    isFinal: boolean;
-}
-
 export interface IAutomaton {
-    states: IState[];
+    states: string[];
+    initialStateId: string;
+    finalStateIds: string[];
 
-    // Encodes matrix[stateFrom.id][stateTo.id] = Edge[]
-    deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
+    // Encodes matrix[stateFromIdd][stateToId] = Edge[]
+    deltaFunctionMatrix: Record<string, Record<string, IEdge[]>>;
 
     automatonType: AutomatonType;
 
@@ -73,15 +69,13 @@ export interface IAutomaton {
     executeCommand<T>(command: EditCommand<T>): void; // if (command.execute()) { commandHistory.push(command); }
     undo(): void; // command = commandHistory.pop(); command.undo();
 
-    getInitialState(): IState;
-
     save(): IAutomatonMemento;
     restore(memento: IAutomatonMemento): void;
 }
 
 export interface IAutomatonMemento {
-    states: IState[];
-    deltaFunctionMatrix: Record<number, Record<number, IEdge[]>>;
+    states: string[];
+    deltaFunctionMatrix: Record<string, Record<string, IEdge[]>>;
     automatonType: AutomatonType;
 }
 
@@ -91,7 +85,7 @@ export interface IConfigurationVisitor {
 }
 
 interface IAutomatonConfiguration {
-    stateId: number;
+    stateId: string;
     remainingInput: string[];
 
     accept(visitor: IConfigurationVisitor): IAutomatonConfiguration;
@@ -100,10 +94,10 @@ interface IAutomatonConfiguration {
 }
 
 export class FiniteConfiguration implements IAutomatonConfiguration {
-    stateId: number;
+    stateId: string;
     remainingInput: string[];
 
-    constructor(_stateId: number, _remainingInput: string[]) {
+    constructor(_stateId: string, _remainingInput: string[]) {
         this.stateId = _stateId;
         this.remainingInput = _remainingInput;
     }
@@ -123,11 +117,11 @@ export class FiniteConfiguration implements IAutomatonConfiguration {
 }
 
 export class PDAConfiguration implements IAutomatonConfiguration {
-    stateId: number;
+    stateId: string;
     remainingInput: string[];
     stack: string[];
 
-    constructor(_stateId: number, _remainingInput: string[], _stack: string[]) {
+    constructor(_stateId: string, _remainingInput: string[], _stack: string[]) {
         this.stateId = _stateId;
         this.remainingInput = _remainingInput;
         this.stack = _stack;
@@ -149,25 +143,25 @@ export class PDAConfiguration implements IAutomatonConfiguration {
 }
 
 interface IConfigurationMemento {
-    stateId: number;
+    stateId: string;
 }
 
 class FiniteConfigurationMemento implements IConfigurationMemento {
-    stateId: number;
+    stateId: string;
     remainingInput: string[];
 
-    constructor(_stateId: number, _remainingInput: string[]) {
+    constructor(_stateId: string, _remainingInput: string[]) {
         this.stateId = _stateId;
         this.remainingInput = _remainingInput;
     }
 }
 
 class PDAConfigurationMemento implements IConfigurationMemento {
-    stateId: number;
+    stateId: string;
     remainingInput: string[];
     stack: string[];
 
-    constructor(_stateId: number, _remainingInput: string[], _stack: string[]) {
+    constructor(_stateId: string, _remainingInput: string[], _stack: string[]) {
         this.stateId = _stateId;
         this.remainingInput = _remainingInput;
         this.stack = _stack;
