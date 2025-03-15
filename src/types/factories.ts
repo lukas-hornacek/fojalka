@@ -10,6 +10,7 @@ import {
 } from "./types.ts";
 
 interface IUniversalEdgeProps {
+    id: string,
     inputChar: string;
     readStackChar?: string;
     writeStackWord?: string;
@@ -56,6 +57,7 @@ export class FiniteAutomatonFactory implements IAutomatonFactory {
 
     createEdge(edgeProps: IUniversalEdgeProps): IEdge {
         return new FiniteAutomatonEdge(
+            edgeProps.id,
             edgeProps.inputChar,
         );
     }
@@ -75,6 +77,7 @@ export class PDAFactory implements IAutomatonFactory {
             throw new Error("Cannot create PDAEdge without both readStackChar and writeStackWord arguments");
         }
         return new PDAEdge(
+            edgeProps.id,
             edgeProps.inputChar,
             edgeProps.readStackChar,
             edgeProps.writeStackWord,
