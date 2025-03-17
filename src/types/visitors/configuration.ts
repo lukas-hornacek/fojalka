@@ -28,7 +28,6 @@ export class NextStepVisitor implements IConfigurationVisitor {
                 }
 
     };
-
     visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration {
         // TODO implement: Based on this.automaton and configuration, calculate the next step configuration for PDA
         return configuration; // TODO remove, just a dummy return
