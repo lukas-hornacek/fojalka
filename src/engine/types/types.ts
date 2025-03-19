@@ -1,5 +1,5 @@
 import { IErrorMessage } from "./common.ts";
-import { arraysEqual } from "../utils.ts";
+import { arraysEqual } from "../../utils.ts";
 import { NextStepCommand } from "./commands/run";
 
 export enum AutomatonType {
@@ -68,7 +68,7 @@ export interface IAutomaton {
   automatonType: AutomatonType;
 
   commandHistory: EditCommand<unknown>[];
-  executeCommand<T>(command: EditCommand<T>): void; // if (command.execute()) { commandHistory.push(command); }
+  executeCommand<T>(command: EditCommand<T>): IErrorMessage | undefined; // if (command.execute()) { commandHistory.push(command); }
   undo(): void; // command = commandHistory.pop(); command.undo();
 
   save(): IAutomatonMemento;

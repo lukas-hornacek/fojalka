@@ -1,5 +1,5 @@
 import { ErrorMessage, IErrorMessage } from "./common.ts";
-import { arraysEqual } from "../utils.ts";
+import { arraysEqual } from "../../utils.ts";
 
 export enum GrammarType {
   REGULAR = "REGULAR",

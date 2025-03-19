@@ -1,3 +1,4 @@
+import { IErrorMessage } from "./common.ts";
 import {
   AutomatonType,
   EditCommand,
@@ -119,13 +120,12 @@ export class Automaton implements IAutomaton {
     this.finalStateIds = finalStateIds;
   }
 
-  executeCommand(command: EditCommand<unknown>): void {
+  executeCommand(command: EditCommand<unknown>): IErrorMessage | undefined {
     const maybeErrorMessage = command.execute();
     if (maybeErrorMessage === undefined) {
       this.commandHistory.push(command);
-    } else {
-      throw new Error(maybeErrorMessage.details);
     }
+    return maybeErrorMessage;
   }
 
   undo(): void {
