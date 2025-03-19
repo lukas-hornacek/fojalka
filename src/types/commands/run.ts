@@ -1,13 +1,21 @@
-import {RunCommand} from "../types.ts";
+import {IEdge, RunCommand} from "../types.ts";
 import {IErrorMessage} from "../common.ts";
 import {NextStepVisitor} from "../visitors/configuration.ts";
 
-export class NextStepCommand extends RunCommand<number> {
+export class NextStepCommand extends RunCommand<IEdge> {
+
+    // creates new visitor, configuration accepts it, this simulates a step on the automata, saves the edge traversed into this.result
     execute(): IErrorMessage | undefined {
         this.saveBackup();
         const nextStepVisitor = new NextStepVisitor(this.simulation.automaton);
+
+        const oldState = this.simulation.configuration.stateId;
+
         this.simulation.configuration = this.simulation.configuration.accept(nextStepVisitor);
-        // TODO store the used edge into this.result. Get this info from the return value of accept probably.
+
+        const newState = this.simulation.configuration.stateId;
+        this.result = this.simulation.automaton.deltaFunctionMatrix[oldState][newState][0];
+
         return;
     }
 }
