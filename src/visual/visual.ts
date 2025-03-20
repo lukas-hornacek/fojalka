@@ -4,7 +4,11 @@ export interface IVisual {
     id: string;
 
     init: () => void;
+    fit: () => void;
     addNode: (id: string, position: { x: number; y: number }) => void;
+    removeNode: (id: string) => void;
+    addEdge: (from: string, to: string, id: string) => void;
+    removeEdge: (id: string) => void;
 }
 
 export class Visual implements IVisual {
@@ -19,11 +23,7 @@ export class Visual implements IVisual {
         this.cy = cytoscape({
             container: document.getElementById(this.id),
             // example elements, that should be removed once user can add them themselves
-            elements: [
-                { group: "nodes", data: { id: "x" }, position: { x: 100, y: 100 } },
-                { group: "nodes", data: { id: "y" }, position: { x: 300, y: 100 } },
-                { group: "edges", data: { id: "a", source: "x", target: "y" } },
-            ],
+            elements: [],
             style: [
                 {
                     selector: "node",
@@ -48,7 +48,23 @@ export class Visual implements IVisual {
         });
     }
 
+    fit() {
+        this.cy?.fit();
+    }
+
     addNode(id: string, position: { x: number; y: number }) {
         this.cy?.add({ group: "nodes", data: { id }, position });
-    };
+    }
+
+    removeNode(id: string) {
+        this.cy?.remove(`node#${id}`);
+    }
+
+    addEdge(from: string, to: string, id: string) {
+        this.cy?.add({ group: "edges", data: { id: id, source: from, target: to }});
+    }
+
+    removeEdge(id: string) {
+        this.cy?.remove(`edge#${id}`);
+    }
 }
