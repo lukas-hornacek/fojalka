@@ -1,8 +1,12 @@
-import {IEdge, RunCommand} from "../types.ts";
+import {IEdge, RunCommand, ISimulation} from "../types.ts";
 import {IErrorMessage} from "../common.ts";
 import {NextStepVisitor} from "../visitors/configuration.ts";
 
 export class NextStepCommand extends RunCommand<IEdge> {
+
+    constructor (_simulation: ISimulation<IEdge>){
+        super (_simulation);
+    }
 
     // creates new visitor, configuration accepts it, this simulates a step on the automata, saves the edge traversed into this.result
     execute(): IErrorMessage | undefined {

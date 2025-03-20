@@ -3,8 +3,8 @@ import {
     IAutomaton,
     IConfigurationVisitor,
     PDAConfiguration,
-    IEdge,
 } from "../types.ts";
+
 
 export class NextStepVisitor implements IConfigurationVisitor {
     automaton: IAutomaton;
@@ -18,17 +18,15 @@ export class NextStepVisitor implements IConfigurationVisitor {
         const nextSymbol = configuration.remainingInput[0];
 
         let nextState: string | undefined;
-        let delta: Record<string, IEdge[]>;
-        delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
+        const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
         for (const key in delta){
             const edge = delta[key][0];
-            if (edge.inputChar == nextSymbol) nextState = edge.id
+            if (edge.inputChar == nextSymbol) nextState = key;
         }
 
         if (nextState === undefined)    return configuration;
             else {
-                let NewConfiguration: FiniteConfiguration;
-                NewConfiguration = new FiniteConfiguration(nextState, configuration.remainingInput.slice(1));
+                const NewConfiguration = new FiniteConfiguration(nextState, configuration.remainingInput.slice(1));
                 return NewConfiguration;
             }
     };
