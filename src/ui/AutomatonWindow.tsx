@@ -1,7 +1,7 @@
 import { useEffect, useContext } from "react";
 import { CoreContext } from "../core/CoreContext";
 
-export default function AutomatonWindow({ id }: { id: string}) {
+export default function AutomatonWindow({ id, cols }: { id: string, cols: number }) {
     const coreContext = useContext(CoreContext);
 
     if (!coreContext) {
@@ -13,7 +13,7 @@ export default function AutomatonWindow({ id }: { id: string}) {
     }, [id, coreContext]);
 
     return (
-        <div className="col-6">
+        <div className={`col-${cols}`}>
             <div id={id}></div>
         </div>
     );
