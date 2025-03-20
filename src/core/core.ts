@@ -1,5 +1,5 @@
 import { IEngine, Engine } from "../engine/engine";
-import { IErrorMessage } from "../engine/types/common";
+import { ErrorMessage, IErrorMessage } from "../engine/types/common";
 import { AutomatonType } from "../engine/types/types";
 import { IVisual, Visual } from "../visual/visual";
 
@@ -10,7 +10,7 @@ enum Mode {
 
 export interface ICore {
     addState: (id: string, position: { x: number, y: number}) => IErrorMessage | undefined;
-    init: () => void;
+    init: (id: string) => IErrorMessage | undefined;
 }
 
 // component that holds global state and coordinates Visual and Core components
@@ -20,7 +20,8 @@ export class Core implements ICore {
     automatonType = AutomatonType.FINITE;
 
     engine: IEngine = new Engine(this.automatonType);
-    visual: IVisual = new Visual();
+    visualPrimary: IVisual = new Visual("cy-primary");
+    visualSecondary: IVisual = new Visual("cy-secondary");
 
     addState(id: string, position: { x: number, y: number}): IErrorMessage | undefined {
         const error = this.engine.addState(id);
@@ -28,10 +29,16 @@ export class Core implements ICore {
             return error;
         }
 
-        this.visual.addNode(id, position);
+        this.visualPrimary.addNode(id, position);
     }
 
-    init() {
-        this.visual.init();
+    init(id: string) {
+        if (id === "cy-primary") {
+            this.visualPrimary.init();
+        } else if (id === "cy-secondary") {
+            this.visualSecondary.init();
+        } else {
+            return new ErrorMessage(`Invalid cytoscape element id '${id}'`);
+        }
     }
 }

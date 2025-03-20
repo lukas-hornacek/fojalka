@@ -1,18 +1,23 @@
 import cytoscape from "cytoscape";
 
 export interface IVisual {
-    cy?: cytoscape.Core;
+    id: string;
 
     init: () => void;
     addNode: (id: string, position: { x: number; y: number }) => void;
 }
 
 export class Visual implements IVisual {
+    id: string;
     cy?: cytoscape.Core;
+
+    constructor(id: string) {
+        this.id = id;
+    }
 
     init() {
         this.cy = cytoscape({
-            container: document.getElementById("cy"),
+            container: document.getElementById(this.id),
             // example elements, that should be removed once user can add them themselves
             elements: [
                 { group: "nodes", data: { id: "x" }, position: { x: 100, y: 100 } },
