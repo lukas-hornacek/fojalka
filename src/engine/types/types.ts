@@ -69,7 +69,7 @@ export interface IAutomaton {
 
   commandHistory: EditCommand<unknown>[];
   executeCommand<T>(command: EditCommand<T>): IErrorMessage | undefined; // if (command.execute()) { commandHistory.push(command); }
-  undo(): void; // command = commandHistory.pop(); command.undo();
+  undo(): IErrorMessage | undefined; // command = commandHistory.pop(); command.undo();
 
   save(): IAutomatonMemento;
   restore(memento: IAutomatonMemento): void;

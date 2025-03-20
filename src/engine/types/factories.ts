@@ -1,4 +1,4 @@
-import { IErrorMessage } from "./common.ts";
+import { ErrorMessage, IErrorMessage } from "./common.ts";
 import {
   AutomatonType,
   EditCommand,
@@ -9,7 +9,7 @@ import {
   PDAEdge,
 } from "./types.ts";
 
-interface IUniversalEdgeProps {
+export interface IUniversalEdgeProps {
   id: string,
   inputChar: string;
   readStackChar?: string;
@@ -128,10 +128,12 @@ export class Automaton implements IAutomaton {
     return maybeErrorMessage;
   }
 
-  undo(): void {
+  undo(): IErrorMessage | undefined {
     const command = this.commandHistory.pop();
     if (command) {
       command.undo();
+    } else {
+      return new ErrorMessage("Cannot undo because command history is empty.");
     }
   }
 
