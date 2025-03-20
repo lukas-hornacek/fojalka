@@ -93,6 +93,22 @@ export class Core implements ICore {
         if (this.mode !== Mode.EDIT) {
             return new ErrorMessage("Editing automaton is only permitted in edit mode.");
         }
+        if (props.inputChar.trim().length === 0) {
+            return new ErrorMessage("Input char must contain at least one non-whitespace character.");
+        }
+        if (this.automatonType === AutomatonType.PDA) {
+            if (props.readStackChar === undefined || props.writeStackWord === undefined) {
+                return new ErrorMessage("PDA edge must specify character(s) read from and written to the stack");
+            }
+            if (props.readStackChar.trim().length === 0 || props.writeStackWord.length === 0) {
+                return new ErrorMessage("Read and written stack character(s) must not contain whitespace-only symbols");
+            }
+            for (const c in props.writeStackWord) {
+                if (c.trim().length === 0) {
+                    return new ErrorMessage("Read and written stack character(s) must not contain whitespace-only symbols");
+                }
+            }
+        }
 
         props.id = `_${this.edgeCounter}`;
 
