@@ -61,8 +61,8 @@ export class Core implements ICore {
         if (this.mode !== Mode.EDIT) {
             return new ErrorMessage("Editing automaton is only permitted in edit mode.");
         }
-        if (id.length === 0) {
-            return new ErrorMessage("State ID cannot be an empty string.");
+        if (id.trim().length === 0) {
+            return new ErrorMessage("State ID must contain at least one non-whitespace character.");
         }
         if (id.charAt(0) == "_") {
             return new ErrorMessage("State ID cannot start with an underscore");
