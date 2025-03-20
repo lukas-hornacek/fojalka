@@ -6,8 +6,8 @@ import ToggleWindow from "./ToggleWindow";
 // handles switching between showing one and two windows at a time
 // note: hiding the second window currently removes its contents
 export default function VisualWindows() {
-    const [showSecondary, setShowSecondary] = useState(true);
-    const [cols, setCols] = useState(6);
+    const [showSecondary, setShowSecondary] = useState(false);
+    const [cols, setCols] = useState(12);
 
     const toggle = () => {
         setShowSecondary(!showSecondary);
