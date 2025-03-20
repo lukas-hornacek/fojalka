@@ -169,23 +169,52 @@ class PDAConfigurationMemento implements IConfigurationMemento {
     }
 }
 
-export interface ISimulation {
+export interface ISimulation<T> {
     automaton: IAutomaton;
     configuration: IAutomatonConfiguration;
 
-    commandHistory: RunCommand<unknown>[];
-    executeCommand<T>(command: RunCommand<T>): void; // if (command.execute()) { commandHistory.push(command); }
+    commandHistory: RunCommand<T>[];
+    executeCommand(command: RunCommand<T>): void; // if (command.execute()) { commandHistory.push(command); }
     undo(): void; // command = commandHistory.pop(); command.undo();
 
     run(): void;
 }
 
-export abstract class RunCommand<T = void> {
-    simulation: ISimulation;
+export class Simulation<T> implements ISimulation<T> {
+    automaton: IAutomaton;
+    configuration: IAutomatonConfiguration;
+    commandHistory: (RunCommand<T>)[];
+
+    constructor(_automaton: IAutomaton, _configuration: IAutomatonConfiguration){
+            this.automaton = _automaton;
+            this.configuration = _configuration;
+            this.commandHistory = [];
+    }
+
+    executeCommand(command: RunCommand<T>): void {
+        if (command.execute()) {
+             this.commandHistory.push(command); 
+            }
+    }
+    undo(): void {
+        const command = this.commandHistory.pop();
+        if (command === undefined) return; // maybe error message when we try undo on empty history
+            else command.undo();
+    }
+
+    run(): void {
+        
+    }
+
+
+}
+
+export abstract class RunCommand<T> {
+    simulation: ISimulation<T>;
     backup?: IConfigurationMemento;
     result?: T;
 
-    protected constructor(_simulation: ISimulation) {
+    protected constructor(_simulation: ISimulation<T>) {
         this.simulation = _simulation;
     }
 
