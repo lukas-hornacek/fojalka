@@ -8,7 +8,10 @@ export default function App() {
     <CoreProvider>
       <h1>Víla Fojálka</h1>
       <AddStateButton />
-      <AutomatonWindow />
+      <div id="cy-window" className="d-flex flex-row">
+        <AutomatonWindow id="cy-primary" />
+        <AutomatonWindow id="cy-secondary" />
+      </div>
     </CoreProvider>
   );
 }

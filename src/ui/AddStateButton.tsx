@@ -20,8 +20,8 @@ export default function AddStateButton() {
             e.preventDefault();
             addState();
         }}>
-            <input onChange={e => stateId.current = e.target.value}/>
-            <button>Send</button>
+            <input className="form-control" onChange={e => stateId.current = e.target.value}/>
+            <button className="btn btn-primary">Send</button>
         </form>
     );
 }
