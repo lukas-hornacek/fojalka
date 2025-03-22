@@ -2,7 +2,9 @@ import { expect, test } from "vitest";
 import {AutomatonType, FiniteAutomatonEdge, FiniteConfiguration, IEdge, Simulation} from "../src/types/types";
 import {AbstractAutomatonFactory} from "../src/types/factories";
 import { NextStepCommand } from "../src/types/commands/run";
-test("name", () =>{
+
+
+test("NextStepCommand/Visitor test", () =>{
     const factory = new AbstractAutomatonFactory ( AutomatonType.FINITE );
     
     const automaton = factory.createAutomaton("0");

@@ -195,6 +195,7 @@ export class Simulation<T> implements ISimulation<T> {
         if (command.execute()) {
              this.commandHistory.push(command); 
             }
+        // maybe return error if fails to execute
     }
     undo(): void {
         const command = this.commandHistory.pop();
@@ -203,7 +204,7 @@ export class Simulation<T> implements ISimulation<T> {
     }
 
     run(): void {
-        
+        // TODO simulates the entire run of the word in configuration on the automata
     }
 
 
