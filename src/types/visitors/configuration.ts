@@ -13,8 +13,9 @@ export class NextStepVisitor implements IConfigurationVisitor {
         this.automaton = _automaton;
     }
 
+    // Finite Automata visit command, preforms the next step command based on the finite configuration
+    // (which has currnet StateId and next symbol) and the FiniteAutomaton in this.automaton (using the deltaFunction)
     visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration {
-        // TODO implement: Based on this.automaton and configuration, calculate the next step configuration for FA
         const nextSymbol = configuration.remainingInput[0];
 
         let nextState: string | undefined;
@@ -30,6 +31,8 @@ export class NextStepVisitor implements IConfigurationVisitor {
                 return NewConfiguration;
             }
     };
+
+    
     visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration {
         // TODO implement: Based on this.automaton and configuration, calculate the next step configuration for PDA
         return configuration; // TODO remove, just a dummy return
