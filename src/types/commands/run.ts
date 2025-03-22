@@ -9,7 +9,7 @@ export class NextStepCommand extends RunCommand {
     }
 
     // creates new visitor, configuration accepts it, this simulates a step on the automata, saves the edge traversed into this.result
-    execute(): IErrorMessage | undefined {
+    execute(): IErrorMessage | void {
         this.saveBackup();
         const nextStepVisitor = new NextStepVisitor(this.simulation.automaton);
 

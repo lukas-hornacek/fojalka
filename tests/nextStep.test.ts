@@ -1,7 +1,8 @@
 import { expect, test } from "vitest";
+import { NextStepCommand } from "../src/types/commands/run";
 import {AutomatonType, FiniteAutomatonEdge, FiniteConfiguration, Simulation} from "../src/types/types";
 import {AbstractAutomatonFactory} from "../src/types/factories";
-import { NextStepCommand } from "../src/types/commands/run";
+
 
 
 test("nextStepCommand Visitor test", () =>{
