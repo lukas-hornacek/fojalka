@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import {AutomatonType, FiniteAutomatonEdge, FiniteConfiguration, IEdge, Simulation} from "../src/types/types";
+import {AutomatonType, FiniteAutomatonEdge, FiniteConfiguration, Simulation} from "../src/types/types";
 import {AbstractAutomatonFactory} from "../src/types/factories";
 import { NextStepCommand } from "../src/types/commands/run";
 
@@ -18,7 +18,7 @@ test("NextStepCommand/Visitor test", () =>{
 
     const configuration = new FiniteConfiguration("0",["a","b","c"]);
 
-    const simulation = new Simulation<IEdge>(automaton, configuration);
+    const simulation = new Simulation(automaton, configuration);
     const command = new NextStepCommand(simulation);
     expect( simulation.configuration.stateId ).toBe("0");
     simulation.executeCommand(command );
