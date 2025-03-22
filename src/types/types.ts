@@ -1,5 +1,6 @@
 import {IErrorMessage} from "./common.ts";
 import {arraysEqual} from "../utils.ts";
+import { NextStepCommand } from "./commands/run";
 
 export enum AutomatonType {
     FINITE = "FINITE",
@@ -169,21 +170,21 @@ class PDAConfigurationMemento implements IConfigurationMemento {
     }
 }
 
-export interface ISimulation<T> {
+export interface ISimulation{
     automaton: IAutomaton;
     configuration: IAutomatonConfiguration;
 
-    commandHistory: RunCommand<T>[];
-    executeCommand(command: RunCommand<T>): void; // if (command.execute()) { commandHistory.push(command); }
+    commandHistory: RunCommand[];
+    executeCommand(command: RunCommand): void; // if (command.execute()) { commandHistory.push(command); }
     undo(): void; // command = commandHistory.pop(); command.undo();
 
     run(): void;
 }
 
-export class Simulation<T> implements ISimulation<T> {
+export class Simulation implements ISimulation {
     automaton: IAutomaton;
     configuration: IAutomatonConfiguration;
-    commandHistory: (RunCommand<T>)[];
+    commandHistory: (RunCommand)[];
 
     constructor(_automaton: IAutomaton, _configuration: IAutomatonConfiguration){
             this.automaton = _automaton;
@@ -191,7 +192,7 @@ export class Simulation<T> implements ISimulation<T> {
             this.commandHistory = [];
     }
 
-    executeCommand(command: RunCommand<T>): void {
+    executeCommand(command: RunCommand): void {
         if (command.execute()) {
              this.commandHistory.push(command); 
             }
@@ -203,19 +204,29 @@ export class Simulation<T> implements ISimulation<T> {
             else command.undo();
     }
 
-    run(): void {
-        // TODO simulates the entire run of the word in configuration on the automata
+    // simulates the entire run on the word in configuration (or the remaining word) and returns true if the
+    // last state is accepting and false if it isn't
+    run(): boolean {
+
+        while(this.configuration.remainingInput.length>0){
+            const nextCommand = new NextStepCommand(this);
+            if (nextCommand.execute()) {
+                this.commandHistory.push(nextCommand); 
+               }
+        }
+        this.automaton.finalStateIds.forEach(element  => {if(element===this.configuration.stateId) return true; });
+        return false;
     }
 
 
 }
 
-export abstract class RunCommand<T> {
-    simulation: ISimulation<T>;
+export abstract class RunCommand {
+    simulation: ISimulation;
     backup?: IConfigurationMemento;
-    result?: T;
+    result?: IEdge;
 
-    protected constructor(_simulation: ISimulation<T>) {
+    protected constructor(_simulation: ISimulation) {
         this.simulation = _simulation;
     }
 
@@ -229,11 +240,11 @@ export abstract class RunCommand<T> {
         }
     }
 
-    getResult(): T | undefined {
+    getResult(): IEdge | undefined {
         return this.result;
     }
 
-    abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...
+    abstract execute(): IErrorMessage | void; // this.saveBackup(); ...perform command...
 }
 
 export abstract class EditCommand<T = void> {
