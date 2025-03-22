@@ -4,7 +4,7 @@ import {AbstractAutomatonFactory} from "../src/types/factories";
 import { NextStepCommand } from "../src/types/commands/run";
 
 
-test("NextStepCommand/Visitor test", () =>{
+test("nextStepCommand Visitor test", () =>{
     const factory = new AbstractAutomatonFactory ( AutomatonType.FINITE );
     
     const automaton = factory.createAutomaton("0");
