@@ -27,7 +27,23 @@ export default tseslint.config(
       ],
       "@stylistic/semi": "error",
       "no-extra-parens": ["error", "all"],
-      "quotes": [2, "double", { "avoidEscape": true }]
+      "quotes": [2, "double", { "avoidEscape": true }],
+      "@stylistic/indent": ["error", 2],
+      "@stylistic/space-before-blocks": ["error", "always"],
+      "@stylistic/space-in-parens": ["error", "never"],
+      "@stylistic/space-infix-ops": "error",
+      "@stylistic/keyword-spacing": ["error", { before: true, after: true }],
+      "@stylistic/comma-spacing": ["error", { before: false, after: true }],
+      "@stylistic/object-curly-spacing": ["error", "always"],
+      "@stylistic/array-bracket-spacing": ["error", "never"],
+      "@stylistic/block-spacing": ["error", "always"],
+
+      "@stylistic/no-multiple-empty-lines": ["error", { max: 1 }],
+      "@stylistic/eol-last": ["error", "always"],
+      "@stylistic/no-trailing-spaces": "error",
+
+      "curly": ["error", "all"],
+      "arrow-body-style": ["error", "as-needed"]
     },
   },
 );
