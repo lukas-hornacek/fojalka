@@ -1,6 +1,6 @@
 import {IErrorMessage} from "./common.ts";
 import {arraysEqual} from "../utils.ts";
-import { NextStepCommand } from "./commands/run";
+import {NextStepCommand} from "./commands/run";
 
 export enum AutomatonType {
     FINITE = "FINITE",
@@ -170,7 +170,7 @@ class PDAConfigurationMemento implements IConfigurationMemento {
     }
 }
 
-export interface ISimulation{
+export interface ISimulation {
     automaton: IAutomaton;
     configuration: IAutomatonConfiguration;
 
@@ -184,9 +184,9 @@ export interface ISimulation{
 export class Simulation implements ISimulation {
     automaton: IAutomaton;
     configuration: IAutomatonConfiguration;
-    commandHistory: (RunCommand)[];
+    commandHistory: RunCommand[];
 
-    constructor(_automaton: IAutomaton, _configuration: IAutomatonConfiguration){
+    constructor(_automaton: IAutomaton, _configuration: IAutomatonConfiguration) {
             this.automaton = _automaton;
             this.configuration = _configuration;
             this.commandHistory = [];
@@ -194,31 +194,30 @@ export class Simulation implements ISimulation {
 
     executeCommand(command: RunCommand): void {
         if (command.execute()) {
-             this.commandHistory.push(command); 
-            }
+            this.commandHistory.push(command); 
+        }
         // maybe return error if fails to execute
     }
     undo(): void {
         const command = this.commandHistory.pop();
-        if (command === undefined) return; // maybe error message when we try undo on empty history
-            else command.undo();
+        if (command === undefined) {
+            return; // maybe error message when we try undo on empty history
+        } else {
+            command.undo();
+        }
     }
 
     // simulates the entire run on the word in configuration (or the remaining word) and returns true if the
     // last state is accepting and false if it isn't
     run(): boolean {
-
         while(this.configuration.remainingInput.length>0){
             const nextCommand = new NextStepCommand(this);
             if (nextCommand.execute()) {
                 this.commandHistory.push(nextCommand); 
-               }
-        }
-        this.automaton.finalStateIds.forEach(element  => {if(element===this.configuration.stateId) return true; });
-        return false;
+            }
+        }   
+        return this.automaton.finalStateIds.some(finalStateId => this.configuration.stateId === finalStateId);
     }
-
-
 }
 
 export abstract class RunCommand {

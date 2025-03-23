@@ -21,14 +21,16 @@ export class NextStepVisitor implements IConfigurationVisitor {
         let nextState: string | undefined;
         const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
         for (const key in delta){
-            const edge = delta[key][0];
-            if (edge.inputChar == nextSymbol) nextState = key;
+            const edges = delta[key];
+            for(let i = 0; i< edges.length; i++){ 
+                if (edges[i].inputChar == nextSymbol) nextState = key;
+            }
         }
 
         if (nextState === undefined)    return configuration;
             else {
-                const NewConfiguration = new FiniteConfiguration(nextState, configuration.remainingInput.slice(1));
-                return NewConfiguration;
+                const newConfiguration = new FiniteConfiguration(nextState, configuration.remainingInput.slice(1));
+                return newConfiguration;
             }
     };
 
