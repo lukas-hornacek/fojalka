@@ -12,17 +12,11 @@ export class NextStepCommand extends RunCommand {
     execute(): IErrorMessage | void {
         this.saveBackup();
         const nextStepVisitor = new NextStepVisitor(this.simulation.automaton);
-        
-        const oldState = this.simulation.configuration.stateId;
-        const usedSymbol = this.simulation.configuration.remainingInput[0];
+
         this.simulation.configuration = this.simulation.configuration.accept(nextStepVisitor);
 
-        const newState = this.simulation.configuration.stateId;
-        
-        const edges = this.simulation.automaton.deltaFunctionMatrix[oldState][newState];
-        for(let i = 0; i< edges.length; i++){ 
-            if (edges[i].inputChar == usedSymbol) this.result = edges[i];
-        }
+        this.result = nextStepVisitor.result;
+    
         return;
     }
 }
