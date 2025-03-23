@@ -27,11 +27,12 @@ export class NextStepVisitor implements IConfigurationVisitor {
             }
         }
 
-        if (nextState === undefined)    return configuration;
-            else {
-                const newConfiguration = new FiniteConfiguration(nextState, configuration.remainingInput.slice(1));
-                return newConfiguration;
-            }
+        if (nextState === undefined) {
+            return configuration;
+        } else {
+            const newConfiguration = new FiniteConfiguration(nextState, configuration.remainingInput.slice(1));
+            return newConfiguration;
+        }
     };
 
     
