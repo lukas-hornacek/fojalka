@@ -20,10 +20,10 @@ export class NextStepVisitor implements IConfigurationVisitor {
 
         let nextState: string | undefined;
         const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
-        for (const key in delta){
-            const edges = delta[key];
+        for (const fromState in delta){
+            const edges = delta[fromState];
             for(let i = 0; i< edges.length; i++){ 
-                if (edges[i].inputChar == nextSymbol) nextState = key;
+                if (edges[i].inputChar == nextSymbol) nextState = fromState;
             }
         }
 
