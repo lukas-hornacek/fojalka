@@ -1,8 +1,8 @@
-import {RunCommand, ISimulation} from "../types.ts";
+import {RunCommand, ISimulation, IEdge} from "../types.ts";
 import {IErrorMessage} from "../common.ts";
 import {NextStepVisitor} from "../visitors/configuration.ts";
 
-export class NextStepCommand extends RunCommand {
+export class NextStepCommand extends RunCommand<IEdge> {
 
     constructor (_simulation: ISimulation){
         super (_simulation);
