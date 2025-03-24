@@ -23,7 +23,7 @@ test("nextStepCommand Visitor test", () =>{
     const command = new NextStepCommand(simulation);
     expect(simulation.configuration.stateId).toBe("0");
     simulation.executeCommand(command);
-    //expect (command.result?.id).toBe("0");
-    //expect (simulation.configuration.stateId).toBe("1");
+    expect (command.result?.id).toBe("0");
+    expect (simulation.configuration.stateId).toBe("1");
 
 });

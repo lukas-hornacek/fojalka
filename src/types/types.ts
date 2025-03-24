@@ -184,7 +184,7 @@ export interface ISimulation {
 export class Simulation implements ISimulation {
     automaton: IAutomaton;
     configuration: IAutomatonConfiguration;
-    commandHistory: RunCommand<unknown>[];
+    commandHistory: RunCommand<IEdge>[];
 
     constructor(_automaton: IAutomaton, _configuration: IAutomatonConfiguration) {
             this.automaton = _automaton;
@@ -192,7 +192,7 @@ export class Simulation implements ISimulation {
             this.commandHistory = [];
     }
 
-    executeCommand(command: RunCommand): void {
+    executeCommand(command: RunCommand<IEdge>): void {
         if (command.execute()) {
             this.commandHistory.push(command); 
         }
