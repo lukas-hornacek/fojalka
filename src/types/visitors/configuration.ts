@@ -18,7 +18,7 @@ export class NextStepVisitor implements IConfigurationVisitor {
   // (which has currnet StateId and next symbol) and the FiniteAutomaton in this.automaton (using the deltaFunction)
   // stores the edge traversed in this.result
   visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration {
-    if (configuration.remainingInput.length == 0) {
+    if (configuration.remainingInput.length === 0) {
       return configuration;
     }
     const nextSymbol = configuration.remainingInput[0];
@@ -28,7 +28,7 @@ export class NextStepVisitor implements IConfigurationVisitor {
     for (const fromState in delta) {
       const edges = delta[fromState];
       for (let i = 0; i < edges.length; i++) {
-        if (edges[i].inputChar == nextSymbol) {
+        if (edges[i].inputChar === nextSymbol) {
           nextState = fromState;
           this.result = edges[i];
         }

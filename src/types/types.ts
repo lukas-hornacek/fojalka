@@ -193,10 +193,10 @@ export class Simulation implements ISimulation {
   }
 
   executeCommand(command: RunCommand<unknown>): void {
-    if (command.execute()) {
+    if (command.execute() === undefined) {
       this.commandHistory.push(command);
     }
-
+    //TODO else if error respond to it
   }
   undo(): void {
     const command = this.commandHistory.pop();
@@ -212,9 +212,10 @@ export class Simulation implements ISimulation {
   run(): boolean {
     while (this.configuration.remainingInput.length > 0) {
       const nextCommand = new NextStepCommand(this);
-      if (nextCommand.execute()) {
+      if (nextCommand.execute() === undefined) {
         this.commandHistory.push(nextCommand);
       }
+      //TODO else if error respond to it
     }
     return this.automaton.finalStateIds.some(finalStateId => this.configuration.stateId === finalStateId);
   }
