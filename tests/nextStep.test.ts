@@ -12,9 +12,9 @@ test("nextStepCommand Visitor test", () =>{
   expect(automaton.initialStateId).toBe("0");
 
   const addState = new AddStateCommand(automaton, "1");
-  addState.execute();
+  automaton.executeCommand(addState);
   const addEdge = new AddEdgeCommand(automaton, "0", "1", new FiniteAutomatonEdge("0", "a"));
-  addEdge.execute();
+  automaton.executeCommand(addEdge);
 
   const configuration = new FiniteConfiguration("0", ["a", "b", "c"]);
 

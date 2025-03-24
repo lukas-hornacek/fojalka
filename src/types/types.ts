@@ -196,12 +196,12 @@ export class Simulation implements ISimulation {
     if (command.execute()) {
       this.commandHistory.push(command);
     }
-    // maybe return error if fails to execute
+
   }
   undo(): void {
     const command = this.commandHistory.pop();
     if (command === undefined) {
-      return; // maybe error message when we try undo on empty history
+      return;
     } else {
       command.undo();
     }
@@ -243,7 +243,7 @@ export abstract class RunCommand<T = void> {
     return this.result;
   }
 
-  abstract execute(): IErrorMessage | void; // this.saveBackup(); ...perform command...
+  abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...
 }
 
 export abstract class EditCommand<T = void> {
