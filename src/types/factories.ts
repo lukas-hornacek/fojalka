@@ -48,7 +48,7 @@ export class AbstractAutomatonFactory implements IAutomatonFactory {
 export class FiniteAutomatonFactory implements IAutomatonFactory {
   createAutomaton(initialStateId: string): IAutomaton {
     return new Automaton({
-      states: [],
+      states: [initialStateId],
       deltaFunctionMatrix: {},
       automatonType: AutomatonType.FINITE,
       initialStateId,
@@ -67,7 +67,7 @@ export class FiniteAutomatonFactory implements IAutomatonFactory {
 export class PDAFactory implements IAutomatonFactory {
   createAutomaton(initialStateId: string): IAutomaton {
     return new Automaton({
-      states: [],
+      states: [initialStateId],
       deltaFunctionMatrix: {},
       automatonType: AutomatonType.PDA,
       initialStateId,

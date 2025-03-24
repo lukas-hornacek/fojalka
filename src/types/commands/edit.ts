@@ -24,6 +24,10 @@ export class AddEdgeCommand extends EditCommand {
       );
     }
 
+    if (this.automaton.deltaFunctionMatrix?.[this.fromStateId] === undefined) {
+      this.automaton.deltaFunctionMatrix[this.fromStateId] = {};
+    }
+
     if (this.automaton.deltaFunctionMatrix?.[this.fromStateId]?.[this.toStateId] === undefined) {
       this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId] = [];
     }
