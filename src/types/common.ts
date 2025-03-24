@@ -1,11 +1,11 @@
 export interface IErrorMessage {
-    details: string;
+  details: string;
 }
 
 export class ErrorMessage implements IErrorMessage {
-    details: string;
+  details: string;
 
-    constructor(_details: string) {
-        this.details = _details;
-    }
+  constructor(_details: string) {
+    this.details = _details;
+  }
 }
