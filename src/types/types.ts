@@ -174,8 +174,8 @@ export interface ISimulation {
     automaton: IAutomaton;
     configuration: IAutomatonConfiguration;
 
-    commandHistory: RunCommand[];
-    executeCommand(command: RunCommand): void; // if (command.execute()) { commandHistory.push(command); }
+    commandHistory: RunCommand<unknown>[];
+    executeCommand(command: RunCommand<unknown>): void; // if (command.execute()) { commandHistory.push(command); }
     undo(): void; // command = commandHistory.pop(); command.undo();
 
     run(): void;
@@ -184,7 +184,7 @@ export interface ISimulation {
 export class Simulation implements ISimulation {
     automaton: IAutomaton;
     configuration: IAutomatonConfiguration;
-    commandHistory: RunCommand[];
+    commandHistory: RunCommand<unknown>[];
 
     constructor(_automaton: IAutomaton, _configuration: IAutomatonConfiguration) {
             this.automaton = _automaton;
@@ -220,10 +220,10 @@ export class Simulation implements ISimulation {
     }
 }
 
-export abstract class RunCommand {
+export abstract class RunCommand<T = void> {
     simulation: ISimulation;
     backup?: IConfigurationMemento;
-    result?: IEdge;
+    result?: T;
 
     protected constructor(_simulation: ISimulation) {
         this.simulation = _simulation;
@@ -239,7 +239,7 @@ export abstract class RunCommand {
         }
     }
 
-    getResult(): IEdge | undefined {
+    getResult(): T | undefined {
         return this.result;
     }
 
