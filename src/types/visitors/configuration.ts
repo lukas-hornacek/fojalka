@@ -27,7 +27,7 @@ export class NextStepVisitor implements IConfigurationVisitor {
     const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
     for (const fromState in delta) {
       const edges = delta[fromState];
-      for (let i = 0; i < edges.length; i++) { 
+      for (let i = 0; i < edges.length; i++) {
         if (edges[i].inputChar == nextSymbol) {
           nextState = fromState;
           this.result = edges[i];
