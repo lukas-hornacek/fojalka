@@ -46,7 +46,7 @@ export class Grammar {
         this.terminalSymbols = terminalSymbols;
         this.initialNonTerminalSymbol = initialNonTerminalSymbol;
         this.productionRules = [];
-        this.commandHistory = []
+        this.commandHistory = [];
     }
 
     hasNonTerminalSymbol(findNonTerminal: string): boolean{
@@ -57,7 +57,7 @@ export class Grammar {
     }
     
     executeCommand<T>(command: GrammarEditCommand<T>): void {
-        let res = command.execute();
+        const res = command.execute();
         if(res == undefined) {
             this.commandHistory.push(command);
         } else {
@@ -74,7 +74,7 @@ export class Grammar {
     }
 
     save(): GrammarMemento {
-        return new GrammarMemento(this.grammarType, this.nonTerminalSymbols, this.terminalSymbols, this.initialNonTerminalSymbol, this.productionRules)
+        return new GrammarMemento(this.grammarType, this.nonTerminalSymbols, this.terminalSymbols, this.initialNonTerminalSymbol, this.productionRules);
     }
     restore(memento: GrammarMemento): void {
         this.grammarType = memento.grammarType;
@@ -82,7 +82,7 @@ export class Grammar {
         this.terminalSymbols = memento.terminalSymbols;
         this.initialNonTerminalSymbol = memento.initialNonTerminalSymbol;
         this.productionRules = memento.productionRules;
-        this.commandHistory = []
+        this.commandHistory = [];
     }
 }
 
@@ -137,18 +137,31 @@ class SententialFormMemento {
     }
 }
 
-export interface IGrammarSimulation {
+export abstract class IGrammarSimulation {
     grammar: Grammar;
     sententialForm: SententialForm;
+    commandHistory: GrammarRunCommand<unknown>[];
+    
+    constructor(grammar: Grammar,sententialForm: SententialForm) {
+        this.grammar = grammar;
+        this.sententialForm = sententialForm;
+        this.commandHistory = [];
+    }
 
-    commandHistory: RunCommand<unknown>[];
-    executeCommand<T>(command: RunCommand<T>): void; // if (command.execute()) { commandHistory.push(command); }
-    undo(): void; // command = commandHistory.pop(); command.undo();
+    executeCommand<T>(command: GrammarRunCommand<T>): void {
+        if (command.execute()) {
+            this.commandHistory.push(command);
+        }
+    }
+    undo(): void {
+        this.commandHistory.pop()?.undo();
+    }
 
-    run(): void;
+    abstract run(): void;
 }
 
-export abstract class RunCommand<T = void> {
+// prob LR or RR parsing commands
+export abstract class GrammarRunCommand<T = void> {
     simulation: IGrammarSimulation;
     backup?: SententialFormMemento;
     result?: T;
@@ -171,7 +184,7 @@ export abstract class RunCommand<T = void> {
         return this.result;
     }
 
-    abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...
+    abstract execute(): IErrorMessage | undefined;
 }
 
 export abstract class GrammarEditCommand<T = void> {
@@ -202,66 +215,73 @@ export abstract class GrammarEditCommand<T = void> {
 
 export class AddProductionRuleCommand extends GrammarEditCommand {
     productionRule: ProductionRule;
-    
+
     constructor(grammar: Grammar, productionRule: ProductionRule) {
         super(grammar);
         this.productionRule = productionRule;
     }
 
     execute(): IErrorMessage | undefined {
-        if(this.productionRule.inputNonTerminal == null) {
-            return new ErrorMessage(`Cannot add production rule: input non-terminal is empty.`);
+        if (this.productionRule.inputNonTerminal == null) {
+            return new ErrorMessage("Cannot add production rule: input non-terminal is empty.");
         }
-        if(this.productionRule.outputSymbols === undefined || this.productionRule.outputSymbols.length == 0) {
-            return new ErrorMessage(`Cannot add production rule: output symbols are empty.`);
+        if (this.productionRule.outputSymbols === undefined || this.productionRule.outputSymbols.length == 0) {
+            return new ErrorMessage("Cannot add production rule: output symbols are empty.");
         }
-        if(!this.grammar.hasNonTerminalSymbol(this.productionRule.inputNonTerminal)) {
+        if (!this.grammar.hasNonTerminalSymbol(this.productionRule.inputNonTerminal)) {
             return new ErrorMessage(`Cannot add production rule: non-terminal ${this.productionRule.inputNonTerminal} is not present in grammar's non-terminals ${this.grammar.nonTerminalSymbols}`);
         }
-        for(let outputSymbol of this.productionRule.outputSymbols) {
+        for (const outputSymbol of this.productionRule.outputSymbols) {
             if (!this.grammar.hasNonTerminalSymbol(outputSymbol) && !this.grammar.hasTerminalSymbol(outputSymbol)) {
                 return new ErrorMessage(`Cannot add production rule: output symbol ${outputSymbol} is not present in grammar's non-terminals ${this.grammar.nonTerminalSymbols} or terminals ${this.grammar.terminalSymbols}`);
             }
         }
-        
-        if(this.grammar.grammarType == GrammarType.REGULAR) {
-            //P ⊆ N × T∗ (N ∪ {ε})
-            let lastOutputSymbol = this.productionRule.outputSymbols.slice(-1)[0];
-            let lastOutputSymbolIsEpsilon = lastOutputSymbol.length === 0;
-            let lastOutputSymbolIsNonTerminal = this.grammar.hasNonTerminalSymbol(lastOutputSymbol);
-            let prefixOutputSymbols = this.productionRule.outputSymbols.slice(0, -1);
-            let prefixOutputSymbolsIsTerminal = prefixOutputSymbols.every(this.grammar.hasTerminalSymbol); // returns true for empty (Vacuous truth)
-            let productionRuleIsContextFree = prefixOutputSymbolsIsTerminal && (lastOutputSymbolIsEpsilon || lastOutputSymbolIsNonTerminal);
 
-            if(!productionRuleIsContextFree) {
+        if (this.grammar.grammarType == GrammarType.REGULAR) {
+            //P ⊆ N × T∗ (N ∪ {ε})
+            const lastOutputSymbol = this.productionRule.outputSymbols.slice(-1)[0];
+            const lastOutputSymbolIsEpsilon = lastOutputSymbol.length === 0;
+            const lastOutputSymbolIsNonTerminal = this.grammar.hasNonTerminalSymbol(lastOutputSymbol);
+            const prefixOutputSymbols = this.productionRule.outputSymbols.slice(0, -1);
+            // fuck this, this is undefined.....
+            // const prefixOutputSymbolsIsTerminal = prefixOutputSymbols.every(prefixOutputSymbol => this.grammar.hasTerminalSymbol(prefixOutputSymbol)); // returns true for empty (Vacuous truth)
+            // fuck this, this is undefined in grammar.....
+            // const prefixOutputSymbolsIsTerminal = prefixOutputSymbols.every(this.grammar.hasTerminalSymbol); // returns true for empty (Vacuous truth)
+            let prefixOutputSymbolsIsTerminal = true;
+            for(const prefixOutputSymbol of prefixOutputSymbols) {
+                prefixOutputSymbolsIsTerminal &&= this.grammar.hasTerminalSymbol(prefixOutputSymbol);
+            }
+            const productionRuleIsContextFree = prefixOutputSymbolsIsTerminal && (lastOutputSymbolIsEpsilon || lastOutputSymbolIsNonTerminal);
+
+            if (!productionRuleIsContextFree) {
                 return new ErrorMessage(`Cannot add production rule: production rule ${this.productionRule} is not a regular rule.`);
             }
-        } else if(this.grammar.grammarType == GrammarType.CONTEXT_FREE) {
+        } else if (this.grammar.grammarType == GrammarType.CONTEXT_FREE) {
             // OK by default
         }
 
-        if(this.grammar.productionRules.includes(this.productionRule)) {
+        if (this.grammar.productionRules.includes(this.productionRule)) {
             return new ErrorMessage(`Cannot add production rule: ${this.productionRule.toString()}: is already present.`);
         }
 
         this.saveBackup();
         this.grammar.productionRules.push(this.productionRule);
-        
+
         return undefined;
     }
 }
 
 export class RemoveProductionRuleCommand extends GrammarEditCommand {
     productionRuleId: string;
-    
+
     constructor(grammar: Grammar, productionRuleId: string) {
         super(grammar);
         this.productionRuleId = productionRuleId;
     }
-    
+
     execute(): IErrorMessage | undefined {
-        let newProductionRules = this.grammar.productionRules.filter(productionRule => productionRule.id === this.productionRuleId);
-        if(newProductionRules.length === this.grammar.productionRules.length) {
+        const newProductionRules = this.grammar.productionRules.filter(productionRule => productionRule.id === this.productionRuleId);
+        if (newProductionRules.length === this.grammar.productionRules.length) {
             return new ErrorMessage(`Cannot remove production rule ${this.productionRuleId}: production rule is not present.`);
         }
         this.saveBackup();
