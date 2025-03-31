@@ -88,7 +88,7 @@ export class ContextFreeGrammarFactory extends IGrammarFactory {
   }
   public createProductionRule(inputNonTerminal: string, outputSymbols: string[], _grammar: Grammar): ProductionRule {
     if (_grammar == null) {
-        throw "Fuck eslint when so that i can successfully commit this shit.";
+      throw "Fuck eslint when so that i can successfully commit this shit.";
     }
     return ProductionRule.createByFactory(this.nextProductionRuleString(), inputNonTerminal, outputSymbols);
   }

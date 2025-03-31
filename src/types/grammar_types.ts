@@ -85,7 +85,6 @@ export class Grammar {
     this.terminalSymbols = memento.terminalSymbols;
     this.initialNonTerminalSymbol = memento.initialNonTerminalSymbol;
     this.productionRules = memento.productionRules;
-    this.commandHistory = [];
   }
 }
 
