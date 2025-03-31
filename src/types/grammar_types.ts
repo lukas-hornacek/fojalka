@@ -62,7 +62,7 @@ export class Grammar {
 
   executeCommand<T>(command: GrammarEditCommand<T>): void {
     const res = command.execute();
-    if (res == undefined) {
+    if (res === undefined) {
       this.commandHistory.push(command);
     } else {
       throw res;
@@ -219,13 +219,6 @@ export class AddProductionRuleCommand extends GrammarEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-
-    if (this.grammar.grammarType == GrammarType.REGULAR) {
-      //P ⊆ N × T∗ (N ∪ {ε})
-    } else if (this.grammar.grammarType == GrammarType.CONTEXT_FREE) {
-      // OK by default
-    }
-
     if (this.grammar.productionRules.includes(this.productionRule)) {
       return new ErrorMessage(`Cannot add production rule: ${this.productionRule.toString()}: is already present.`);
     }

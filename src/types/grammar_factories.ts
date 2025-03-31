@@ -37,7 +37,7 @@ export class AbstractGrammarFactory extends IGrammarFactory {
     return this.internalFactory.createGrammar(nonTerminalSymbols, terminalSymbols, initialNonTerminalSymbol);
   }
   public createProductionRule(inputNonTerminal: string, outputSymbols: string[], grammar: Grammar): ProductionRule {
-    if (inputNonTerminal == null) {
+    if (inputNonTerminal === null) {
       throw new ErrorMessage("Cannot add production rule: input non-terminal is empty.");
     } else if (outputSymbols === undefined) {
       throw new ErrorMessage("Cannot add production rule: output symbols are empty.");
@@ -87,7 +87,7 @@ export class ContextFreeGrammarFactory extends IGrammarFactory {
     return new Grammar(GrammarType.CONTEXT_FREE, nonTerminalSymbols, terminalSymbols, initialNonTerminalSymbol);
   }
   public createProductionRule(inputNonTerminal: string, outputSymbols: string[], _grammar: Grammar): ProductionRule {
-    if (_grammar == null) {
+    if (_grammar === null) {
       throw "Fuck eslint when so that i can successfully commit this shit.";
     }
     return ProductionRule.createByFactory(this.nextProductionRuleString(), inputNonTerminal, outputSymbols);
