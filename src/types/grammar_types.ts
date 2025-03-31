@@ -11,10 +11,14 @@ export class ProductionRule {
   inputNonTerminal: string;
   outputSymbols: string[];
 
-  constructor(_id: string, inputNonTerminal: string, outputSymbols: string[]) {
+  private constructor(_id: string, inputNonTerminal: string, outputSymbols: string[]) {
     this.id = _id;
     this.inputNonTerminal = inputNonTerminal;
     this.outputSymbols = outputSymbols;
+  }
+
+  static createByFactory(_id: string, inputNonTerminal: string, outputSymbols: string[]): ProductionRule {
+    return new ProductionRule(_id, inputNonTerminal, outputSymbols);
   }
 
   equals(other: ProductionRule): boolean {
@@ -216,40 +220,9 @@ export class AddProductionRuleCommand extends GrammarEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    if (this.productionRule.inputNonTerminal == null) {
-      return new ErrorMessage("Cannot add production rule: input non-terminal is empty.");
-    }
-    if (this.productionRule.outputSymbols === undefined || this.productionRule.outputSymbols.length == 0) {
-      return new ErrorMessage("Cannot add production rule: output symbols are empty.");
-    }
-    if (!this.grammar.hasNonTerminalSymbol(this.productionRule.inputNonTerminal)) {
-      return new ErrorMessage(`Cannot add production rule: non-terminal ${this.productionRule.inputNonTerminal} is not present in grammar's non-terminals ${this.grammar.nonTerminalSymbols}`);
-    }
-    for (const outputSymbol of this.productionRule.outputSymbols) {
-      if (!this.grammar.hasNonTerminalSymbol(outputSymbol) && !this.grammar.hasTerminalSymbol(outputSymbol)) {
-        return new ErrorMessage(`Cannot add production rule: output symbol ${outputSymbol} is not present in grammar's non-terminals ${this.grammar.nonTerminalSymbols} or terminals ${this.grammar.terminalSymbols}`);
-      }
-    }
 
     if (this.grammar.grammarType == GrammarType.REGULAR) {
       //P ⊆ N × T∗ (N ∪ {ε})
-      const lastOutputSymbol = this.productionRule.outputSymbols.slice(-1)[0];
-      const lastOutputSymbolIsEpsilon = lastOutputSymbol.length === 0;
-      const lastOutputSymbolIsNonTerminal = this.grammar.hasNonTerminalSymbol(lastOutputSymbol);
-      const prefixOutputSymbols = this.productionRule.outputSymbols.slice(0, -1);
-      // fuck this, this is undefined.....
-      // const prefixOutputSymbolsIsTerminal = prefixOutputSymbols.every(prefixOutputSymbol => this.grammar.hasTerminalSymbol(prefixOutputSymbol)); // returns true for empty (Vacuous truth)
-      // fuck this, this is undefined in grammar.....
-      // const prefixOutputSymbolsIsTerminal = prefixOutputSymbols.every(this.grammar.hasTerminalSymbol); // returns true for empty (Vacuous truth)
-      let prefixOutputSymbolsIsTerminal = true;
-      for (const prefixOutputSymbol of prefixOutputSymbols) {
-        prefixOutputSymbolsIsTerminal &&= this.grammar.hasTerminalSymbol(prefixOutputSymbol);
-      }
-      const productionRuleIsContextFree = prefixOutputSymbolsIsTerminal && (lastOutputSymbolIsEpsilon || lastOutputSymbolIsNonTerminal);
-
-      if (!productionRuleIsContextFree) {
-        return new ErrorMessage(`Cannot add production rule: production rule ${this.productionRule} is not a regular rule.`);
-      }
     } else if (this.grammar.grammarType == GrammarType.CONTEXT_FREE) {
       // OK by default
     }
