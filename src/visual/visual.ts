@@ -7,7 +7,7 @@ export interface IVisual {
   fit: () => void;
   addNode: (id: string, position: { x: number; y: number }) => void;
   removeNode: (id: string) => void;
-  addEdge: (from: string, to: string, id: string) => void;
+  addEdge: (from: string, to: string, id: string, label: string) => void;
   removeEdge: (id: string) => void;
 }
 
@@ -40,11 +40,16 @@ export class Visual implements IVisual {
             "target-arrow-color": "#ccc",
             "target-arrow-shape": "triangle",
             "curve-style": "bezier",
-            label: "data(id)",
+            label: "data(label)",
           },
         },
       ],
       layout: { name: "preset" },
+    });
+
+    // for debugging only
+    this.cy.on("tap", "node, edge", (e) => {
+      console.log(e.target.id());
     });
   }
 
@@ -60,8 +65,8 @@ export class Visual implements IVisual {
     this.cy?.remove(`node#${id}`);
   }
 
-  addEdge(from: string, to: string, id: string) {
-    this.cy?.add({ group: "edges", data: { id: id, source: from, target: to } });
+  addEdge(from: string, to: string, id: string, label: string) {
+    this.cy?.add({ group: "edges", data: { id: id, source: from, target: to, label: label } });
   }
 
   removeEdge(id: string) {

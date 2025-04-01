@@ -1,5 +1,32 @@
-import { IAutomaton, IEdge, EditCommand } from "../types.ts";
-import { ErrorMessage, IErrorMessage } from "../common.ts";
+import { IAutomaton, IAutomatonMemento } from "../automaton.ts";
+import { ErrorMessage, IErrorMessage } from "../../common.ts";
+import { IEdge } from "../edge.ts";
+
+export abstract class EditCommand<T = void> {
+  automaton: IAutomaton;
+  backup?: IAutomatonMemento;
+  result?: T;
+
+  protected constructor(_automaton: IAutomaton) {
+    this.automaton = _automaton;
+  }
+
+  saveBackup() {
+    this.backup = this.automaton.save();
+  }
+
+  undo() {
+    if (this.backup) {
+      this.automaton.restore(this.backup);
+    }
+  }
+
+  getResult(): T | undefined {
+    return this.result;
+  }
+
+  abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...
+}
 
 export class AddEdgeCommand extends EditCommand {
   fromStateId: string;

@@ -1,9 +1,11 @@
-import { AddEdgeCommand, AddStateCommand, RemoveEdgeCommand, RemoveStateCommand } from "./types/commands/edit";
-import { IErrorMessage } from "./types/common";
-import { IAutomatonFactory, AbstractAutomatonFactory, IUniversalEdgeProps } from "./types/factories";
-import { IAutomaton, ISimulation, AutomatonType, EditCommand, IEdge } from "./types/types";
+import { AddEdgeCommand, AddStateCommand, EditCommand, RemoveEdgeCommand, RemoveStateCommand } from "./automaton/commands/edit";
+import { IErrorMessage } from "./common";
+import { IAutomatonFactory, AbstractAutomatonFactory, IUniversalEdgeProps } from "./automaton/factories";
+import { IAutomaton, AutomatonType } from "./automaton/automaton";
+import { IEdge } from "./automaton/edge";
+import { ISimulation } from "./automaton/simulation";
 
-export interface IEngine {
+export interface IAutomatonEngine {
   undo: () => IErrorMessage | undefined;
   addState: (id: string) => IErrorMessage | undefined;
   removeState: (id: string) => IErrorMessage | undefined;
@@ -11,7 +13,7 @@ export interface IEngine {
   removeEdge: (from: string, to: string, id: string) => IErrorMessage | undefined;
 }
 
-export class Engine implements IEngine {
+export class Engine implements IAutomatonEngine {
   // used to create automata and edges
   factory: IAutomatonFactory;
   // the automaton in first window, which is always present

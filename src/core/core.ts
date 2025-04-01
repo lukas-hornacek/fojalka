@@ -1,7 +1,7 @@
-import { IEngine, Engine } from "../engine/engine";
-import { ErrorMessage, IErrorMessage } from "../engine/types/common";
-import { IUniversalEdgeProps } from "../engine/types/factories";
-import { AutomatonType } from "../engine/types/types";
+import { IAutomatonEngine, Engine } from "../engine/automaton_engine";
+import { ErrorMessage, IErrorMessage } from "../engine/common";
+import { IUniversalEdgeProps } from "../engine/automaton/factories";
+import { AutomatonType } from "../engine/automaton/automaton";
 import { IVisual, Visual } from "../visual/visual";
 
 enum Mode {
@@ -34,7 +34,7 @@ export class Core implements ICore {
   // used to create unique edge IDs
   edgeCounter: number = 0;
 
-  engine: IEngine = new Engine(this.automatonType);
+  engine: IAutomatonEngine = new Engine(this.automatonType);
   visualPrimary: IVisual = new Visual("cy-primary");
   visualSecondary: IVisual = new Visual("cy-secondary");
 
@@ -117,7 +117,8 @@ export class Core implements ICore {
       return error;
     }
 
-    this.visualPrimary.addEdge(from, to, props.id);
+    // TODO the label should use all relevant props for each AutomatonType
+    this.visualPrimary.addEdge(from, to, props.id, props.inputChar);
 
     this.edgeCounter++;
   }
