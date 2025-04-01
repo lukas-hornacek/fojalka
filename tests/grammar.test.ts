@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { AbstractGrammarFactory  } from "../src/types/grammar_factories.ts";
-import { AddProductionRuleCommand, GrammarType } from "../src/types/grammar_types.ts";
+import { AbstractGrammarFactory  } from "../src/engine/types/grammar_factories.ts";
+import { AddProductionRuleCommand, GrammarType } from "../src/engine/types/grammar_types.ts";
 
 test("Regular grammar test", () => {
   const agf = new AbstractGrammarFactory(GrammarType.REGULAR);

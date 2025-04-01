@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
-import { NextStepCommand } from "../src/types/commands/run";
-import { AddEdgeCommand, AddStateCommand } from "../src/types/commands/edit";
-import { AutomatonType, FiniteAutomatonEdge, FiniteConfiguration, Simulation } from "../src/types/types";
-import { AbstractAutomatonFactory } from "../src/types/factories";
+import { NextStepCommand } from "../src/engine/types/commands/run";
+import { AddEdgeCommand, AddStateCommand } from "../src/engine/types/commands/edit";
+import { AutomatonType, FiniteAutomatonEdge, FiniteConfiguration, Simulation } from "../src/engine/types/types";
+import { AbstractAutomatonFactory } from "../src/engine/types/factories";
 
 test("nextStepCommand Visitor test", () =>{
   const factory = new AbstractAutomatonFactory(AutomatonType.FINITE);
