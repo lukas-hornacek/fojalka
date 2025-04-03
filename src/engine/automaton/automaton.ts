@@ -1,6 +1,8 @@
 import { ErrorMessage, IErrorMessage } from "../common.ts";
 import { EditCommand } from "./commands/edit.ts";
+import { FiniteConfiguration, PDAConfiguration } from "./configuration.ts";
 import { IEdge } from "./edge.ts";
+import { ISimulation, Simulation } from "./simulation.ts";
 
 export enum AutomatonType {
   FINITE = "FINITE",
@@ -24,6 +26,8 @@ export interface IAutomaton {
 
   save(): IAutomatonMemento;
   restore(memento: IAutomatonMemento): void;
+
+  createRunSimulation(word: string[]): ISimulation;
 }
 
 export type AutomatonParams = {
@@ -83,6 +87,19 @@ export class Automaton implements IAutomaton {
     this.states = memento.states;
     this.deltaFunctionMatrix = memento.deltaFunctionMatrix;
     this.automatonType = memento.automatonType;
+  }
+
+  createRunSimulation(word: string[]): ISimulation {
+    switch (this.automatonType) {
+      case AutomatonType.FINITE:
+        return new Simulation(this, new FiniteConfiguration(this.initialStateId, word));
+      case AutomatonType.PDA:
+        // TODO what is initial stack symbol?
+        return new Simulation(this, new PDAConfiguration(this.initialStateId, word, ["Z"]));
+      case AutomatonType.TURING:
+        // TODO
+        throw new Error("Not implemented.");
+    }
   }
 }
 
