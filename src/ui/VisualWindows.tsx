@@ -18,8 +18,8 @@ export default function VisualWindows() {
     <>
       <ToggleWindow toggle={toggle}/>
       <div id="cy-window" className="d-flex flex-row">
-        <AutomatonWindow id="cy-primary" cols={cols} />
-        {showSecondary ? <AutomatonWindow id="cy-secondary" cols={6} /> : null}
+        <AutomatonWindow primary={true} cols={cols} />
+        {showSecondary ? <AutomatonWindow primary={false} cols={6} /> : null}
       </div>
     </>
   );

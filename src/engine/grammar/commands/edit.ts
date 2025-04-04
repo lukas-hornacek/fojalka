@@ -1,10 +1,12 @@
+import { Kind } from "../../../core/core";
+import { IEditCommandVisitor } from "../../automaton/visitors/editCommand";
 import { IErrorMessage, ErrorMessage } from "../../common";
 import { Grammar, GrammarMemento, ProductionRule } from "../grammar";
 
-export abstract class GrammarEditCommand<T = void> {
+export abstract class GrammarEditCommand {
+  kind = Kind.GRAMMAR as const;
   grammar: Grammar;
   backup?: GrammarMemento;
-  result?: T;
 
   protected constructor(grammar: Grammar) {
     this.grammar = grammar;
@@ -20,10 +22,7 @@ export abstract class GrammarEditCommand<T = void> {
     }
   }
 
-  getResult(): T | undefined {
-    return this.result;
-  }
-
+  abstract accept(visitor: IEditCommandVisitor): void;
   abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...
 }
 
@@ -33,6 +32,10 @@ export class AddProductionRuleCommand extends GrammarEditCommand {
   constructor(grammar: Grammar, productionRule: ProductionRule) {
     super(grammar);
     this.productionRule = productionRule;
+  }
+
+  accept(visitor: IEditCommandVisitor): void {
+    visitor.visitAddProductionRuleCommand(this);
   }
 
   execute(): IErrorMessage | undefined {
@@ -53,6 +56,10 @@ export class RemoveProductionRuleCommand extends GrammarEditCommand {
   constructor(grammar: Grammar, productionRuleId: string) {
     super(grammar);
     this.productionRuleId = productionRuleId;
+  }
+
+  accept(visitor: IEditCommandVisitor): void {
+    visitor.visitRemoveProductionRuleCommand(this);
   }
 
   execute(): IErrorMessage | undefined {

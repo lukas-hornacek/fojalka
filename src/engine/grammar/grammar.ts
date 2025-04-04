@@ -1,4 +1,5 @@
 import { arraysEqual } from "../../utils.ts";
+import { ErrorMessage, IErrorMessage } from "../common.ts";
 import { GrammarEditCommand } from "./commands/edit.ts";
 
 export enum GrammarType {
@@ -39,7 +40,7 @@ export class Grammar {
   terminalSymbols: string[];
   initialNonTerminalSymbol: string;
   productionRules: ProductionRule[];
-  commandHistory: GrammarEditCommand<unknown>[];
+  commandHistory: GrammarEditCommand[];
 
   constructor(grammarType: GrammarType,
     nonTerminalSymbols: string[],
@@ -60,7 +61,7 @@ export class Grammar {
     return this.terminalSymbols.some(terminal => terminal === findTerminal);
   }
 
-  executeCommand<T>(command: GrammarEditCommand<T>): void {
+  executeCommand(command: GrammarEditCommand): void {
     const res = command.execute();
     if (res === undefined) {
       this.commandHistory.push(command);
@@ -69,10 +70,12 @@ export class Grammar {
     }
 
   }
-  undo(): void {
+  undo(): IErrorMessage | undefined {
     const command = this.commandHistory.pop();
     if (command) {
       command.undo();
+    } else {
+      return new ErrorMessage("Cannot undo because command history is empty.");
     }
   }
 

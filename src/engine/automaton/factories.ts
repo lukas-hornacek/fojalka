@@ -16,6 +16,9 @@ export interface IAutomatonFactory {
 export class AbstractAutomatonFactory implements IAutomatonFactory {
   internalFactory: IAutomatonFactory;
 
+  // used to create unique edge IDs
+  edgeCounter: number = 0;
+
   constructor(automatonType: AutomatonType) {
     if (automatonType === AutomatonType.FINITE) {
       this.internalFactory = new FiniteAutomatonFactory();
@@ -34,6 +37,8 @@ export class AbstractAutomatonFactory implements IAutomatonFactory {
   }
 
   createEdge(edgeProps: IUniversalEdgeProps): IEdge {
+    edgeProps.id = `_${this.edgeCounter}`;
+    this.edgeCounter++;
     return this.internalFactory.createEdge(edgeProps);
   }
 }

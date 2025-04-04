@@ -1,6 +1,7 @@
 import { RunCommand, NextStepCommand } from "./commands/run";
 import { IAutomaton } from "./automaton";
 import { IAutomatonConfiguration } from "./configuration";
+import { ErrorMessage, IErrorMessage } from "../common";
 
 export interface ISimulation {
   automaton: IAutomaton;
@@ -8,8 +9,8 @@ export interface ISimulation {
   commandHistory: RunCommand<unknown>[];
 
   executeCommand(command: RunCommand<unknown>): void; // if (command.execute()) { commandHistory.push(command); }
-  undo(): void; // command = commandHistory.pop(); command.undo();
-  run(): void;
+  undo(): IErrorMessage | undefined;
+  run(): boolean;
 }
 
 export class Simulation implements ISimulation {
@@ -30,10 +31,10 @@ export class Simulation implements ISimulation {
     //TODO else if error respond to it
   }
 
-  undo(): void {
+  undo(): IErrorMessage | undefined {
     const command = this.commandHistory.pop();
     if (command === undefined) {
-      return;
+      return new ErrorMessage("Cannot undo because command history is empty.");
     } else {
       command.undo();
     }

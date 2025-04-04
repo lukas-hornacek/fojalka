@@ -1,5 +1,6 @@
 import { useContext, useRef } from "react";
 import { CoreContext } from "../core/CoreContext";
+import { Kind } from "../core/core";
 
 // buttons for testing interaction between UI and Core
 export default function EditButtons() {
@@ -15,42 +16,92 @@ export default function EditButtons() {
   }
 
   function addState() {
-    const e = coreContext?.addState(id.current, { x: 200, y: 50 });
-    if (e !== undefined) {
-      console.log(e.details);
+    const core = coreContext!.primary;
+
+    switch (core.kind) {
+      case Kind.AUTOMATON: {
+        const e = core.addState(id.current, { x: 200, y: 50 });
+        if (e !== undefined) {
+          console.log(e.details);
+        }
+        break;
+      }
+      case Kind.GRAMMAR:
+        console.log("Cannot add state to grammar.");
+        break;
     }
   }
 
   function removeState() {
-    const e = coreContext?.removeState(id.current);
-    if (e !== undefined) {
-      console.log(e.details);
+    const core = coreContext!.primary;
+
+    switch (core.kind) {
+      case Kind.AUTOMATON: {
+        const e = core.removeState(id.current);
+        if (e !== undefined) {
+          console.log(e.details);
+        }
+        break;
+      }
+      case Kind.GRAMMAR:
+        console.log("Cannot remove state from grammar.");
+        break;
     }
   }
 
   function addEdge() {
-    const e = coreContext?.addEdge(from.current, to.current, { id: "", inputChar: char.current });
-    if (e !== undefined) {
-      console.log(e.details);
+    const core = coreContext!.primary;
+
+    switch (core.kind) {
+      case Kind.AUTOMATON: {
+        const e = core.addEdge(from.current, to.current, { id: "", inputChar: char.current });
+        if (e !== undefined) {
+          console.log(e.details);
+        }
+        break;
+      }
+      case Kind.GRAMMAR:
+        console.log("Cannot add edge to grammar.");
+        break;
     }
   }
 
   function removeEdge() {
-    const e = coreContext?.removeEdge(from.current, to.current, id.current);
-    if (e !== undefined) {
-      console.log(e.details);
+    const core = coreContext!.primary;
+
+    switch (core.kind) {
+      case Kind.AUTOMATON: {
+        const e = core.removeEdge(from.current, to.current, id.current);
+        if (e !== undefined) {
+          console.log(e.details);
+        }
+        break;
+      }
+      case Kind.GRAMMAR:
+        console.log("Cannot remove edge from grammar.");
+        break;
     }
   }
 
   function undo() {
-    const e = coreContext?.undo();
+    const e = coreContext?.primary.undo();
     if (e !== undefined) {
       console.log(e.details);
     }
   }
 
   function fit() {
-    coreContext?.fit();
+    const core = coreContext!.primary;
+
+    switch (core.kind) {
+      case Kind.AUTOMATON: {
+        core.fit();
+        break;
+      }
+      case Kind.GRAMMAR:
+        console.log("Fit is not applicable to grammar window.");
+        break;
+    }
   }
 
   return (

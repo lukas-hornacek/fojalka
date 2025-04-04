@@ -1,138 +1,151 @@
-import { IAutomatonEngine, Engine } from "../engine/automaton_engine";
+import { IAlgorithm } from "../engine/algorithm";
 import { ErrorMessage, IErrorMessage } from "../engine/common";
-import { IUniversalEdgeProps } from "../engine/automaton/factories";
-import { AutomatonType } from "../engine/automaton/automaton";
-import { IVisual, Visual } from "../visual/visual";
+import { IAutomatonCore } from "./automatonCore";
+import { IGrammarCore } from "./grammarCore";
 
-enum Mode {
+export enum Mode {
   EDIT,
   VISUAL,
 }
 
-// holds most of global state, coordinates Visual and Core components
-// exposes interface that is used by UI
-export interface ICore {
-  // called from AutomatonWindow, which own the Cytoscape HTML element
-  init: (id: string) => IErrorMessage | undefined;
-
-  // centers the Cytoscape window to show the entire automaton
-  fit: () => void;
-
-  // basic edit functions
-  addState: (id: string, position: { x: number, y: number }) => IErrorMessage | undefined;
-  removeState: (id: string) => IErrorMessage | undefined;
-  addEdge: (from: string, to: string, props: IUniversalEdgeProps) => IErrorMessage | undefined;
-  removeEdge: (from: string, to: string, id: string) => IErrorMessage | undefined;
-  undo: () => IErrorMessage | undefined;
+export enum Kind {
+  GRAMMAR,
+  AUTOMATON,
 }
 
-// component that holds global state and coordinates Visual and Core components
+export type ICoreType = IAutomatonCore | IGrammarCore;
+
+export interface ICore {
+  mode: Mode,
+
+  primary: ICoreType,
+  secondary?: ICoreType,
+
+  // switches to edit mode and if there are two cores present, deletes one of them
+  switchToEditMode: (keepSecondary: boolean) => IErrorMessage | undefined;
+  // switches to visual mode without immediately running any algorithm/simulation (and therefore without creating second window)
+  switchToVisualMode: () => IErrorMessage | undefined;
+
+  // takes algorithm object or enum that is then pushed into factory
+  // creates simulation object, that can be used to call next() and undo()
+  // if needed, creates new core and stores it in secondary
+  algorithmStart: (algorithm: IAlgorithm) => IErrorMessage | undefined;
+  algorithmNext: () => IErrorMessage | undefined;
+  algorithmUndo: () => IErrorMessage | undefined;
+}
+
+// component that holds global state and Grammar/Automaton cores
 export class Core implements ICore {
   // current UI mode
   mode: Mode = Mode.EDIT;
-  automatonType: AutomatonType = AutomatonType.FINITE;
-  // used to create unique edge IDs
-  edgeCounter: number = 0;
 
-  engine: IAutomatonEngine = new Engine(this.automatonType);
-  visualPrimary: IVisual = new Visual("cy-primary");
-  visualSecondary: IVisual = new Visual("cy-secondary");
+  primary: ICoreType;
+  secondary?: ICoreType | undefined;
 
-  init(id: string) {
-    if (id === "cy-primary") {
-      this.visualPrimary.init();
-    } else if (id === "cy-secondary") {
-      this.visualSecondary.init();
-    } else {
-      return new ErrorMessage(`Invalid cytoscape element id '${id}'`);
-    }
+  algorithm?: IAlgorithm;
+
+  constructor(primary: ICoreType) {
+    this.mode = Mode.EDIT;
+    this.primary = primary;
   }
 
-  // TODO engine.undo() must be refactored to return information that can be used to reflect changes in visual
-  undo() {
-    return new ErrorMessage("Not implemented.");
-  }
-
-  fit() {
-    this.visualPrimary.fit();
-  }
-
-  addState(id: string, position: { x: number, y: number }) {
+  switchToEditMode(keepSecondary: boolean) {
     if (this.mode !== Mode.EDIT) {
-      return new ErrorMessage("Editing automaton is only permitted in edit mode.");
-    }
-    if (id.trim().length === 0) {
-      return new ErrorMessage("State ID must contain at least one non-whitespace character.");
-    }
-    if (id.charAt(0) == "_") {
-      return new ErrorMessage("State ID cannot start with an underscore");
+      return new ErrorMessage("Cannot switch to edit mode when already in edit mode.");
     }
 
-    const error = this.engine.addState(id);
-    if (error !== undefined) {
-      return error;
-    }
-
-    this.visualPrimary.addNode(id, position);
-  }
-
-  removeState(id: string) {
-    if (this.mode !== Mode.EDIT) {
-      return new ErrorMessage("Editing automaton is only permitted in edit mode.");
-    }
-
-    const error = this.engine.removeState(id);
-    if (error !== undefined) {
-      return error;
-    }
-
-    this.visualPrimary.removeNode(id);
-  }
-
-  addEdge(from: string, to: string, props: IUniversalEdgeProps) {
-    if (this.mode !== Mode.EDIT) {
-      return new ErrorMessage("Editing automaton is only permitted in edit mode.");
-    }
-    if (props.inputChar.trim().length === 0) {
-      return new ErrorMessage("Input char must contain at least one non-whitespace character.");
-    }
-    if (this.automatonType === AutomatonType.PDA) {
-      if (props.readStackChar === undefined || props.writeStackWord === undefined) {
-        return new ErrorMessage("PDA edge must specify character(s) read from and written to the stack");
+    if (keepSecondary) {
+      if (this.secondary === undefined) {
+        return new ErrorMessage("Cannot keep second window, because the window does not exit.");
       }
-      if (props.readStackChar.trim().length === 0 || props.writeStackWord.length === 0) {
-        return new ErrorMessage("Read and written stack character(s) must not contain whitespace-only symbols");
+      this.primary = this.secondary;
+      this.secondary = undefined;
+    }
+
+    this.mode = Mode.EDIT;
+  }
+
+  switchToVisualMode() {
+    if (this.mode !== Mode.VISUAL) {
+      return new ErrorMessage("Cannot switch to visual mode when already in visual mode.");
+    }
+
+    this.mode = Mode.VISUAL;
+  }
+
+  // TODO should this somehow handle displaying second window, or should it be handled in UI?
+  // TODO check if there is already an algorithm running
+  algorithmStart(algorithm: IAlgorithm) {
+    this.mode = Mode.VISUAL;
+
+    this.algorithm = algorithm;
+    this.secondary = algorithm.init();
+
+    return undefined;
+  }
+
+  algorithmNext() {
+    if (this.algorithm === undefined) {
+      return new ErrorMessage("Cannot simulate algorithm step before start.");
+    }
+    try {
+      const result = this.algorithm.next();
+      if (result === undefined) {
+        return new ErrorMessage("Algorithm is already completed.");
       }
-      for (const c in props.writeStackWord) {
-        if (c.trim().length === 0) {
-          return new ErrorMessage("Read and written stack character(s) must not contain whitespace-only symbols");
+
+      if (this.algorithm.outputType === undefined) {
+        switch (this.primary.kind) {
+          case Kind.GRAMMAR:
+            if (result.command.kind !== Kind.GRAMMAR) {
+              return new ErrorMessage("Grammar command is not applicable to automaton.");
+            }
+            this.primary.grammar.executeCommand(result.command);
+            break;
+          case Kind.AUTOMATON:
+            if (result.command.kind !== Kind.AUTOMATON) {
+              return new ErrorMessage("Grammar command is not applicable to automaton.");
+            }
+            this.primary.automaton.executeCommand(result.command);
+            break;
         }
+        // visualise edit command
+        result.command.accept(this.primary.visitor);
+      } else {
+        if (this.secondary === undefined) {
+          return new ErrorMessage("Second window does not exist.");
+        }
+        this.primary.highlight(result.highlight);
+
+        switch (this.secondary.kind) {
+          case Kind.GRAMMAR:
+            if (result.command.kind !== Kind.GRAMMAR) {
+              return new ErrorMessage("Grammar command is not applicable to automaton.");
+            }
+            this.secondary.grammar.executeCommand(result.command);
+            break;
+          case Kind.AUTOMATON:
+            if (result.command.kind !== Kind.AUTOMATON) {
+              return new ErrorMessage("Grammar command is not applicable to automaton.");
+            }
+            this.secondary.automaton.executeCommand(result.command);
+            break;
+        }
+        // visualise edit command
+        result.command.accept(this.secondary.visitor);
+      }
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        return new ErrorMessage(e.message);
       }
     }
-
-    props.id = `_${this.edgeCounter}`;
-
-    const error = this.engine.addEdge(from, to, props);
-    if (error !== undefined) {
-      return error;
-    }
-
-    // TODO the label should use all relevant props for each AutomatonType
-    this.visualPrimary.addEdge(from, to, props.id, props.inputChar);
-
-    this.edgeCounter++;
   }
 
-  removeEdge(from: string, to: string, id: string) {
-    if (this.mode !== Mode.EDIT) {
-      return new ErrorMessage("Editing automaton is only permitted in edit mode.");
+  algorithmUndo() {
+    if (this.algorithm === undefined) {
+      return new ErrorMessage("Cannot undo algorithm step before start.");
     }
 
-    const error = this.engine.removeEdge(from, to, id);
-    if (error !== undefined) {
-      return error;
-    }
-
-    this.visualPrimary.removeEdge(id);
+    return this.algorithm.undo();
   }
 }

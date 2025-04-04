@@ -20,8 +20,8 @@ export interface IAutomaton {
 
   automatonType: AutomatonType;
 
-  commandHistory: EditCommand<unknown>[];
-  executeCommand<T>(command: EditCommand<T>): IErrorMessage | undefined; // if (command.execute()) { commandHistory.push(command); }
+  commandHistory: EditCommand[];
+  executeCommand(command: EditCommand): IErrorMessage | undefined; // if (command.execute()) { commandHistory.push(command); }
   undo(): IErrorMessage | undefined; // command = commandHistory.pop(); command.undo();
 
   save(): IAutomatonMemento;
@@ -42,7 +42,7 @@ export class Automaton implements IAutomaton {
   states: string[];
   deltaFunctionMatrix: Record<string, Record<string, IEdge[]>>;
   automatonType: AutomatonType;
-  commandHistory: EditCommand<unknown>[];
+  commandHistory: EditCommand[];
   initialStateId: string;
   finalStateIds: string[];
 
@@ -61,7 +61,7 @@ export class Automaton implements IAutomaton {
     this.finalStateIds = finalStateIds;
   }
 
-  executeCommand(command: EditCommand<unknown>): IErrorMessage | undefined {
+  executeCommand(command: EditCommand): IErrorMessage | undefined {
     const maybeErrorMessage = command.execute();
     if (maybeErrorMessage === undefined) {
       this.commandHistory.push(command);
