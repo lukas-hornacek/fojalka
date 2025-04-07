@@ -47,7 +47,6 @@ export class AutomatonVisual implements IAutomatonVisual {
   init() {
     this.cy = cytoscape({
       container: document.getElementById(this.id),
-      // example elements, that should be removed once user can add them themselves
       elements: [],
       style: [
         {

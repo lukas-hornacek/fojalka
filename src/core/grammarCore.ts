@@ -1,7 +1,8 @@
 import { IEditCommandVisitor, VisualVisitor } from "../engine/automaton/visitors/editCommand";
 import { ErrorMessage, IErrorMessage } from "../engine/common";
+import { AbstractGrammarFactory, IGrammarFactory } from "../engine/grammar/factories";
 import { Grammar, GrammarType } from "../engine/grammar/grammar";
-import { GrammarEngine, IGrammarEngine } from "../engine/grammar/grammarEngine";
+import { IGrammarSimulation } from "../engine/grammar/simulation";
 import { GrammarVisual, IGrammarVisual } from "../visual/grammarVisual";
 import { Kind } from "./core";
 
@@ -27,18 +28,19 @@ export interface IGrammarCore {
 export class GrammarCore implements IGrammarCore {
   kind = Kind.GRAMMAR as const;
 
-  engine: IGrammarEngine;
+  factory: IGrammarFactory;
+  grammar: Grammar;
+  simulation?: IGrammarSimulation;
+
   visual: IGrammarVisual;
   visitor: IEditCommandVisitor;
 
   constructor(type: GrammarType) {
-    this.engine = new GrammarEngine(type);
+    this.factory = new AbstractGrammarFactory(type);
+    this.grammar = this.factory.createGrammar(["S"], [], "S");
+
     this.visual = new GrammarVisual();
     this.visitor = new VisualVisitor(this.visual);
-  }
-
-  get grammar(): Grammar {
-    return this.grammar;
   }
 
   display() {
@@ -46,39 +48,19 @@ export class GrammarCore implements IGrammarCore {
   }
 
   addProductionRule(inputNonTerminal: string, outputSymbols: string[]) {
-    const e = this.engine.addProductionRule(inputNonTerminal, outputSymbols);
-    if (e !== undefined) {
-      return e;
-    }
-
-    this.visual.setGrammar(this.engine.grammar);
+    return new ErrorMessage(`Not implemented. ${inputNonTerminal}, ${outputSymbols.join("")}`);
   }
 
   editProductionRule(id: string, inputNonTerminal: string, outputSymbols: string[]) {
-    const e = this.engine.editProductionRule(id, inputNonTerminal, outputSymbols);
-    if (e !== undefined) {
-      return e;
-    }
-
-    this.visual.setGrammar(this.engine.grammar);
+    return new ErrorMessage(`Not implemented. ${id} ${inputNonTerminal}, ${outputSymbols.join("")}`);
   }
 
   removeProductionRule(id: string) {
-    const e = this.engine.removeProductionRule(id);
-    if (e !== undefined) {
-      return e;
-    }
-
-    this.visual.setGrammar(this.engine.grammar);
+    return new ErrorMessage(`Not implemented. ${id}`);
   }
 
   undo() {
-    const e = this.engine.undo();
-    if (e !== undefined) {
-      return e;
-    }
-
-    this.visual.setGrammar(this.engine.grammar);
+    return this.grammar.undo();
   }
 
   highlight(ids: string[]) {

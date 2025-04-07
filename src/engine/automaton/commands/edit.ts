@@ -234,6 +234,9 @@ export class RemoveEdgeCommand extends EditCommand {
   fromStateId: string;
   toStateId: string;
 
+  // TODO fromStateId and toStateId are not strictly necessary to remove edge and are here only for simpler and faster implementation
+  // EditCommand on the other hand has only edgeId
+  // we can decide based on how it is called from UI which version is preferable
   constructor(_automaton: IAutomaton, _fromStateId: string, _toStateId: string, _edgeId: string) {
     super(_automaton);
     this.edgeId = _edgeId;
