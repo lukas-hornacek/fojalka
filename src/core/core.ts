@@ -80,7 +80,7 @@ export class Core implements ICore {
   }
 
   algorithmStart(algorithm: IAlgorithm) {
-    if (algorithm === undefined) {
+    if (this.algorithm !== undefined) {
       return new ErrorMessage("Cannot start new algorithm where an algorithm is already in progress.");
     }
 
