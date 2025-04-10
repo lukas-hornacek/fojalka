@@ -4,7 +4,7 @@ import { AddEdgeCommand, AddStateCommand } from "../src/engine/automaton/command
 import { AutomatonType } from "../src/engine/automaton/automaton.ts";
 import { FiniteAutomatonEdge } from "../src/engine/automaton/edge.ts";
 import { FiniteConfiguration } from "../src/engine/automaton/configuration.ts";
-import { Simulation } from "../src/engine/automaton/simulation.ts";
+import { AutomatonSimulation } from "../src/engine/automaton/simulation.ts";
 import { AbstractAutomatonFactory } from "../src/engine/automaton/factories";
 
 test("nextStepCommand Visitor test", () =>{
@@ -21,7 +21,7 @@ test("nextStepCommand Visitor test", () =>{
 
   const configuration = new FiniteConfiguration("0", ["a", "b", "c"]);
 
-  const simulation = new Simulation(automaton, configuration);
+  const simulation = new AutomatonSimulation(automaton, configuration);
   const command = new NextStepCommand(simulation);
   expect(simulation.configuration.stateId).toBe("0");
   simulation.executeCommand(command);
