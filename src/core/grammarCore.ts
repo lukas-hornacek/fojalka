@@ -5,10 +5,11 @@ import { AbstractGrammarFactory, IGrammarFactory } from "../engine/grammar/facto
 import { Grammar, GrammarType } from "../engine/grammar/grammar";
 import { IGrammarSimulation } from "../engine/grammar/simulation";
 import { GrammarVisual, IGrammarVisual } from "../visual/grammarVisual";
-import { Kind } from "./core";
+import { ModeHolder, Kind, Mode } from "./core";
 
 export interface IGrammarCore {
   kind: Kind.GRAMMAR;
+  mode: ModeHolder;
   grammar: Grammar;
 
   display: () => string;
@@ -28,6 +29,7 @@ export interface IGrammarCore {
 
 export class GrammarCore implements IGrammarCore {
   kind = Kind.GRAMMAR as const;
+  mode: ModeHolder;
 
   factory: IGrammarFactory;
   grammar: Grammar;
@@ -36,12 +38,13 @@ export class GrammarCore implements IGrammarCore {
   visual: IGrammarVisual;
   visitor: IEditCommandVisitor;
 
-  constructor(type: GrammarType) {
+  constructor(type: GrammarType, mode: ModeHolder) {
     this.factory = new AbstractGrammarFactory(type);
     this.grammar = this.factory.createGrammar([INITIAL_NONTERMINAL], [], INITIAL_NONTERMINAL);
 
     this.visual = new GrammarVisual();
     this.visitor = new VisualVisitor(this.visual);
+    this.mode = mode;
   }
 
   display() {
@@ -49,26 +52,50 @@ export class GrammarCore implements IGrammarCore {
   }
 
   addProductionRule(inputNonTerminal: string, outputSymbols: string[]) {
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
+    }
+
     return new ErrorMessage(`Not implemented. ${inputNonTerminal}, ${outputSymbols.join("")}`);
   }
 
   editProductionRule(id: string, inputNonTerminal: string, outputSymbols: string[]) {
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
+    }
+
     return new ErrorMessage(`Not implemented. ${id} ${inputNonTerminal}, ${outputSymbols.join("")}`);
   }
 
   removeProductionRule(id: string) {
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
+    }
+
     return new ErrorMessage(`Not implemented. ${id}`);
   }
 
   undo() {
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
+    }
+
     return this.grammar.undo();
   }
 
   highlight(ids: string[]) {
+    if (this.mode.mode !== Mode.VISUAL) {
+      return new ErrorMessage("Operation is only permitted in visual mode.");
+    }
+
     return new ErrorMessage(`Not implemented ${ids}`);
   }
 
   simulateParsing(word: string[]) {
+    if (this.mode.mode !== Mode.VISUAL) {
+      return new ErrorMessage("Operation is only permitted in visual mode.");
+    }
+
     return new ErrorMessage(`Not implemented. ${word}`);
   }
 }

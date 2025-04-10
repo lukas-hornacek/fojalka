@@ -13,10 +13,16 @@ export enum Kind {
   AUTOMATON,
 }
 
+// workaround to give IAutomatonCore | IGrammarCore access to mode reference
+// if mode was not inside an object, it would always be passed by value, not by reference
+export class ModeHolder {
+  mode: Mode = Mode.EDIT;
+}
+
 export type ICoreType = IAutomatonCore | IGrammarCore;
 
 export interface ICore {
-  mode: Mode,
+  mode: ModeHolder,
 
   primary: ICoreType,
   secondary?: ICoreType,
@@ -42,37 +48,38 @@ export interface ICore {
 // component that holds global state and Grammar/Automaton cores
 export class Core implements ICore {
   // current UI mode
-  mode: Mode = Mode.EDIT;
+  mode: ModeHolder = new ModeHolder();
 
   primary: ICoreType;
   secondary?: ICoreType | undefined;
 
   algorithm?: IAlgorithm;
 
+  // this constructor might be changed depending on UI (e.g. if user starts with empty screen or with some default window)
   constructor(primary: ICoreType) {
-    this.mode = Mode.EDIT;
     this.primary = primary;
+    this.primary.mode = this.mode;
   }
 
   switchToEditMode(keepSecondary: boolean) {
-    if (this.mode === Mode.EDIT) {
+    if (this.mode.mode === Mode.EDIT) {
       return new ErrorMessage("Cannot switch to edit mode when already in edit mode.");
     }
 
     this.algorithmDelete(keepSecondary);
-    this.mode = Mode.EDIT;
+    this.mode.mode = Mode.EDIT;
   }
 
   switchToVisualMode() {
-    if (this.mode === Mode.VISUAL) {
+    if (this.mode.mode === Mode.VISUAL) {
       return new ErrorMessage("Cannot switch to visual mode when already in visual mode.");
     }
 
-    this.mode = Mode.VISUAL;
+    this.mode.mode = Mode.VISUAL;
   }
 
   transform(algorithm: IAlgorithm) {
-    if (this.mode === Mode.VISUAL) {
+    if (this.mode.mode === Mode.VISUAL) {
       return new ErrorMessage("Cannot apply algorithm all at once in visual mode.");
     }
     // TODO first apply all EditCommands to Automaton and then display visual changes all at once
@@ -80,17 +87,21 @@ export class Core implements ICore {
   }
 
   algorithmStart(algorithm: IAlgorithm) {
+    if (this.mode.mode === Mode.EDIT) {
+      return new ErrorMessage("Cannot simulate algorithm in edit mode.");
+    }
     if (this.algorithm !== undefined) {
-      return new ErrorMessage("Cannot start new algorithm where an algorithm is already in progress.");
+      return new ErrorMessage("Cannot start new algorithm when an algorithm is already in progress.");
     }
 
-    this.mode = Mode.VISUAL;
-
     this.algorithm = algorithm;
-    this.secondary = algorithm.init();
+    this.secondary = algorithm.init(this.mode);
   }
 
   algorithmNext() {
+    if (this.mode.mode === Mode.EDIT) {
+      return new ErrorMessage("Cannot simulate algorithm in edit mode.");
+    }
     if (this.algorithm === undefined) {
       return new ErrorMessage("Cannot simulate algorithm step before start.");
     }
@@ -149,6 +160,9 @@ export class Core implements ICore {
 
   // TODO reflect changes in visual
   algorithmUndo() {
+    if (this.mode.mode === Mode.EDIT) {
+      return new ErrorMessage("Cannot simulate algorithm in edit mode.");
+    }
     if (this.algorithm === undefined) {
       return new ErrorMessage("Cannot undo algorithm step before start.");
     }

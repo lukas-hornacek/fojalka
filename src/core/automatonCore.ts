@@ -2,7 +2,7 @@ import { AutomatonType, IAutomaton } from "../engine/automaton/automaton";
 import { AbstractAutomatonFactory, IAutomatonFactory, IUniversalEdgeProps } from "../engine/automaton/factories";
 import { IErrorMessage, ErrorMessage } from "../engine/common";
 import { IAutomatonVisual, AutomatonVisual } from "../visual/automatonVisual";
-import { Kind } from "./core";
+import { Kind, Mode, ModeHolder } from "./core";
 import { IEdge } from "../engine/automaton/edge";
 import { IEditCommandVisitor, VisualVisitor } from "../engine/automaton/visitors/editCommand";
 import { ISimulation } from "../engine/automaton/simulation";
@@ -12,6 +12,7 @@ import { INITIAL_STATE } from "../constants";
 
 export interface IAutomatonCore {
   kind: Kind.AUTOMATON;
+  mode: ModeHolder;
   automaton: IAutomaton;
 
   // called from AutomatonWindow, which own the Cytoscape HTML element
@@ -50,6 +51,7 @@ export interface IAutomatonCore {
 
 export class AutomatonCore implements IAutomatonCore {
   kind = Kind.AUTOMATON as const;
+  mode: ModeHolder;
 
   automatonType: AutomatonType;
   visual: IAutomatonVisual;
@@ -62,12 +64,13 @@ export class AutomatonCore implements IAutomatonCore {
   // the simulation also contains configuration
   simulation?: ISimulation;
 
-  constructor(automatonType: AutomatonType, id: string) {
+  constructor(automatonType: AutomatonType, id: string, mode: ModeHolder) {
     this.automatonType = automatonType;
     this.factory = new AbstractAutomatonFactory(automatonType);
     this.automaton = this.factory.createAutomaton(INITIAL_STATE);
     this.visual = new AutomatonVisual(id);
     this.visitor = new VisualVisitor(this.visual);
+    this.mode = mode;
   }
 
   init(): undefined {
@@ -85,6 +88,10 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   addState(id: string, position: { x: number, y: number }) {
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
+    }
+
     let error = this.checkStateId(id);
     if (error !== undefined) {
       return error;
@@ -101,22 +108,11 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   removeState(id: string) {
-    let error = this.checkStateId(id);
-    if (error !== undefined) {
-      return error;
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
     const command: EditCommand = new RemoveStateCommand(this.automaton, id);
-    error = this.automaton.executeCommand(command);
-    if (error !== undefined) {
-      return error;
-    }
-
-    command.accept(this.visitor);
-  }
-
-  renameState(id: string, newId: string) {
-    const command: EditCommand = new RenameStateCommand(this.automaton, id, newId);
     const error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -125,7 +121,30 @@ export class AutomatonCore implements IAutomatonCore {
     command.accept(this.visitor);
   }
 
+  renameState(id: string, newId: string) {
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
+    }
+
+    let error = this.checkStateId(newId);
+    if (error !== undefined) {
+      return error;
+    }
+
+    const command: EditCommand = new RenameStateCommand(this.automaton, id, newId);
+    error = this.automaton.executeCommand(command);
+    if (error !== undefined) {
+      return error;
+    }
+
+    command.accept(this.visitor);
+  }
+
   setInitialState(id: string) {
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
+    }
+
     const command: EditCommand = new SetInitialStateCommand(this.automaton, id);
     const error = this.automaton.executeCommand(command);
     if (error !== undefined) {
@@ -136,6 +155,10 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   setIsFinalState(id: string, isFinalState: boolean) {
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
+    }
+
     const command: EditCommand = new SetStateFinalFlagCommand(this.automaton, id, isFinalState);
     const error = this.automaton.executeCommand(command);
     if (error !== undefined) {
@@ -146,6 +169,10 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   addEdge(from: string, to: string, props: IUniversalEdgeProps) {
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
+    }
+
     let error = this.checkEdgeProps(props);
     if (error !== undefined) {
       return error;
@@ -162,6 +189,10 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   removeEdge(from: string, to: string, id: string) {
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
+    }
+
     const command: EditCommand = new RemoveEdgeCommand(this.automaton, from, to, id);
 
     const error = this.automaton.executeCommand(command);
@@ -173,6 +204,10 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   editEdge(from: string, to: string, id: string, props: IUniversalEdgeProps) {
+    if (this.mode.mode !== Mode.EDIT) {
+      return new ErrorMessage("Operation is only permitted in edit mode.");
+    }
+
     let error = this.checkEdgeProps(props);
     if (error !== undefined) {
       return error;
@@ -190,6 +225,10 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   highlight(ids: string[]) {
+    if (this.mode.mode !== Mode.VISUAL) {
+      return new ErrorMessage("Operation is only permitted in visual mode.");
+    }
+
     return new ErrorMessage(`Not implemented ${ids}`);
   }
 
@@ -198,10 +237,18 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   runStart(word: string[]) {
+    if (this.mode.mode !== Mode.VISUAL) {
+      return new ErrorMessage("Operation is only permitted in visual mode.");
+    }
+
     this.simulation = this.automaton.createRunSimulation(word);
   }
 
   runNext() {
+    if (this.mode.mode !== Mode.VISUAL) {
+      return new ErrorMessage("Operation is only permitted in visual mode.");
+    }
+
     if (this.simulation === undefined) {
       return new ErrorMessage("Run simulation does not exist. Try starting a simulation first.");
     }
@@ -224,6 +271,10 @@ export class AutomatonCore implements IAutomatonCore {
 
   // TODO update visual
   runUndo() {
+    if (this.mode.mode !== Mode.VISUAL) {
+      return new ErrorMessage("Operation is only permitted in visual mode.");
+    }
+
     if (this.simulation === undefined) {
       return new ErrorMessage("Run simulation does not exist. Try starting a simulation first.");
     }

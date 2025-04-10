@@ -1,6 +1,6 @@
 import { SECONDARY_CYTOSCAPE_ID } from "../constants";
 import { AutomatonCore } from "../core/automatonCore";
-import { ICoreType, Kind } from "../core/core";
+import { ICoreType, Kind, ModeHolder } from "../core/core";
 import { AutomatonType } from "./automaton/automaton";
 import { EditCommand } from "./automaton/commands/edit";
 import { IErrorMessage } from "./common";
@@ -28,7 +28,7 @@ export interface IAlgorithm {
   // if undefined, modifications are done in place and there is no highlighting
   outputType?: AlgorithmParams,
 
-  init(): ICoreType | undefined,
+  init(mode: ModeHolder): ICoreType | undefined,
   // returns undefined when algorithm is completed
   next(): AlgorithmResult | undefined,
   undo(): IErrorMessage | undefined,
@@ -39,8 +39,8 @@ export class TestingAlgorithm implements IAlgorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
-  init(): ICoreType | undefined {
-    return new AutomatonCore(this.outputType.AutomatonType!, SECONDARY_CYTOSCAPE_ID);
+  init(mode: ModeHolder): ICoreType | undefined {
+    return new AutomatonCore(this.outputType.AutomatonType!, SECONDARY_CYTOSCAPE_ID, mode);
   }
 
   next(): AlgorithmResult | undefined {
