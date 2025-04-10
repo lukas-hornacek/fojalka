@@ -21,6 +21,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "bootstrap": "^5.3.3",
     "cytoscape": "^3.31.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

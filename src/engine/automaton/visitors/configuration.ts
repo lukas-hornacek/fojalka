@@ -1,10 +1,11 @@
-import {
-  FiniteConfiguration,
-  IAutomaton,
-  IConfigurationVisitor,
-  IEdge,
-  PDAConfiguration,
-} from "../types.ts";
+import { IEdge } from "../edge.ts";
+import { IAutomaton } from "../automaton.ts";
+import { FiniteConfiguration, PDAConfiguration } from "../configuration.ts";
+
+export interface IConfigurationVisitor {
+  visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
+  visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration;
+}
 
 export class NextStepVisitor implements IConfigurationVisitor {
   automaton: IAutomaton;

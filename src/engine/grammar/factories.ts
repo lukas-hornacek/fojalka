@@ -2,8 +2,8 @@ import {
   GrammarType,
   Grammar,
   ProductionRule,
-} from "./grammar_types.ts";
-import { ErrorMessage } from "./common.ts";
+} from "./grammar.ts";
+import { ErrorMessage } from "../common.ts";
 
 export abstract class IGrammarFactory {
   public abstract createGrammar(nonTerminalSymbols: string[], terminalSymbols: string[], initialNonTerminalSymbol: string): Grammar;
