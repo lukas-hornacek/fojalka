@@ -2,7 +2,7 @@ import { SECONDARY_CYTOSCAPE_ID } from "../constants";
 import { AutomatonCore } from "../core/automatonCore";
 import { ICoreType, Kind, ModeHolder } from "../core/core";
 import { AutomatonType } from "./automaton/automaton";
-import { EditCommand } from "./automaton/commands/edit";
+import { AutomatonEditCommand } from "./automaton/commands/edit";
 import { IErrorMessage } from "./common";
 import { GrammarEditCommand } from "./grammar/commands/edit";
 import { GrammarType } from "./grammar/grammar";
@@ -15,7 +15,7 @@ export type AlgorithmParams = {
 
 export type AlgorithmResult = {
   highlight: string[],
-  command: EditCommand | GrammarEditCommand,
+  command: AutomatonEditCommand | GrammarEditCommand,
 };
 
 // each algorithm has constructor that takes object of input type (taken from core.primary)

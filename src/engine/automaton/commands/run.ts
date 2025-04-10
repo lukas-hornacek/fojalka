@@ -1,15 +1,15 @@
 import { IErrorMessage } from "../../common.ts";
 import { NextStepVisitor } from "../visitors/configuration.ts";
 import { IEdge } from "../edge.ts";
-import { ISimulation } from "../simulation.ts";
+import { IAutomatonSimulation } from "../simulation.ts";
 import { IConfigurationMemento } from "../configuration.ts";
 
-export abstract class RunCommand<T = void> {
-  simulation: ISimulation;
+export abstract class AutomatonRunCommand<T = void> {
+  simulation: IAutomatonSimulation;
   backup?: IConfigurationMemento;
   result?: T;
 
-  protected constructor(_simulation: ISimulation) {
+  protected constructor(_simulation: IAutomatonSimulation) {
     this.simulation = _simulation;
   }
 
@@ -30,8 +30,8 @@ export abstract class RunCommand<T = void> {
   abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...
 }
 
-export class NextStepCommand extends RunCommand<IEdge> {
-  constructor (_simulation: ISimulation) {
+export class NextStepCommand extends AutomatonRunCommand<IEdge> {
+  constructor (_simulation: IAutomatonSimulation) {
     super (_simulation);
   }
 

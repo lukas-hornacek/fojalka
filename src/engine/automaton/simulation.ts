@@ -1,22 +1,22 @@
-import { RunCommand, NextStepCommand } from "./commands/run";
+import { AutomatonRunCommand, NextStepCommand } from "./commands/run";
 import { IAutomaton } from "./automaton";
 import { IAutomatonConfiguration } from "./configuration";
 import { ErrorMessage, IErrorMessage } from "../common";
 
-export interface ISimulation {
+export interface IAutomatonSimulation {
   automaton: IAutomaton;
   configuration: IAutomatonConfiguration;
-  commandHistory: RunCommand<unknown>[];
+  commandHistory: AutomatonRunCommand<unknown>[];
 
-  executeCommand(command: RunCommand<unknown>): IErrorMessage | undefined; // if (command.execute()) { commandHistory.push(command); }
+  executeCommand(command: AutomatonRunCommand<unknown>): IErrorMessage | undefined; // if (command.execute()) { commandHistory.push(command); }
   undo(): IErrorMessage | undefined;
   run(): boolean;
 }
 
-export class Simulation implements ISimulation {
+export class AutomatonSimulation implements IAutomatonSimulation {
   automaton: IAutomaton;
   configuration: IAutomatonConfiguration;
-  commandHistory: RunCommand<unknown>[];
+  commandHistory: AutomatonRunCommand<unknown>[];
 
   constructor(_automaton: IAutomaton, _configuration: IAutomatonConfiguration) {
     this.automaton = _automaton;
@@ -24,7 +24,7 @@ export class Simulation implements ISimulation {
     this.commandHistory = [];
   }
 
-  executeCommand(command: RunCommand<unknown>): IErrorMessage | undefined {
+  executeCommand(command: AutomatonRunCommand<unknown>): IErrorMessage | undefined {
     const error = command.execute();
     if (error !== undefined) {
       return error;

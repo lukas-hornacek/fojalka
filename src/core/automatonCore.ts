@@ -5,8 +5,8 @@ import { IAutomatonVisual, AutomatonVisual } from "../visual/automatonVisual";
 import { Kind, Mode, ModeHolder } from "./core";
 import { IEdge } from "../engine/automaton/edge";
 import { IEditCommandVisitor, VisualVisitor } from "../engine/automaton/visitors/editCommand";
-import { ISimulation } from "../engine/automaton/simulation";
-import { EditCommand, AddStateCommand, RemoveStateCommand, AddEdgeCommand, EditEdgeCommand, RemoveEdgeCommand, RenameStateCommand, SetInitialStateCommand, SetStateFinalFlagCommand } from "../engine/automaton/commands/edit";
+import { IAutomatonSimulation } from "../engine/automaton/simulation";
+import { AutomatonEditCommand, AddStateCommand, RemoveStateCommand, AddEdgeCommand, EditEdgeCommand, RemoveEdgeCommand, RenameStateCommand, SetInitialStateCommand, SetStateFinalFlagCommand } from "../engine/automaton/commands/edit";
 import { NextStepCommand } from "../engine/automaton/commands/run";
 import { INITIAL_STATE } from "../constants";
 
@@ -62,7 +62,7 @@ export class AutomatonCore implements IAutomatonCore {
   automaton: IAutomaton;
   // optionally hold current simulation
   // the simulation also contains configuration
-  simulation?: ISimulation;
+  simulation?: IAutomatonSimulation;
 
   constructor(automatonType: AutomatonType, id: string, mode: ModeHolder) {
     this.automatonType = automatonType;
@@ -97,7 +97,7 @@ export class AutomatonCore implements IAutomatonCore {
       return error;
     }
 
-    const command: EditCommand = new AddStateCommand(this.automaton, id);
+    const command: AutomatonEditCommand = new AddStateCommand(this.automaton, id);
     error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -112,7 +112,7 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: EditCommand = new RemoveStateCommand(this.automaton, id);
+    const command: AutomatonEditCommand = new RemoveStateCommand(this.automaton, id);
     const error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -131,7 +131,7 @@ export class AutomatonCore implements IAutomatonCore {
       return error;
     }
 
-    const command: EditCommand = new RenameStateCommand(this.automaton, id, newId);
+    const command: AutomatonEditCommand = new RenameStateCommand(this.automaton, id, newId);
     error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -145,7 +145,7 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: EditCommand = new SetInitialStateCommand(this.automaton, id);
+    const command: AutomatonEditCommand = new SetInitialStateCommand(this.automaton, id);
     const error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -159,7 +159,7 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: EditCommand = new SetStateFinalFlagCommand(this.automaton, id, isFinalState);
+    const command: AutomatonEditCommand = new SetStateFinalFlagCommand(this.automaton, id, isFinalState);
     const error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -179,7 +179,7 @@ export class AutomatonCore implements IAutomatonCore {
     }
 
     const edge: IEdge = this.factory.createEdge(props);
-    const command: EditCommand = new AddEdgeCommand(this.automaton, from, to, edge);
+    const command: AutomatonEditCommand = new AddEdgeCommand(this.automaton, from, to, edge);
     error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -193,7 +193,7 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: EditCommand = new RemoveEdgeCommand(this.automaton, from, to, id);
+    const command: AutomatonEditCommand = new RemoveEdgeCommand(this.automaton, from, to, id);
 
     const error = this.automaton.executeCommand(command);
     if (error !== undefined) {
@@ -214,7 +214,7 @@ export class AutomatonCore implements IAutomatonCore {
     }
 
     const edge: IEdge = this.factory.createEdge(props);
-    const command: EditCommand = new EditEdgeCommand(this.automaton, id, edge);
+    const command: AutomatonEditCommand = new EditEdgeCommand(this.automaton, id, edge);
 
     error = this.automaton.executeCommand(command);
     if (error !== undefined) {

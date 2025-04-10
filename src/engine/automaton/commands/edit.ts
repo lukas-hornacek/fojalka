@@ -4,7 +4,7 @@ import { IEdge } from "../edge.ts";
 import { Kind } from "../../../core/core.ts";
 import { IEditCommandVisitor } from "../visitors/editCommand.ts";
 
-export abstract class EditCommand {
+export abstract class AutomatonEditCommand {
   kind = Kind.AUTOMATON as const;
   automaton: IAutomaton;
   backup?: IAutomatonMemento;
@@ -27,7 +27,7 @@ export abstract class EditCommand {
   abstract execute(): IErrorMessage | undefined; // this.saveBackup(); ...perform command...
 }
 
-export class AddStateCommand extends EditCommand {
+export class AddStateCommand extends AutomatonEditCommand {
   stateId: string;
 
   constructor(automaton: IAutomaton, stateId: string) {
@@ -49,7 +49,7 @@ export class AddStateCommand extends EditCommand {
   }
 }
 
-export class RemoveStateCommand extends EditCommand {
+export class RemoveStateCommand extends AutomatonEditCommand {
   stateId: string;
 
   constructor(_automaton: IAutomaton, _stateId: string) {
@@ -91,7 +91,7 @@ export class RemoveStateCommand extends EditCommand {
   }
 }
 
-export class RenameStateCommand extends EditCommand {
+export class RenameStateCommand extends AutomatonEditCommand {
   stateId: string;
   newStateId: string;
 
@@ -122,7 +122,7 @@ export class RenameStateCommand extends EditCommand {
   }
 }
 
-export class SetStateFinalFlagCommand extends EditCommand {
+export class SetStateFinalFlagCommand extends AutomatonEditCommand {
   stateId: string;
   shouldBeFinal: boolean;
 
@@ -159,7 +159,7 @@ export class SetStateFinalFlagCommand extends EditCommand {
   }
 }
 
-export class SetInitialStateCommand extends EditCommand {
+export class SetInitialStateCommand extends AutomatonEditCommand {
   stateId: string;
 
   constructor(_automaton: IAutomaton, _stateId: string) {
@@ -181,7 +181,7 @@ export class SetInitialStateCommand extends EditCommand {
   }
 }
 
-export class AddEdgeCommand extends EditCommand {
+export class AddEdgeCommand extends AutomatonEditCommand {
   fromStateId: string;
   toStateId: string;
   edge: IEdge;
@@ -228,7 +228,7 @@ export class AddEdgeCommand extends EditCommand {
   }
 }
 
-export class RemoveEdgeCommand extends EditCommand {
+export class RemoveEdgeCommand extends AutomatonEditCommand {
   edgeId: string;
   fromStateId: string;
   toStateId: string;
@@ -272,7 +272,7 @@ export class RemoveEdgeCommand extends EditCommand {
 }
 
 // TODO replaces edge with edgeId with edge from constructor
-export class EditEdgeCommand extends EditCommand {
+export class EditEdgeCommand extends AutomatonEditCommand {
   edgeId: string;
   edge: IEdge;
 

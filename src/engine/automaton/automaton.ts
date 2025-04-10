@@ -1,9 +1,9 @@
 import { INITIAL_STACK_SYMBOL } from "../../constants.ts";
 import { ErrorMessage, IErrorMessage } from "../common.ts";
-import { EditCommand } from "./commands/edit.ts";
+import { AutomatonEditCommand } from "./commands/edit.ts";
 import { FiniteConfiguration, PDAConfiguration } from "./configuration.ts";
 import { IEdge } from "./edge.ts";
-import { ISimulation, Simulation } from "./simulation.ts";
+import { IAutomatonSimulation, AutomatonSimulation } from "./simulation.ts";
 
 export enum AutomatonType {
   FINITE = "FINITE",
@@ -21,14 +21,14 @@ export interface IAutomaton {
 
   automatonType: AutomatonType;
 
-  commandHistory: EditCommand[];
-  executeCommand(command: EditCommand): IErrorMessage | undefined; // if (command.execute()) { commandHistory.push(command); }
+  commandHistory: AutomatonEditCommand[];
+  executeCommand(command: AutomatonEditCommand): IErrorMessage | undefined; // if (command.execute()) { commandHistory.push(command); }
   undo(): IErrorMessage | undefined; // command = commandHistory.pop(); command.undo();
 
   save(): IAutomatonMemento;
   restore(memento: IAutomatonMemento): void;
 
-  createRunSimulation(word: string[]): ISimulation;
+  createRunSimulation(word: string[]): IAutomatonSimulation;
 }
 
 export type AutomatonParams = {
@@ -43,7 +43,7 @@ export class Automaton implements IAutomaton {
   states: string[];
   deltaFunctionMatrix: Record<string, Record<string, IEdge[]>>;
   automatonType: AutomatonType;
-  commandHistory: EditCommand[];
+  commandHistory: AutomatonEditCommand[];
   initialStateId: string;
   finalStateIds: string[];
 
@@ -62,7 +62,7 @@ export class Automaton implements IAutomaton {
     this.finalStateIds = finalStateIds;
   }
 
-  executeCommand(command: EditCommand): IErrorMessage | undefined {
+  executeCommand(command: AutomatonEditCommand): IErrorMessage | undefined {
     const maybeErrorMessage = command.execute();
     if (maybeErrorMessage === undefined) {
       this.commandHistory.push(command);
@@ -90,12 +90,12 @@ export class Automaton implements IAutomaton {
     this.automatonType = memento.automatonType;
   }
 
-  createRunSimulation(word: string[]): ISimulation {
+  createRunSimulation(word: string[]): IAutomatonSimulation {
     switch (this.automatonType) {
       case AutomatonType.FINITE:
-        return new Simulation(this, new FiniteConfiguration(this.initialStateId, word));
+        return new AutomatonSimulation(this, new FiniteConfiguration(this.initialStateId, word));
       case AutomatonType.PDA:
-        return new Simulation(this, new PDAConfiguration(this.initialStateId, word, [INITIAL_STACK_SYMBOL]));
+        return new AutomatonSimulation(this, new PDAConfiguration(this.initialStateId, word, [INITIAL_STACK_SYMBOL]));
       case AutomatonType.TURING:
         // TODO
         throw new Error("Not implemented.");
