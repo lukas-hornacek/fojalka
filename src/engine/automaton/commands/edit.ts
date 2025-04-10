@@ -66,13 +66,12 @@ export class RemoveStateCommand extends EditCommand {
     if (index === -1) {
       return new ErrorMessage(`Cannot remove state ${this.stateId}, as it does not exist.`);
     }
-
     this.saveBackup();
 
     // TODO check if stateId is initialStateId or in finalStateIds
 
     // remove state
-    if (this.automaton.states.length > 1) {
+    if (this.automaton.states.length > 1 && index !== this.automaton.states.length - 1) {
       this.automaton.states[index] = this.automaton.states.pop()!;
     } else {
       this.automaton.states.pop();
@@ -259,12 +258,16 @@ export class RemoveEdgeCommand extends EditCommand {
 
     this.saveBackup();
 
-    if (this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].length > 1) {
+    if (this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].length > 1
+      && index !== this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].length - 1
+    ) {
       this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId][index] =
         this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].pop()!;
     } else {
       this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].pop();
     }
+
+    console.log(this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId]);
   }
 }
 
