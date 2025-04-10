@@ -8,7 +8,7 @@ export interface ISimulation {
   configuration: IAutomatonConfiguration;
   commandHistory: RunCommand<unknown>[];
 
-  executeCommand(command: RunCommand<unknown>): void; // if (command.execute()) { commandHistory.push(command); }
+  executeCommand(command: RunCommand<unknown>): IErrorMessage | undefined; // if (command.execute()) { commandHistory.push(command); }
   undo(): IErrorMessage | undefined;
   run(): boolean;
 }
@@ -24,20 +24,20 @@ export class Simulation implements ISimulation {
     this.commandHistory = [];
   }
 
-  executeCommand(command: RunCommand<unknown>): void {
-    if (command.execute() === undefined) {
-      this.commandHistory.push(command);
+  executeCommand(command: RunCommand<unknown>): IErrorMessage | undefined {
+    const error = command.execute();
+    if (error !== undefined) {
+      return error;
     }
-    //TODO else if error respond to it
+    this.commandHistory.push(command);
   }
 
   undo(): IErrorMessage | undefined {
     const command = this.commandHistory.pop();
     if (command === undefined) {
       return new ErrorMessage("Cannot undo because command history is empty.");
-    } else {
-      command.undo();
     }
+    command.undo();
   }
 
   // simulates the entire run on the word in configuration (or the remaining word) and returns true if the

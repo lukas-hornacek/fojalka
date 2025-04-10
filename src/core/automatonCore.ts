@@ -85,16 +85,13 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   addState(id: string, position: { x: number, y: number }) {
-    if (id.trim().length === 0) {
-      return new ErrorMessage("State ID must contain at least one non-whitespace character.");
-    }
-    // prevents conflicts with edge IDs
-    if (id.charAt(0) == "_") {
-      return new ErrorMessage("State ID cannot start with an underscore");
+    let error = this.checkStateId(id);
+    if (error !== undefined) {
+      return error;
     }
 
     const command: EditCommand = new AddStateCommand(this.automaton, id);
-    const error = this.automaton.executeCommand(command);
+    error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
     }
@@ -104,8 +101,13 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   removeState(id: string) {
+    let error = this.checkStateId(id);
+    if (error !== undefined) {
+      return error;
+    }
+
     const command: EditCommand = new RemoveStateCommand(this.automaton, id);
-    const error = this.automaton.executeCommand(command);
+    error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
     }
@@ -144,26 +146,14 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   addEdge(from: string, to: string, props: IUniversalEdgeProps) {
-    if (props.inputChar.trim().length === 0) {
-      return new ErrorMessage("Input char must contain at least one non-whitespace character.");
-    }
-    if (this.automatonType === AutomatonType.PDA) {
-      if (props.readStackChar === undefined || props.writeStackWord === undefined) {
-        return new ErrorMessage("PDA edge must specify character(s) read from and written to the stack");
-      }
-      if (props.readStackChar.trim().length === 0 || props.writeStackWord.length === 0) {
-        return new ErrorMessage("Read and written stack character(s) must not contain whitespace-only symbols");
-      }
-      for (const c in props.writeStackWord) {
-        if (c.trim().length === 0) {
-          return new ErrorMessage("Read and written stack character(s) must not contain whitespace-only symbols");
-        }
-      }
+    let error = this.checkEdgeProps(props);
+    if (error !== undefined) {
+      return error;
     }
 
     const edge: IEdge = this.factory.createEdge(props);
     const command: EditCommand = new AddEdgeCommand(this.automaton, from, to, edge);
-    const error = this.automaton.executeCommand(command);
+    error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
     }
@@ -183,10 +173,15 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   editEdge(from: string, to: string, id: string, props: IUniversalEdgeProps) {
+    let error = this.checkEdgeProps(props);
+    if (error !== undefined) {
+      return error;
+    }
+
     const edge: IEdge = this.factory.createEdge(props);
     const command: EditCommand = new EditEdgeCommand(this.automaton, id, edge);
 
-    const error = this.automaton.executeCommand(command);
+    error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
     }
@@ -211,19 +206,20 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Run simulation does not exist. Try starting a simulation first.");
     }
 
-    if (this.simulation.configuration.remainingInput.length === 0) {
-      return new ErrorMessage("Run simulation is already finished.");
+    // TODO update NextStepCommand to return error if simulation ends
+    const nextCommand = new NextStepCommand(this.simulation);
+    const error = this.simulation.executeCommand(nextCommand);
+    if (error !== undefined) {
+      return error;
     }
 
-    const nextCommand = new NextStepCommand(this.simulation);
-    this.simulation.executeCommand(nextCommand);
-
+    // TODO change this to RunCommandVisitor
     const result = nextCommand.getResult();
     if (result === undefined) {
       return new ErrorMessage("Command result is empty.");
     }
     this.visual.clearHighlights();
-    this.visual.highlightElements([], [result.id]);
+    this.visual.highlightElements([result.id]);
   }
 
   // TODO update visual
@@ -241,5 +237,34 @@ export class AutomatonCore implements IAutomatonCore {
 
   createEdge(edgeProps: IUniversalEdgeProps) {
     return this.factory.createEdge(edgeProps);
+  }
+
+  checkStateId(id: string) {
+    if (id.trim().length === 0) {
+      return new ErrorMessage("State ID must contain at least one non-whitespace character.");
+    }
+    // prevents conflicts with edge IDs
+    if (id.charAt(0) == "_") {
+      return new ErrorMessage("State ID cannot start with an underscore");
+    }
+  }
+
+  checkEdgeProps(props: IUniversalEdgeProps) {
+    if (props.inputChar.trim().length === 0) {
+      return new ErrorMessage("Input char must contain at least one non-whitespace character.");
+    }
+    if (this.automatonType === AutomatonType.PDA) {
+      if (props.readStackChar === undefined || props.writeStackWord === undefined) {
+        return new ErrorMessage("PDA edge must specify character(s) read from and written to the stack");
+      }
+      if (props.readStackChar.trim().length === 0 || props.writeStackWord.length === 0) {
+        return new ErrorMessage("Read and written stack character(s) must not contain whitespace-only symbols");
+      }
+      for (const c in props.writeStackWord) {
+        if (c.trim().length === 0) {
+          return new ErrorMessage("Read and written stack character(s) must not contain whitespace-only symbols");
+        }
+      }
+    }
   }
 }

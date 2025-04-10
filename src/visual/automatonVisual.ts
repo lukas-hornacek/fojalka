@@ -30,7 +30,7 @@ export interface IAutomatonVisual {
   addEdge: (id: string, from: string, to: string, label: string,) => void;
   editEdge: (id: string, label: string) => void;
   removeEdge: (id: string) => void;
-  highlightElements: (nodes: string[], edges: string[]) => void;
+  highlightElements: (ids: string[]) => void;
   // removes all current highlights
   clearHighlights: () => void;
 }
@@ -118,8 +118,8 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   // TODO
-  highlightElements(nodes: string[], edges: string[]) {
-    console.log(nodes, edges);
+  highlightElements(ids: string[]) {
+    console.log(ids);
   };
 
   // TODO
