@@ -30,7 +30,7 @@ export interface IAutomatonCore {
 
   addEdge: (from: string, to: string, props: IUniversalEdgeProps) => IErrorMessage | undefined;
   removeEdge: (from: string, to: string, id: string) => IErrorMessage | undefined;
-  editEdge: (from: string, to: string, id: string, props: IUniversalEdgeProps) => IErrorMessage | undefined;
+  editEdge: (id: string, props: IUniversalEdgeProps) => IErrorMessage | undefined;
 
   undo: () => IErrorMessage | undefined;
 
@@ -203,7 +203,7 @@ export class AutomatonCore implements IAutomatonCore {
     command.accept(this.visitor);
   }
 
-  editEdge(from: string, to: string, id: string, props: IUniversalEdgeProps) {
+  editEdge(id: string, props: IUniversalEdgeProps) {
     if (this.mode.mode !== Mode.EDIT) {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
