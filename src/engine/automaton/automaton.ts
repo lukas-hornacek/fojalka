@@ -1,3 +1,4 @@
+import { INITIAL_STACK_SYMBOL } from "../../constants.ts";
 import { ErrorMessage, IErrorMessage } from "../common.ts";
 import { EditCommand } from "./commands/edit.ts";
 import { FiniteConfiguration, PDAConfiguration } from "./configuration.ts";
@@ -94,8 +95,7 @@ export class Automaton implements IAutomaton {
       case AutomatonType.FINITE:
         return new Simulation(this, new FiniteConfiguration(this.initialStateId, word));
       case AutomatonType.PDA:
-        // TODO what is initial stack symbol?
-        return new Simulation(this, new PDAConfiguration(this.initialStateId, word, ["Z"]));
+        return new Simulation(this, new PDAConfiguration(this.initialStateId, word, [INITIAL_STACK_SYMBOL]));
       case AutomatonType.TURING:
         // TODO
         throw new Error("Not implemented.");

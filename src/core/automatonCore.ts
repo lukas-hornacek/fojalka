@@ -8,6 +8,7 @@ import { IEditCommandVisitor, VisualVisitor } from "../engine/automaton/visitors
 import { ISimulation } from "../engine/automaton/simulation";
 import { EditCommand, AddStateCommand, RemoveStateCommand, AddEdgeCommand, EditEdgeCommand, RemoveEdgeCommand, RenameStateCommand, SetInitialStateCommand, SetStateFinalFlagCommand } from "../engine/automaton/commands/edit";
 import { NextStepCommand } from "../engine/automaton/commands/run";
+import { INITIAL_STATE } from "../constants";
 
 export interface IAutomatonCore {
   kind: Kind.AUTOMATON;
@@ -64,8 +65,7 @@ export class AutomatonCore implements IAutomatonCore {
   constructor(automatonType: AutomatonType, id: string) {
     this.automatonType = automatonType;
     this.factory = new AbstractAutomatonFactory(automatonType);
-    // TODO decide on default initial state ID
-    this.automaton = this.factory.createAutomaton("0");
+    this.automaton = this.factory.createAutomaton(INITIAL_STATE);
     this.visual = new AutomatonVisual(id);
     this.visitor = new VisualVisitor(this.visual);
   }
@@ -88,6 +88,7 @@ export class AutomatonCore implements IAutomatonCore {
     if (id.trim().length === 0) {
       return new ErrorMessage("State ID must contain at least one non-whitespace character.");
     }
+    // prevents conflicts with edge IDs
     if (id.charAt(0) == "_") {
       return new ErrorMessage("State ID cannot start with an underscore");
     }

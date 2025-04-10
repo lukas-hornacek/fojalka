@@ -1,3 +1,4 @@
+import { SECONDARY_CYTOSCAPE_ID } from "../constants";
 import { AutomatonCore } from "../core/automatonCore";
 import { ICoreType, Kind } from "../core/core";
 import { AutomatonType } from "./automaton/automaton";
@@ -8,7 +9,7 @@ import { GrammarType } from "./grammar/grammar";
 
 export type AlgorithmParams = {
   Kind: Kind,
-  AutomatonType?: AutomatonType
+  AutomatonType?: AutomatonType,
   GrammarType?: GrammarType,
 };
 
@@ -39,7 +40,7 @@ export class TestingAlgorithm implements IAlgorithm {
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
   init(): ICoreType | undefined {
-    return new AutomatonCore(this.outputType.AutomatonType!, "cy-secondary");
+    return new AutomatonCore(this.outputType.AutomatonType!, SECONDARY_CYTOSCAPE_ID);
   }
 
   next(): AlgorithmResult | undefined {

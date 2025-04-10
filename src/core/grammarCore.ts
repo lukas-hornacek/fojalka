@@ -1,3 +1,4 @@
+import { INITIAL_NONTERMINAL } from "../constants";
 import { IEditCommandVisitor, VisualVisitor } from "../engine/automaton/visitors/editCommand";
 import { ErrorMessage, IErrorMessage } from "../engine/common";
 import { AbstractGrammarFactory, IGrammarFactory } from "../engine/grammar/factories";
@@ -37,7 +38,7 @@ export class GrammarCore implements IGrammarCore {
 
   constructor(type: GrammarType) {
     this.factory = new AbstractGrammarFactory(type);
-    this.grammar = this.factory.createGrammar(["S"], [], "S");
+    this.grammar = this.factory.createGrammar([INITIAL_NONTERMINAL], [], INITIAL_NONTERMINAL);
 
     this.visual = new GrammarVisual();
     this.visitor = new VisualVisitor(this.visual);
