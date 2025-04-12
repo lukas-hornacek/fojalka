@@ -2,7 +2,7 @@ import { SECONDARY_CYTOSCAPE_ID } from "../constants";
 import { AutomatonCore } from "../core/automatonCore";
 import { ICoreType, Kind, ModeHolder } from "../core/core";
 import { AutomatonType } from "./automaton/automaton";
-import { AutomatonEditCommand } from "./automaton/commands/edit";
+import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RenameStateCommand, SetStateFinalFlagCommand } from "./automaton/commands/edit";
 import { IErrorMessage, ErrorMessage } from "./common";
 import { GrammarEditCommand } from "./grammar/commands/edit";
 import { GrammarType } from "./grammar/grammar";
@@ -95,5 +95,90 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
     this.inputCore.automaton.undo();
     this.index--;
   }
+
+  precomputeResults(){
+    let visited: string[][] = [];
+    let notProcessed: string[][] = [];
+    let initialState: string[] = [];
+    initialState.push(this.inputCore.automaton.initialStateId);
+    notProcessed.push(initialState);
+    visited.push(initialState);
+
+    //getting an alphabet for the input automaton
+    let alphabet: string[] = [];
+    for(const fromState in this.inputCore.automaton.deltaFunctionMatrix){
+      for(const toState in this.inputCore.automaton.deltaFunctionMatrix[fromState]){
+        const edges = this.inputCore.automaton.deltaFunctionMatrix[fromState][toState];
+        for(const i in edges){
+          if(!alphabet.includes(edges[i].inputChar)){
+              alphabet.push(edges[i].inputChar);
+          }
+        }
+      }                
+    }
+
+    //renaming initial state to a set containing the state
+    this.results = [];
+    let currentCommand: AutomatonEditCommand = new RenameStateCommand(this.outputCore!.automaton, this.inputCore.automaton.initialStateId, this.stateToString(initialState));
+    let currentHiglight: string[] = [this.inputCore.automaton.initialStateId];
+    this.results.push({highlight: currentHiglight, command: currentCommand});
+
+    //setting initial state as final if it was final originally
+    if(this.inputCore.automaton.finalStateIds.includes(this.inputCore.automaton.initialStateId)){
+      currentCommand = new SetStateFinalFlagCommand(this.outputCore!.automaton, this.stateToString(initialState), true);
+      this.results.push({highlight: currentHiglight, command: currentCommand});   
+    }
+
+    while(notProcessed.length !== 0){
+      let currentState: string[] = notProcessed.pop()!;
+      
+      for(const symbol in alphabet){
+        let newState: string[] = [];
+        let edgeHiglight = [];
+
+        for(const fromState in currentState){
+          for(const toState in this.inputCore.automaton.deltaFunctionMatrix[fromState]){
+            for(const id in this.inputCore.automaton.deltaFunctionMatrix[fromState][toState]){
+              if(this.inputCore.automaton.deltaFunctionMatrix[fromState][toState][id].inputChar === symbol))){
+                newState.push(toState);
+                edgeHiglight.push(this.inputCore.automaton.deltaFunctionMatrix[fromState][toState][id].id);
+              }
+            }
+            
+          }
+        }    
+        
+        if(!visited.some(state => this.equalState(state, newState))){
+          visited.push(newState);
+          notProcessed.push(newState);
+
+          currentCommand = new AddStateCommand(this.outputCore!.automaton, this.stateToString(newState));
+          this.results.push({highlight: newState, command: currentCommand});
+
+          if(this.inputCore.automaton.finalStateIds.some(id => newState.includes(id))){
+            currentCommand = new SetStateFinalFlagCommand(this.outputCore!.automaton, this.stateToString(newState), true);
+            this.results.push({highlight: newState, command: currentCommand});
+          }
+        }
+
+        currentCommand = new AddEdgeCommand(this.outputCore!.automaton, this.stateToString(currentState), this.stateToString(newState), this.outputCore!.createEdge({id:"", inputChar: symbol}));
+        this.results.push({highlight: edgeHiglight, command: currentCommand});
+      }
+    }
+
+  }
+
+  stateToString(state: string[]): string{
+    return "{" + state.join() + "}";
+  }
+
+  equalState(state1: string[], state2: string[]): boolean{
+    if(state1.length !== state2.length){
+      return false;
+    }
+
+    return state1.every(id => state2.includes(id));
+  }
+
 }
 
