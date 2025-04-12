@@ -3,7 +3,7 @@ import { AutomatonCore } from "../core/automatonCore";
 import { ICoreType, Kind, ModeHolder } from "../core/core";
 import { AutomatonType } from "./automaton/automaton";
 import { AutomatonEditCommand } from "./automaton/commands/edit";
-import { IErrorMessage } from "./common";
+import { IErrorMessage, ErrorMessage } from "./common";
 import { GrammarEditCommand } from "./grammar/commands/edit";
 import { GrammarType } from "./grammar/grammar";
 
@@ -51,3 +51,49 @@ export class TestingAlgorithm implements IAlgorithm {
     return;
   }
 }
+
+export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
+  inputType: AlgorithmParams = {Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE};
+  outputType: AlgorithmParams = {Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE};
+
+  inputCore: AutomatonCore;
+  outputCore?: AutomatonCore;
+
+  results?: AlgorithmResult[];
+  index: number = 0;
+
+  constructor(_inputCore: AutomatonCore){
+    this.inputCore = _inputCore;
+  }
+
+  init(mode: ModeHolder){
+    this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
+    return this.outputCore;
+  }
+
+  next(){
+    if(this.results === undefined){
+      return undefined;
+    }
+
+    //algorithm has already ended
+    if(this.index === this.results.length-1){
+      return undefined;
+    }
+    
+    return this.results[this.index++];
+  }
+
+  undo(){
+    if(this.results === undefined){
+      return new ErrorMessage("There is nothing to undo!")
+    }
+    if(this.index === 0){
+      return new ErrorMessage("There is nothing to undo!")
+    }
+    
+    this.inputCore.automaton.undo();
+    this.index--;
+  }
+}
+
