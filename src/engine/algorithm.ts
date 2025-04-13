@@ -1,4 +1,4 @@
-import { SECONDARY_CYTOSCAPE_ID } from "../constants";
+import { SECONDARY_CYTOSCAPE_ID, EPSILON } from "../constants";
 import { AutomatonCore } from "../core/automatonCore";
 import { ICoreType, Kind, ModeHolder } from "../core/core";
 import { AutomatonType } from "./automaton/automaton";
@@ -67,7 +67,16 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
   }
 
   init(mode: ModeHolder){
+    if(this.inputCore.automaton.automatonType !== this.inputType.AutomatonType){
+      throw new Error(`Cannot use algorithm, as it only works with finite automata.`);
+    }
+    if(this.hasEpsilonTransitions()){
+      throw new Error(`Cannot use algorithm, as the input automaton has epsilon transitions.`);
+    }
+
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
+    this.precomputeResults();
+
     return this.outputCore;
   }
 
@@ -139,7 +148,7 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
         for(const fromState in currentState){
           for(const toState in this.inputCore.automaton.deltaFunctionMatrix[fromState]){
             for(const id in this.inputCore.automaton.deltaFunctionMatrix[fromState][toState]){
-              if(this.inputCore.automaton.deltaFunctionMatrix[fromState][toState][id].inputChar === symbol))){
+              if(this.inputCore.automaton.deltaFunctionMatrix[fromState][toState][id].inputChar === symbol){
                 newState.push(toState);
                 edgeHiglight.push(this.inputCore.automaton.deltaFunctionMatrix[fromState][toState][id].id);
               }
@@ -178,6 +187,18 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
     }
 
     return state1.every(id => state2.includes(id));
+  }
+
+  hasEpsilonTransitions(): boolean{
+    for(const fromState in this.inputCore.automaton.deltaFunctionMatrix){
+      for(const toState in this.inputCore.automaton.deltaFunctionMatrix[fromState]){
+        if(this.inputCore.automaton.deltaFunctionMatrix[fromState][toState].some(edge => (edge.inputChar === EPSILON))){
+          return true;
+        }
+      }                
+    }
+
+    return false;
   }
 
 }
