@@ -94,10 +94,10 @@ export class Core implements ICore {
       return new ErrorMessage("Cannot start new algorithm when an algorithm is already in progress.");
     }
 
-    try{
+    try {
       this.algorithm = algorithm;
       this.secondary = algorithm.init(this.mode);
-    } catch(e: unknown){
+    } catch (e: unknown) {
       if (e instanceof Error) {
         return new ErrorMessage(e.message);
       }
