@@ -1,4 +1,4 @@
-import { SECONDARY_CYTOSCAPE_ID, EPSILON } from "../constants";
+import { SECONDARY_CYTOSCAPE_ID, EPSILON, INITIAL_STATE } from "../constants";
 import { AutomatonCore } from "../core/automatonCore";
 import { ICoreType, Kind, ModeHolder } from "../core/core";
 import { AutomatonType } from "./automaton/automaton";
@@ -34,23 +34,6 @@ export interface IAlgorithm {
   undo(): IErrorMessage | undefined,
 }
 
-// TODO remove this
-export class TestingAlgorithm implements IAlgorithm {
-  inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
-  outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
-
-  init(mode: ModeHolder): ICoreType | undefined {
-    return new AutomatonCore(this.outputType.AutomatonType!, SECONDARY_CYTOSCAPE_ID, mode);
-  }
-
-  next(): AlgorithmResult | undefined {
-    return;
-  }
-
-  undo(): IErrorMessage | undefined {
-    return;
-  }
-}
 
 export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
   inputType: AlgorithmParams = {Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE};
@@ -59,7 +42,7 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
   inputCore: AutomatonCore;
   outputCore?: AutomatonCore;
 
-  results?: AlgorithmResult[];
+  results: AlgorithmResult[] = [];
   index: number = 0;
 
   constructor(_inputCore: AutomatonCore){
@@ -68,10 +51,10 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
 
   init(mode: ModeHolder){
     if(this.inputCore.automaton.automatonType !== this.inputType.AutomatonType){
-      throw new Error(`Cannot use algorithm, as it only works with finite automata.`);
+      throw new Error("Cannot use algorithm, as it only works with finite automata.");
     }
     if(this.hasEpsilonTransitions()){
-      throw new Error(`Cannot use algorithm, as the input automaton has epsilon transitions.`);
+      throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions.");
     }
 
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
@@ -81,12 +64,11 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
   }
 
   next(){
-    if(this.results === undefined){
-      return undefined;
+    if(this.outputCore === undefined){
+      throw new Error("Cannot simulate algorithm step before start.");
     }
-
     //algorithm has already ended
-    if(this.index === this.results.length-1){
+    if(this.index === this.results.length){
       return undefined;
     }
     
@@ -94,11 +76,11 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
   }
 
   undo(){
-    if(this.results === undefined){
-      return new ErrorMessage("There is nothing to undo!")
+    if(this.outputCore === undefined){
+      return new ErrorMessage("Cannot undo algorithm step before start.")
     }
     if(this.index === 0){
-      return new ErrorMessage("There is nothing to undo!")
+      return new ErrorMessage("There is nothing to undo.")
     }
     
     this.inputCore.automaton.undo();
@@ -120,7 +102,7 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
         const edges = this.inputCore.automaton.deltaFunctionMatrix[fromState][toState];
         for(const i in edges){
           if(!alphabet.includes(edges[i].inputChar)){
-              alphabet.push(edges[i].inputChar);
+            alphabet.push(edges[i].inputChar);
           }
         }
       }                
@@ -128,14 +110,14 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
 
     //renaming initial state to a set containing the state
     this.results = [];
-    let currentCommand: AutomatonEditCommand = new RenameStateCommand(this.outputCore!.automaton, this.inputCore.automaton.initialStateId, this.stateToString(initialState));
-    let currentHiglight: string[] = [this.inputCore.automaton.initialStateId];
-    this.results.push({highlight: currentHiglight, command: currentCommand});
+    let currentCommand: AutomatonEditCommand = new RenameStateCommand(this.outputCore!.automaton, INITIAL_STATE, this.stateToString(initialState));
+    let stateHiglight: string[] = [this.inputCore.automaton.initialStateId];
+    this.results.push({highlight: stateHiglight, command: currentCommand});
 
     //setting initial state as final if it was final originally
     if(this.inputCore.automaton.finalStateIds.includes(this.inputCore.automaton.initialStateId)){
       currentCommand = new SetStateFinalFlagCommand(this.outputCore!.automaton, this.stateToString(initialState), true);
-      this.results.push({highlight: currentHiglight, command: currentCommand});   
+      this.results.push({highlight: stateHiglight, command: currentCommand});   
     }
 
     while(notProcessed.length !== 0){
@@ -153,20 +135,20 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm{
                 edgeHiglight.push(this.inputCore.automaton.deltaFunctionMatrix[fromState][toState][id].id);
               }
             }
-            
           }
         }    
+        stateHiglight = newState;
         
         if(!visited.some(state => this.equalState(state, newState))){
           visited.push(newState);
           notProcessed.push(newState);
 
           currentCommand = new AddStateCommand(this.outputCore!.automaton, this.stateToString(newState));
-          this.results.push({highlight: newState, command: currentCommand});
+          this.results.push({highlight: stateHiglight, command: currentCommand});
 
           if(this.inputCore.automaton.finalStateIds.some(id => newState.includes(id))){
             currentCommand = new SetStateFinalFlagCommand(this.outputCore!.automaton, this.stateToString(newState), true);
-            this.results.push({highlight: newState, command: currentCommand});
+            this.results.push({highlight: stateHiglight, command: currentCommand});
           }
         }
 
