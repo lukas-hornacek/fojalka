@@ -86,6 +86,7 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
     this.index--;
   }
 
+  //function computes all commands and highlits in advance and stores it in results
   precomputeResults() {
     const visited: string[][] = [];
     const notProcessed: string[][] = [];
@@ -126,6 +127,7 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
         const newState: string[] = [];
         const edgeHiglight = [];
 
+        //construct new state as set of states that we can get to from current state with the symbol
         for (const fromState in currentState) {
           for (const toState in this.inputCore.automaton.deltaFunctionMatrix[currentState[fromState]]) {
             for (const edge in this.inputCore.automaton.deltaFunctionMatrix[currentState[fromState]][toState]) {
@@ -138,6 +140,7 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
         }
         stateHiglight = newState;
 
+        //add new state if it hasnt been added before
         if (!visited.some(state => this.equalState(state, newState))) {
           visited.push(newState);
           notProcessed.push(newState);
@@ -151,6 +154,7 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
           }
         }
 
+        //add edge to new state
         currentCommand = new AddEdgeCommand(this.outputCore!.automaton, this.stateToString(currentState), this.stateToString(newState), this.outputCore!.createEdge({ id:"", inputChar: alphabet[symbol] }));
         this.results.push({ highlight: edgeHiglight, command: currentCommand });
       }

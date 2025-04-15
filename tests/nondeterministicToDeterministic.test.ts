@@ -74,86 +74,85 @@ test("small automaton test", () => {
 });
 
 test("testing algorithm functions", () => {
+  //testing error throwing on wrong inputs
+  let core = new AutomatonCore(AutomatonType.PDA, "test_core", new ModeHolder());
+  let algorithm = new NondeterministicToDeterministicAlgorithm(core);
 
-    //testing error throwing on wrong inputs
-    let core = new AutomatonCore(AutomatonType.PDA, "test_core", new ModeHolder());
-    let algorithm = new NondeterministicToDeterministicAlgorithm(core);
-  
-    expect(algorithm.inputCore).toBe(core);
-    expect(algorithm.outputCore).toBeUndefined();
-    expect(algorithm.results).toEqual([]);
-    expect(algorithm.index).toBe(0);
-    expect(() => algorithm.init(new ModeHolder)).toThrowError("Cannot use algorithm, as it only works with finite automata.");
-  
-    core = new AutomatonCore(AutomatonType.FINITE, "test_core", new ModeHolder());
-    core.automaton = new Automaton({
-      states: ["q0", "q1"],
-      deltaFunctionMatrix: { "q0":{ "q1":[new FiniteAutomatonEdge("1", EPSILON)] } },
-      automatonType: AutomatonType.FINITE,
-      initialStateId: "q0",
-      finalStateIds: ["q1"] });
-    algorithm = new NondeterministicToDeterministicAlgorithm(core);
-    expect(() => algorithm.init(new ModeHolder)).toThrowError("Cannot use algorithm, as the input automaton has epsilon transitions.");
-  
-    //testing usage of next()/undo() before init()
-    core.automaton = new Automaton({
-      states: ["q0", "q1"],
-      deltaFunctionMatrix: { "q0":{ "q1":[new FiniteAutomatonEdge("1", "a")] } },
-      automatonType: AutomatonType.FINITE,
-      initialStateId: "q0",
-      finalStateIds: ["q1"] });
+  expect(algorithm.inputCore).toBe(core);
+  expect(algorithm.outputCore).toBeUndefined();
+  expect(algorithm.results).toEqual([]);
+  expect(algorithm.index).toBe(0);
+  expect(() => algorithm.init(new ModeHolder)).toThrowError("Cannot use algorithm, as it only works with finite automata.");
 
-    expect(() => algorithm.next()).toThrowError("Cannot simulate algorithm step before start.");
-  
-    let message = algorithm.undo();
-    expect(message).toEqual(new ErrorMessage("Cannot undo algorithm step before start."));
-  
-    //testing usage of undo() before next()
-    let core2 = algorithm.init(new ModeHolder);
-    expect(core2).toBeInstanceOf(AutomatonCore);
-    
-    message = algorithm.undo();
-    expect(message).toEqual(new ErrorMessage("There is nothing to undo."));
-    
-    //second algorithm for testing undo() function
-    const algorithm2 = new NondeterministicToDeterministicAlgorithm(core);
-    const core3 = new AutomatonCore(AutomatonType.FINITE, "test_core2", new ModeHolder());
-    core3.automaton = new Automaton({
-      states: ["q0", "q1"],
-      deltaFunctionMatrix: { "q0":{ "q1":[new FiniteAutomatonEdge("1", "a")] } },
-      automatonType: AutomatonType.FINITE,
-      initialStateId: "q0",
-      finalStateIds: ["q1"] });
-    const core4 = algorithm2.init(new ModeHolder);
-    expect(core4).toBeInstanceOf(AutomatonCore);
-  
-    //testing if next + undo equals the original automaton
-    const result1 = algorithm.next();
-    core2.automaton.executeCommand((result1?.command as  AutomatonEditCommand));
+  core = new AutomatonCore(AutomatonType.FINITE, "test_core", new ModeHolder());
+  core.automaton = new Automaton({
+    states: ["q0", "q1"],
+    deltaFunctionMatrix: { "q0":{ "q1":[new FiniteAutomatonEdge("1", EPSILON)] } },
+    automatonType: AutomatonType.FINITE,
+    initialStateId: "q0",
+    finalStateIds: ["q1"] });
+  algorithm = new NondeterministicToDeterministicAlgorithm(core);
+  expect(() => algorithm.init(new ModeHolder)).toThrowError("Cannot use algorithm, as the input automaton has epsilon transitions.");
+
+  //testing usage of next()/undo() before init()
+  core.automaton = new Automaton({
+    states: ["q0", "q1"],
+    deltaFunctionMatrix: { "q0":{ "q1":[new FiniteAutomatonEdge("1", "a")] } },
+    automatonType: AutomatonType.FINITE,
+    initialStateId: "q0",
+    finalStateIds: ["q1"] });
+
+  expect(() => algorithm.next()).toThrowError("Cannot simulate algorithm step before start.");
+
+  let message = algorithm.undo();
+  expect(message).toEqual(new ErrorMessage("Cannot undo algorithm step before start."));
+
+  //testing usage of undo() before next()
+  const core2 = algorithm.init(new ModeHolder);
+  expect(core2).toBeInstanceOf(AutomatonCore);
+
+  message = algorithm.undo();
+  expect(message).toEqual(new ErrorMessage("There is nothing to undo."));
+
+  //second algorithm for testing undo() function
+  const algorithm2 = new NondeterministicToDeterministicAlgorithm(core);
+  const core3 = new AutomatonCore(AutomatonType.FINITE, "test_core2", new ModeHolder());
+  core3.automaton = new Automaton({
+    states: ["q0", "q1"],
+    deltaFunctionMatrix: { "q0":{ "q1":[new FiniteAutomatonEdge("1", "a")] } },
+    automatonType: AutomatonType.FINITE,
+    initialStateId: "q0",
+    finalStateIds: ["q1"] });
+  const core4 = algorithm2.init(new ModeHolder);
+  expect(core4).toBeInstanceOf(AutomatonCore);
+
+  //testing if next + undo equals the original automaton
+  const result1 = algorithm.next();
+  core2.automaton.executeCommand((result1?.command as AutomatonEditCommand));
+  algorithm.undo();
+  expect(core2.automaton).toEqual(core4.automaton);
+
+  //testing if next + undo + next return the same command as next
+  const result2 = algorithm.next();
+  core2.automaton.executeCommand((result2?.command as AutomatonEditCommand));
+  algorithm.undo();
+  expect(result1).toEqual(result2);
+
+  //testing if next + next + undo + undo equals the original automaton
+  core2.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
+  core2.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
+  algorithm.undo();
+  algorithm.undo();
+  expect(core2.automaton).toEqual(core4.automaton);
+
+  //testing if next + undo works in the entire algorthm
+  for (let i = 0; i < algorithm.results.length - 1; i++) {
+    core2.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
+    core4.automaton.executeCommand((algorithm2.next()?.command as AutomatonEditCommand));
+    expect(core2.automaton).toEqual(core4.automaton);
+
+    core2.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
     algorithm.undo();
     expect(core2.automaton).toEqual(core4.automaton);
-  
-    //testing if next + undo + next return the same command as next
-    const result2 = algorithm.next();
-    core2.automaton.executeCommand((result2?.command as  AutomatonEditCommand));
-    algorithm.undo();
-    expect(result1).toEqual(result2);
-  
-    //testing if next + next + undo + undo equals the original automaton
-    core2.automaton.executeCommand((algorithm.next()?.command as  AutomatonEditCommand));
-    core2.automaton.executeCommand((algorithm.next()?.command as  AutomatonEditCommand));
-    algorithm.undo();
-    algorithm.undo();
-    expect(core2.automaton).toEqual(core4.automaton);
-  
-    //testing if next + undo works in the entire algorthm
-    for (let i = 0; i < algorithm.results.length - 1; i++) {
-      core2.automaton.executeCommand((algorithm.next()?.command as  AutomatonEditCommand));
-      core4.automaton.executeCommand((algorithm2.next()?.command as  AutomatonEditCommand));
-      expect(core2.automaton).toEqual(core4.automaton);
-  
-      core2.automaton.executeCommand((algorithm.next()?.command as  AutomatonEditCommand));
-      algorithm.undo();
-      expect(core2.automaton).toEqual(core4.automaton);
-    }
-  });
+  }
+});
