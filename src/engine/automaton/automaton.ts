@@ -2,7 +2,7 @@ import { INITIAL_STACK_SYMBOL } from "../../constants.ts";
 import { ErrorMessage, IErrorMessage } from "../common.ts";
 import { AutomatonEditCommand } from "./commands/edit.ts";
 import { FiniteConfiguration, PDAConfiguration } from "./configuration.ts";
-import { IEdge } from "./edge.ts";
+import { FiniteAutomatonEdge, IEdge, PDAEdge } from "./edge.ts";
 import { IAutomatonSimulation, AutomatonSimulation } from "./simulation.ts";
 
 export enum AutomatonType {
@@ -81,13 +81,15 @@ export class Automaton implements IAutomaton {
 
   save(): IAutomatonMemento {
     return new AutomatonMemento(
-      this.states, this.deltaFunctionMatrix, this.automatonType
+      this.states, this.deltaFunctionMatrix, this.automatonType, this.initialStateId, this.finalStateIds
     );
   }
   restore(memento: IAutomatonMemento): void {
     this.states = memento.states;
     this.deltaFunctionMatrix = memento.deltaFunctionMatrix;
     this.automatonType = memento.automatonType;
+    this.initialStateId = memento.initialStateId;
+    this.finalStateIds = memento.finalStateIds;
   }
 
   createRunSimulation(word: string[]): IAutomatonSimulation {
@@ -107,20 +109,49 @@ export interface IAutomatonMemento {
   states: string[];
   deltaFunctionMatrix: Record<string, Record<string, IEdge[]>>;
   automatonType: AutomatonType;
+  initialStateId: string;
+  finalStateIds: string[];
 }
 
 export class AutomatonMemento implements IAutomatonMemento {
   states: string[];
   automatonType: AutomatonType;
   deltaFunctionMatrix: Record<string, Record<string, Array<IEdge>>>;
+  initialStateId: string;
+  finalStateIds: string[];
 
   constructor(
     _states: string[],
     _deltaFunctionMatrix: Record<string, Record<string, Array<IEdge>>>,
-    _automatonType: AutomatonType
+    _automatonType: AutomatonType,
+    _initialStateId: string,
+    _finalStateIds: string[]
   ) {
-    this.states = _states;
-    this.deltaFunctionMatrix = _deltaFunctionMatrix;
+    this.states = [..._states];
     this.automatonType = _automatonType;
+    this.initialStateId = _initialStateId;
+    this.finalStateIds = [..._finalStateIds];
+    
+    const deltaCopy: Record<string, Record<string, Array<IEdge>>> = {};
+    for(const fromState in _deltaFunctionMatrix){
+      deltaCopy[fromState] = {};
+      
+      for(const toState in _deltaFunctionMatrix[fromState]){
+        deltaCopy[fromState][toState] = [];
+
+        for(const i in _deltaFunctionMatrix[fromState][toState]){
+          const edge = _deltaFunctionMatrix[fromState][toState][i];
+
+          if(edge instanceof FiniteAutomatonEdge){
+            deltaCopy[fromState][toState].push(new FiniteAutomatonEdge(edge.id, edge.inputChar));
+          }
+          if(edge instanceof PDAEdge){
+            deltaCopy[fromState][toState].push(new PDAEdge(edge.id, edge.inputChar, edge.readStackChar, edge.writeStackWord));
+          }
+        }
+      }
+    }
+
+    this.deltaFunctionMatrix = deltaCopy;
   }
 }

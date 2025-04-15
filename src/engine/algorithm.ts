@@ -82,7 +82,7 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
       return new ErrorMessage("There is nothing to undo.");
     }
 
-    this.inputCore.automaton.undo();
+    this.outputCore.automaton.undo();
     this.index--;
   }
 
@@ -130,7 +130,7 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
           for (const toState in this.inputCore.automaton.deltaFunctionMatrix[currentState[fromState]]) {
             for (const edge in this.inputCore.automaton.deltaFunctionMatrix[currentState[fromState]][toState]) {
               if (this.inputCore.automaton.deltaFunctionMatrix[currentState[fromState]][toState][edge].inputChar === alphabet[symbol]) {
-                if (!newState.includes(toState)) newState.push(toState);
+                if (!newState.includes(toState)) { newState.push(toState); }
                 edgeHiglight.push(this.inputCore.automaton.deltaFunctionMatrix[currentState[fromState]][toState][edge].id);
               }
             }
