@@ -131,21 +131,21 @@ export class AutomatonMemento implements IAutomatonMemento {
     this.automatonType = _automatonType;
     this.initialStateId = _initialStateId;
     this.finalStateIds = [..._finalStateIds];
-    
+
     const deltaCopy: Record<string, Record<string, Array<IEdge>>> = {};
-    for(const fromState in _deltaFunctionMatrix){
+    for (const fromState in _deltaFunctionMatrix) {
       deltaCopy[fromState] = {};
-      
-      for(const toState in _deltaFunctionMatrix[fromState]){
+
+      for (const toState in _deltaFunctionMatrix[fromState]) {
         deltaCopy[fromState][toState] = [];
 
-        for(const i in _deltaFunctionMatrix[fromState][toState]){
+        for (const i in _deltaFunctionMatrix[fromState][toState]) {
           const edge = _deltaFunctionMatrix[fromState][toState][i];
 
-          if(edge instanceof FiniteAutomatonEdge){
+          if (edge instanceof FiniteAutomatonEdge) {
             deltaCopy[fromState][toState].push(new FiniteAutomatonEdge(edge.id, edge.inputChar));
           }
-          if(edge instanceof PDAEdge){
+          if (edge instanceof PDAEdge) {
             deltaCopy[fromState][toState].push(new PDAEdge(edge.id, edge.inputChar, edge.readStackChar, edge.writeStackWord));
           }
         }
