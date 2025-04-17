@@ -14,10 +14,12 @@ test("small automaton test", () => {
     states: ["q0", "q1"],
     deltaFunctionMatrix: {
       "q0":{ "q0":[new FiniteAutomatonEdge("1", "a")], "q1":[new FiniteAutomatonEdge("2", "a")] },
-      "q1":{ "q1":[new FiniteAutomatonEdge("3", "a"), new FiniteAutomatonEdge("4", "b")] } },
+      "q1":{ "q1":[new FiniteAutomatonEdge("3", "a"), new FiniteAutomatonEdge("4", "b")] } 
+    },
     automatonType: AutomatonType.FINITE,
     initialStateId: "q0",
-    finalStateIds: ["q1"] });
+    finalStateIds: ["q1"] 
+  });
 
   const algorithm = new NondeterministicToDeterministicAlgorithm(core);
   const core2 = algorithm.init(new ModeHolder());
@@ -32,8 +34,8 @@ test("small automaton test", () => {
   //testing properities of the new automaton
   expect(core2.automaton.states.length).toBe(4);
   const list = ["{q0}", "{q1}", "{q0,q1}", "{}"];
-  for (const state in list) {
-    expect(core2.automaton.states).toContain(list[state]);
+  for (const state of list) {
+    expect(core2.automaton.states).toContain(state);
   }
   expect(core2.automaton.finalStateIds).toHaveLength(2);
   expect(core2.automaton.finalStateIds).toContain("{q1}");

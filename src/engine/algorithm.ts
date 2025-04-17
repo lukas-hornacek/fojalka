@@ -97,12 +97,12 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
 
     //getting an alphabet for the input automaton
     const alphabet: string[] = [];
-    for (const fromState in this.inputCore.automaton.deltaFunctionMatrix) {
-      for (const toState in this.inputCore.automaton.deltaFunctionMatrix[fromState]) {
-        const edges = this.inputCore.automaton.deltaFunctionMatrix[fromState][toState];
-        for (const i in edges) {
-          if (!alphabet.includes(edges[i].inputChar)) {
-            alphabet.push(edges[i].inputChar);
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
+    for (const fromState in delta) {
+      for (const toState in delta[fromState]) {
+        for (const edge of delta[fromState][toState]) {
+          if (!alphabet.includes(edge.inputChar)) {
+            alphabet.push(edge.inputChar);
           }
         }
       }
@@ -123,17 +123,17 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
     while (notProcessed.length !== 0) {
       const currentState: string[] = notProcessed.pop()!;
 
-      for (const symbol in alphabet) {
+      for (const symbol of alphabet) {
         const newState: string[] = [];
         const edgeHiglight = [];
 
         //construct new state as set of states that we can get to from current state with the symbol
-        for (const fromState in currentState) {
-          for (const toState in this.inputCore.automaton.deltaFunctionMatrix[currentState[fromState]]) {
-            for (const edge in this.inputCore.automaton.deltaFunctionMatrix[currentState[fromState]][toState]) {
-              if (this.inputCore.automaton.deltaFunctionMatrix[currentState[fromState]][toState][edge].inputChar === alphabet[symbol]) {
+        for (const fromState of currentState) {
+          for (const toState in delta[fromState]) {
+            for (const edge of delta[fromState][toState]) {
+              if (edge.inputChar === symbol) {
                 if (!newState.includes(toState)) { newState.push(toState); }
-                edgeHiglight.push(this.inputCore.automaton.deltaFunctionMatrix[currentState[fromState]][toState][edge].id);
+                edgeHiglight.push(edge.id);
               }
             }
           }
@@ -155,7 +155,8 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
         }
 
         //add edge to new state
-        currentCommand = new AddEdgeCommand(this.outputCore!.automaton, this.stateToString(currentState), this.stateToString(newState), this.outputCore!.createEdge({ id:"", inputChar: alphabet[symbol] }));
+        const newEdge = this.outputCore!.createEdge({ id:"", inputChar: symbol });
+        currentCommand = new AddEdgeCommand(this.outputCore!.automaton, this.stateToString(currentState), this.stateToString(newState), newEdge);
         this.results.push({ highlight: edgeHiglight, command: currentCommand });
       }
     }
@@ -175,9 +176,10 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
   }
 
   hasEpsilonTransitions(): boolean {
-    for (const fromState in this.inputCore.automaton.deltaFunctionMatrix) {
-      for (const toState in this.inputCore.automaton.deltaFunctionMatrix[fromState]) {
-        if (this.inputCore.automaton.deltaFunctionMatrix[fromState][toState].some(edge => edge.inputChar === EPSILON)) {
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
+    for (const fromState in delta) {
+      for (const toState in delta[fromState]) {
+        if (delta[fromState][toState].some(edge => edge.inputChar === EPSILON)) {
           return true;
         }
       }
