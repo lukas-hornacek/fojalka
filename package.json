@@ -23,6 +23,7 @@
   "dependencies": {
     "bootstrap": "^5.3.3",
     "cytoscape": "^3.31.0",
+    "lodash": "^4.17.21",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

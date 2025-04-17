@@ -14,11 +14,11 @@ test("small automaton test", () => {
     states: ["q0", "q1"],
     deltaFunctionMatrix: {
       "q0":{ "q0":[new FiniteAutomatonEdge("1", "a")], "q1":[new FiniteAutomatonEdge("2", "a")] },
-      "q1":{ "q1":[new FiniteAutomatonEdge("3", "a"), new FiniteAutomatonEdge("4", "b")] } 
+      "q1":{ "q1":[new FiniteAutomatonEdge("3", "a"), new FiniteAutomatonEdge("4", "b")] }
     },
     automatonType: AutomatonType.FINITE,
     initialStateId: "q0",
-    finalStateIds: ["q1"] 
+    finalStateIds: ["q1"]
   });
 
   const algorithm = new NondeterministicToDeterministicAlgorithm(core);

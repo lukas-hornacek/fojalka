@@ -2,8 +2,9 @@ import { INITIAL_STACK_SYMBOL } from "../../constants.ts";
 import { ErrorMessage, IErrorMessage } from "../common.ts";
 import { AutomatonEditCommand } from "./commands/edit.ts";
 import { FiniteConfiguration, PDAConfiguration } from "./configuration.ts";
-import { FiniteAutomatonEdge, IEdge, PDAEdge } from "./edge.ts";
+import { IEdge } from "./edge.ts";
 import { IAutomatonSimulation, AutomatonSimulation } from "./simulation.ts";
+import { cloneDeep } from "lodash";
 
 export enum AutomatonType {
   FINITE = "FINITE",
@@ -131,27 +132,6 @@ export class AutomatonMemento implements IAutomatonMemento {
     this.automatonType = _automatonType;
     this.initialStateId = _initialStateId;
     this.finalStateIds = [..._finalStateIds];
-
-    const deltaCopy: Record<string, Record<string, Array<IEdge>>> = {};
-    for (const fromState in _deltaFunctionMatrix) {
-      deltaCopy[fromState] = {};
-
-      for (const toState in _deltaFunctionMatrix[fromState]) {
-        deltaCopy[fromState][toState] = [];
-
-        for (const i in _deltaFunctionMatrix[fromState][toState]) {
-          const edge = _deltaFunctionMatrix[fromState][toState][i];
-
-          if (edge instanceof FiniteAutomatonEdge) {
-            deltaCopy[fromState][toState].push(new FiniteAutomatonEdge(edge.id, edge.inputChar));
-          }
-          if (edge instanceof PDAEdge) {
-            deltaCopy[fromState][toState].push(new PDAEdge(edge.id, edge.inputChar, edge.readStackChar, edge.writeStackWord));
-          }
-        }
-      }
-    }
-
-    this.deltaFunctionMatrix = deltaCopy;
+    this.deltaFunctionMatrix = cloneDeep(_deltaFunctionMatrix);
   }
 }
