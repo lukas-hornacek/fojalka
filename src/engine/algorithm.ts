@@ -34,6 +34,24 @@ export interface IAlgorithm {
   undo(): IErrorMessage | undefined,
 }
 
+// TODO remove this
+export class TestingAlgorithm implements IAlgorithm {
+  inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
+  outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
+
+  init(mode: ModeHolder): ICoreType | undefined {
+    return new AutomatonCore(this.outputType.AutomatonType!, SECONDARY_CYTOSCAPE_ID, mode);
+  }
+
+  next(): AlgorithmResult | undefined {
+    return;
+  }
+
+  undo(): IErrorMessage | undefined {
+    return;
+  }
+}
+
 export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
