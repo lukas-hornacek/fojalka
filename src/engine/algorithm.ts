@@ -208,3 +208,72 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
 
 }
 
+export class RemoveEpsilonAlgorithm implements IAlgorithm {
+  inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
+  outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
+
+  inputCore: AutomatonCore;
+
+  results?: AlgorithmResult[];
+  index: number = 0;
+
+  constructor(_inputCore: AutomatonCore) {
+    this.inputCore = _inputCore;
+  }
+
+  init(_mode: ModeHolder) {
+    if (this.inputCore.automaton.automatonType !== this.inputType.AutomatonType) {
+      throw new Error("Cannot use algorithm, as it only works with finite automata.");
+    }
+    if (this.hasEpsilonTransitions()) {
+      this.precomputeResults();
+    } else {
+      this.results = [];
+    }
+
+    return undefined;
+  }
+
+  next() {
+    if (this.results === undefined) {
+      throw new Error("Cannot simulate algorithm step before start.");
+    }
+    //algorithm has already ended
+    if (this.index === this.results.length) {
+      return undefined;
+    }
+
+    return this.results[this.index++];
+  }
+
+  undo() {
+    if (this.results === undefined) {
+      return new ErrorMessage("Cannot undo algorithm step before start.");
+    }
+    if (this.index === 0) {
+      return new ErrorMessage("There is nothing to undo.");
+    }
+
+    this.inputCore.automaton.undo();
+    this.index--;
+  }
+
+  //function computes all commands and highlits in advance and stores it in results
+  precomputeResults() {
+    return;
+  }
+
+  hasEpsilonTransitions(): boolean {
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
+    for (const fromState in delta) {
+      for (const toState in delta[fromState]) {
+        if (delta[fromState][toState].some(edge => edge.inputChar === EPSILON)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+}
