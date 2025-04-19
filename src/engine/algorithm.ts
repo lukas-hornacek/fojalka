@@ -2,7 +2,7 @@ import { SECONDARY_CYTOSCAPE_ID, EPSILON, INITIAL_STATE } from "../constants";
 import { AutomatonCore } from "../core/automatonCore";
 import { ICoreType, Kind, ModeHolder } from "../core/core";
 import { AutomatonType } from "./automaton/automaton";
-import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RenameStateCommand, SetStateFinalFlagCommand } from "./automaton/commands/edit";
+import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RemoveEdgeCommand, RenameStateCommand, SetStateFinalFlagCommand } from "./automaton/commands/edit";
 import { IErrorMessage, ErrorMessage } from "./common";
 import { GrammarEditCommand } from "./grammar/commands/edit";
 import { GrammarType } from "./grammar/grammar";
@@ -260,7 +260,87 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
 
   //function computes all commands and highlits in advance and stores it in results
   precomputeResults() {
-    return;
+    this.results = [];
+    const epsilonTails: Record<string, string[]> = {};
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
+
+    //computing epsilon tails for all states
+    const stack: string[] = [];
+    for (const state of this.inputCore.automaton.states) {
+      epsilonTails[state] = [state];
+      stack.push(state);
+
+      while (stack.length !== 0) {
+        const currentState: string = stack.pop()!;
+
+        for (const newState in delta[currentState]) {
+          if (!epsilonTails[state].includes(newState) && delta[currentState][newState].some(edge => edge.inputChar === EPSILON)) {
+            stack.push(newState);
+            epsilonTails[state].push(newState);
+          }
+        }
+      }
+    }
+
+    //getting an alphabet for the input automaton
+    const alphabet: string[] = [];
+    for (const fromState in delta) {
+      for (const toState in delta[fromState]) {
+        for (const edge of delta[fromState][toState]) {
+          if (!alphabet.includes(edge.inputChar)) {
+            alphabet.push(edge.inputChar);
+          }
+        }
+      }
+    }
+
+    //removing edges with epsilon
+    for (const fromState in delta) {
+      for (const toState in delta[fromState]) {
+        for (const edge of delta[fromState][toState]) {
+          if (edge.inputChar === EPSILON) {
+            const command = new RemoveEdgeCommand(this.inputCore.automaton, fromState, toState, edge.id);
+            this.results.push({ highlight: [], command: command });
+          } 
+        }
+      }
+    }
+
+    //addind transitions to states expept initial state
+    for (const state in this.inputCore.automaton.states) {
+      if (state !== this.inputCore.automaton.initialStateId) {
+        for (const symbol of alphabet) {
+          if (symbol !== EPSILON) {
+            const endStates = this.getEndStates(state, symbol, epsilonTails);
+
+            for (const newState of endStates) {
+              const edge = this.inputCore.createEdge({ id: "", inputChar: symbol });
+              const command = new AddEdgeCommand(this.inputCore.automaton, state, newState, edge);
+              this.results.push({ highlight: [], command: command });
+            }
+          }
+        }
+      }
+    }
+
+    //adding transitions to initial state
+    for (const symbol of alphabet) {
+      for (const state of epsilonTails[this.inputCore.automaton.initialStateId]) {
+        const endStates = this.getEndStates(state, symbol, epsilonTails);
+  
+        for (const newState in endStates) {
+          const edge = this.inputCore.createEdge({ id: "", inputChar: symbol });
+          const command = new AddEdgeCommand(this.inputCore.automaton, state, newState, edge);
+          this.results.push({ highlight: [], command: command });
+        }
+      }
+    }
+
+    //setting initial state as final if it has final state in epsilon tail
+    if (epsilonTails[this.inputCore.automaton.initialStateId].some(state => this.inputCore.automaton.finalStateIds.includes(state))) {
+      const command = new SetStateFinalFlagCommand(this.inputCore.automaton, this.inputCore.automaton.initialStateId, true);
+      this.results.push({ highlight: [], command: command });
+    }
   }
 
   hasEpsilonTransitions(): boolean {
@@ -274,6 +354,24 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     }
 
     return false;
+  }
+
+  //returns set of states that are in epsilon tail of some state 'q', that is accesible from state 'state' on symbol 'symbol'
+  getEndStates(state: string, symbol: string, epsilonTails: Record<string, string[]>): string[] {
+    const endStates: string[] = [];
+    for (const nextState in this.inputCore.automaton.deltaFunctionMatrix[state]) {
+      for (const edge of this.inputCore.automaton.deltaFunctionMatrix[state][nextState]) {
+        if (edge.inputChar === symbol) {
+          for (const newState of epsilonTails[nextState]) {
+            if (!endStates.includes(newState)) {
+              endStates.push(newState);
+            }
+          }
+        }
+      }
+    }
+
+    return endStates;
   }
 
 }
