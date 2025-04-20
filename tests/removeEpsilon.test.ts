@@ -96,12 +96,68 @@ test("testing algorithm functions", () => {
 
   //testing if next + undo works in the entire algorthm
   for (let i = 0; i < algorithm.results!.length - 1; i++) {
-      core.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
-      core2.automaton.executeCommand((algorithm2.next()?.command as AutomatonEditCommand));
-      expect(core2.automaton).toEqual(core.automaton);
+    core.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
+    core2.automaton.executeCommand((algorithm2.next()?.command as AutomatonEditCommand));
+    expect(core2.automaton).toEqual(core.automaton);
 
-      core.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
-      algorithm.undo();
-      expect(core2.automaton).toEqual(core.automaton);
-    }
+    core.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
+    algorithm.undo();
+    expect(core2.automaton).toEqual(core.automaton);
+  }
 });
+
+test("testing algorithm corectness", () => {
+    const core = new AutomatonCore(AutomatonType.FINITE, "test_core", new ModeHolder());
+    const algorithm = new RemoveEpsilonAlgorithm(core);
+  
+    core.automaton = new Automaton({
+      states: ["q0", "q1", "q2", "q3"],
+      deltaFunctionMatrix: {
+        "q0":{ "q1":[new FiniteAutomatonEdge("1", EPSILON)], "q3":[new FiniteAutomatonEdge("2", "a"), new FiniteAutomatonEdge("3", "b")] },
+        "q1":{ "q1":[new FiniteAutomatonEdge("3", "b")], "q2":[new FiniteAutomatonEdge("4", "a")] },
+        "q2":{ "q0":[new FiniteAutomatonEdge("5", EPSILON)] }
+      },
+      automatonType: AutomatonType.FINITE,
+      initialStateId: "q0",
+      finalStateIds: ["q1", "q3"]
+    });
+
+    algorithm.init(new ModeHolder());
+
+    //running the algorithm
+    let result = algorithm.next();
+    while (result !== undefined) {
+      core.automaton.executeCommand((result.command as AutomatonEditCommand));
+      result = algorithm.next();
+    }
+
+    //testing properities of the new automaton
+    expect(core.automaton.states).toEqual(["q0", "q1", "q2", "q3"]);
+    expect(core.automaton.finalStateIds).toEqual(["q1", "q3", "q0"]);
+    expect(core.automaton.initialStateId).toBe("q0");
+    expect(core.automaton.automatonType).toBe(AutomatonType.FINITE);
+
+    expect(algorithm.hasEpsilonTransitions()).toBeFalsy();
+
+    for (const state of ["q0", "q2"]){
+      expect(core.automaton.deltaFunctionMatrix["q0"][state]).toHaveLength(1);
+      expect(core.automaton.deltaFunctionMatrix["q0"][state][0].inputChar).toBe("a");
+    }
+    for (const state of ["q1", "q3"]){
+      expect(core.automaton.deltaFunctionMatrix["q0"][state]).toHaveLength(2);
+      expect(core.automaton.deltaFunctionMatrix["q0"][state][0].inputChar).toBeOneOf(["a", "b"]);
+      expect(core.automaton.deltaFunctionMatrix["q0"][state][1].inputChar).toBeOneOf(["a", "b"]);  
+    }
+
+    for (const state of ["q0", "q2"]){
+        expect(core.automaton.deltaFunctionMatrix["q1"][state]).toHaveLength(1);
+        expect(core.automaton.deltaFunctionMatrix["q1"][state][0].inputChar).toBe("a");
+    }
+    expect(core.automaton.deltaFunctionMatrix["q1"]["q1"]).toHaveLength(2);
+    expect(core.automaton.deltaFunctionMatrix["q1"]["q1"][0].inputChar).toBeOneOf(["a", "b"]);
+    expect(core.automaton.deltaFunctionMatrix["q1"]["q1"][1].inputChar).toBeOneOf(["a", "b"]);
+    expect(core.automaton.deltaFunctionMatrix["q1"]["q3"]).toBeUndefined();
+
+    expect(core.automaton.deltaFunctionMatrix["q2"]).toEqual({"q0":[]});
+    expect(core.automaton.deltaFunctionMatrix["q3"]).toBeUndefined();
+  });
