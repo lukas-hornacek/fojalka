@@ -264,8 +264,10 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
   precomputeResults() {
     this.results = [];
     const epsilonTails: Record<string, string[]> = {};
-    const delta = this.inputCore.automaton.deltaFunctionMatrix;
     const addedEdges: string[][] = [];
+    
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
+    const initial = this.inputCore.automaton.initialStateId;
 
     //computing epsilon tails for all states
     const stack: string[] = [];
@@ -311,7 +313,7 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
 
     //addind transitions to states expept initial state
     for (const state of this.inputCore.automaton.states) {
-      if (state !== this.inputCore.automaton.initialStateId) {
+      if (state !== initial) {
         for (const symbol of alphabet) {
           const endStates = this.getEndStates(state, symbol, epsilonTails);
 
@@ -331,16 +333,16 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
 
     //adding transitions to initial state
     for (const symbol of alphabet) {
-      for (const state of epsilonTails[this.inputCore.automaton.initialStateId]) {
+      for (const state of epsilonTails[initial]) {
         const endStates = this.getEndStates(state, symbol, epsilonTails);
 
         for (const newState of endStates) {
-          if (delta[this.inputCore.automaton.initialStateId][newState] === undefined || !delta[this.inputCore.automaton.initialStateId][newState].some(edge => edge.inputChar === symbol)) {
-            if (!addedEdges.some(edge => edge[0] === this.inputCore.automaton.initialStateId && edge[1] === newState && edge[2] === symbol)) {
+          if (delta[initial][newState] === undefined || !delta[initial][newState].some(edge => edge.inputChar === symbol)) {
+            if (!addedEdges.some(edge => edge[0] === initial && edge[1] === newState && edge[2] === symbol)) {
               const edge = this.inputCore.createEdge({ id: "", inputChar: symbol });
-              const command = new AddEdgeCommand(this.inputCore.automaton, this.inputCore.automaton.initialStateId, newState, edge);
+              const command = new AddEdgeCommand(this.inputCore.automaton, initial, newState, edge);
               this.results.push({ highlight: [], command: command });
-              addedEdges.push([this.inputCore.automaton.initialStateId, newState, symbol]);
+              addedEdges.push([initial, newState, symbol]);
             }
           }
         }
@@ -348,8 +350,8 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     }
 
     //setting initial state as final if it has final state in epsilon tail
-    if (epsilonTails[this.inputCore.automaton.initialStateId].some(state => this.inputCore.automaton.finalStateIds.includes(state))) {
-      const command = new SetStateFinalFlagCommand(this.inputCore.automaton, this.inputCore.automaton.initialStateId, true);
+    if (epsilonTails[initial].some(state => this.inputCore.automaton.finalStateIds.includes(state))) {
+      const command = new SetStateFinalFlagCommand(this.inputCore.automaton, initial, true);
       this.results.push({ highlight: [], command: command });
     }
   }
