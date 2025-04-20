@@ -213,6 +213,7 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
   inputCore: AutomatonCore;
+  outputCore?: AutomatonCore;
 
   results?: AlgorithmResult[];
   index: number = 0;
@@ -221,7 +222,7 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     this.inputCore = _inputCore;
   }
 
-  init(_mode: ModeHolder) {
+  init(mode: ModeHolder) {
     if (this.inputCore.automaton.automatonType !== this.inputType.AutomatonType) {
       throw new Error("Cannot use algorithm, as it only works with finite automata.");
     }
@@ -230,6 +231,7 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     } else {
       this.results = [];
     }
+    this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
 
     return undefined;
   }
@@ -263,6 +265,7 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     this.results = [];
     const epsilonTails: Record<string, string[]> = {};
     const delta = this.inputCore.automaton.deltaFunctionMatrix;
+    const addedEdges: string[][] = [];
 
     //computing epsilon tails for all states
     const stack: string[] = [];
@@ -287,7 +290,7 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     for (const fromState in delta) {
       for (const toState in delta[fromState]) {
         for (const edge of delta[fromState][toState]) {
-          if (!alphabet.includes(edge.inputChar)) {
+          if (!alphabet.includes(edge.inputChar) && edge.inputChar !== EPSILON) {
             alphabet.push(edge.inputChar);
           }
         }
@@ -301,22 +304,25 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
           if (edge.inputChar === EPSILON) {
             const command = new RemoveEdgeCommand(this.inputCore.automaton, fromState, toState, edge.id);
             this.results.push({ highlight: [], command: command });
-          } 
+          }
         }
       }
     }
 
     //addind transitions to states expept initial state
-    for (const state in this.inputCore.automaton.states) {
+    for (const state of this.inputCore.automaton.states) {
       if (state !== this.inputCore.automaton.initialStateId) {
         for (const symbol of alphabet) {
-          if (symbol !== EPSILON) {
-            const endStates = this.getEndStates(state, symbol, epsilonTails);
+          const endStates = this.getEndStates(state, symbol, epsilonTails);
 
-            for (const newState of endStates) {
-              const edge = this.inputCore.createEdge({ id: "", inputChar: symbol });
-              const command = new AddEdgeCommand(this.inputCore.automaton, state, newState, edge);
-              this.results.push({ highlight: [], command: command });
+          for (const newState of endStates) {
+            if (delta[state][newState] === undefined || !delta[state][newState].some(edge => edge.inputChar === symbol)) {
+              if (!addedEdges.some(edge => edge[0] === state && edge[1] === newState && edge[2] === symbol)) {
+                const edge = this.inputCore.createEdge({ id: "", inputChar: symbol });
+                const command = new AddEdgeCommand(this.inputCore.automaton, state, newState, edge);
+                this.results.push({ highlight: [], command: command });
+                addedEdges.push([state, newState, symbol]);
+              }
             }
           }
         }
@@ -327,11 +333,16 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     for (const symbol of alphabet) {
       for (const state of epsilonTails[this.inputCore.automaton.initialStateId]) {
         const endStates = this.getEndStates(state, symbol, epsilonTails);
-  
-        for (const newState in endStates) {
-          const edge = this.inputCore.createEdge({ id: "", inputChar: symbol });
-          const command = new AddEdgeCommand(this.inputCore.automaton, state, newState, edge);
-          this.results.push({ highlight: [], command: command });
+
+        for (const newState of endStates) {
+          if (delta[this.inputCore.automaton.initialStateId][newState] === undefined || !delta[this.inputCore.automaton.initialStateId][newState].some(edge => edge.inputChar === symbol)) {
+            if (!addedEdges.some(edge => edge[0] === this.inputCore.automaton.initialStateId && edge[1] === newState && edge[2] === symbol)) {
+              const edge = this.inputCore.createEdge({ id: "", inputChar: symbol });
+              const command = new AddEdgeCommand(this.inputCore.automaton, this.inputCore.automaton.initialStateId, newState, edge);
+              this.results.push({ highlight: [], command: command });
+              addedEdges.push([this.inputCore.automaton.initialStateId, newState, symbol]);
+            }
+          }
         }
       }
     }
