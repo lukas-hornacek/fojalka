@@ -265,7 +265,7 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     this.results = [];
     const epsilonTails: Record<string, string[]> = {};
     const addedEdges: string[][] = [];
-    
+
     const delta = this.inputCore.automaton.deltaFunctionMatrix;
     const initial = this.inputCore.automaton.initialStateId;
 
