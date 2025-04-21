@@ -213,6 +213,8 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
   inputCore: AutomatonCore;
+
+  //only for the mode in init, so it wont be unused variable
   outputCore?: AutomatonCore;
 
   results?: AlgorithmResult[];
@@ -231,6 +233,8 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     } else {
       this.results = [];
     }
+
+    //TODO - we need to decide if we want this or we always want second window
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
 
     return undefined;
@@ -311,7 +315,7 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
       }
     }
 
-    //addind transitions to states expept initial state
+    //addind transitions from states except the initial state
     for (const state of this.inputCore.automaton.states) {
       if (state !== initial) {
         for (const symbol of alphabet) {
@@ -331,7 +335,7 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
       }
     }
 
-    //adding transitions to initial state
+    //adding transitions from the initial state
     for (const symbol of alphabet) {
       for (const state of epsilonTails[initial]) {
         const endStates = this.getEndStates(state, symbol, epsilonTails);
@@ -349,7 +353,7 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
       }
     }
 
-    //setting initial state as final if it has final state in epsilon tail
+    //setting initial state as final if it has final state in its epsilon tail
     if (epsilonTails[initial].some(state => this.inputCore.automaton.finalStateIds.includes(state))) {
       const command = new SetStateFinalFlagCommand(this.inputCore.automaton, initial, true);
       this.results.push({ highlight: [], command: command });
