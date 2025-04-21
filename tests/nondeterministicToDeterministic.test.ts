@@ -118,21 +118,14 @@ test("testing algorithm functions", () => {
 
   //second algorithm for testing undo() function
   const algorithm2 = new NondeterministicToDeterministicAlgorithm(core);
-  const core3 = new AutomatonCore(AutomatonType.FINITE, "test_core2", new ModeHolder());
-  core3.automaton = new Automaton({
-    states: ["q0", "q1"],
-    deltaFunctionMatrix: { "q0":{ "q1":[new FiniteAutomatonEdge("1", "a")] } },
-    automatonType: AutomatonType.FINITE,
-    initialStateId: "q0",
-    finalStateIds: ["q1"] });
-  const core4 = algorithm2.init(new ModeHolder);
-  expect(core4).toBeInstanceOf(AutomatonCore);
+  const core3 = algorithm2.init(new ModeHolder);
+  expect(core3).toBeInstanceOf(AutomatonCore);
 
   //testing if next + undo equals the original automaton
   const result1 = algorithm.next();
   core2.automaton.executeCommand((result1?.command as AutomatonEditCommand));
   algorithm.undo();
-  expect(core2.automaton).toEqual(core4.automaton);
+  expect(core2.automaton).toEqual(core3.automaton);
 
   //testing if next + undo + next return the same command as next
   const result2 = algorithm.next();
@@ -145,16 +138,16 @@ test("testing algorithm functions", () => {
   core2.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
   algorithm.undo();
   algorithm.undo();
-  expect(core2.automaton).toEqual(core4.automaton);
+  expect(core2.automaton).toEqual(core3.automaton);
 
   //testing if next + undo works in the entire algorthm
   for (let i = 0; i < algorithm.results.length - 1; i++) {
     core2.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
-    core4.automaton.executeCommand((algorithm2.next()?.command as AutomatonEditCommand));
-    expect(core2.automaton).toEqual(core4.automaton);
+    core3.automaton.executeCommand((algorithm2.next()?.command as AutomatonEditCommand));
+    expect(core2.automaton).toEqual(core3.automaton);
 
     core2.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
     algorithm.undo();
-    expect(core2.automaton).toEqual(core4.automaton);
+    expect(core2.automaton).toEqual(core3.automaton);
   }
 });
