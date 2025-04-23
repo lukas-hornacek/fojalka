@@ -1,6 +1,7 @@
 import { SECONDARY_CYTOSCAPE_ID, EPSILON, INITIAL_STATE } from "../constants";
 import { AutomatonCore } from "../core/automatonCore";
 import { ICoreType, Kind, ModeHolder } from "../core/core";
+import { GrammarCore } from "../core/grammarCore";
 import { AutomatonType } from "./automaton/automaton";
 import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RemoveEdgeCommand, RenameStateCommand, SetStateFinalFlagCommand } from "./automaton/commands/edit";
 import { IErrorMessage, ErrorMessage } from "./common";
@@ -389,6 +390,62 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     }
 
     return endStates;
+  }
+
+}
+
+export class AutomatonToGrammarAlgorithm implements IAlgorithm {
+  inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
+  outputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
+
+  inputCore: AutomatonCore;
+  outputCore?: GrammarCore;
+
+  results: AlgorithmResult[] = [];
+  index: number = 0;
+
+  constructor(_inputCore: AutomatonCore) {
+    this.inputCore = _inputCore;
+  }
+
+  init(mode: ModeHolder) {
+    if (this.inputCore.automaton.automatonType !== this.inputType.AutomatonType) {
+      throw new Error("Cannot use algorithm, as it only works with finite automata.");
+    }
+
+    this.outputCore = new GrammarCore(GrammarType.REGULAR, mode);
+    this.precomputeResults();
+
+    return this.outputCore;
+  }
+
+  next() {
+    if (this.outputCore === undefined) {
+      throw new Error("Cannot simulate algorithm step before start.");
+    }
+    //algorithm has already ended
+    if (this.index === this.results.length) {
+      return undefined;
+    }
+
+    return this.results[this.index++];
+  }
+
+  undo() {
+    if (this.outputCore === undefined) {
+      return new ErrorMessage("Cannot undo algorithm step before start.");
+    }
+    if (this.index === 0) {
+      return new ErrorMessage("There is nothing to undo.");
+    }
+
+    this.outputCore.grammar.undo();
+    this.index--;
+  }
+
+  //function computes all commands and highlights in advance and stores it in results
+  precomputeResults() {
+    
   }
 
 }
