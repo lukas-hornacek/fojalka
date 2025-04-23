@@ -5,7 +5,7 @@ import { GrammarCore } from "../core/grammarCore";
 import { AutomatonType } from "./automaton/automaton";
 import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RemoveEdgeCommand, RenameStateCommand, SetStateFinalFlagCommand } from "./automaton/commands/edit";
 import { IErrorMessage, ErrorMessage } from "./common";
-import { GrammarEditCommand } from "./grammar/commands/edit";
+import { AddProductionRuleCommand, GrammarEditCommand } from "./grammar/commands/edit";
 import { GrammarType } from "./grammar/grammar";
 
 export type AlgorithmParams = {
@@ -445,7 +445,32 @@ export class AutomatonToGrammarAlgorithm implements IAlgorithm {
 
   //function computes all commands and highlights in advance and stores it in results
   precomputeResults() {
-    
-  }
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
 
+    //for every edge add rule from one state to a word consisting of the symbol and the other state
+    for (const from in delta) {
+      for (const to in delta[from]) {
+        for (const edge of delta [from][to]) {
+          let output = [];
+          if (edge.inputChar === EPSILON) {
+            output = [to];
+          } else {
+            output = [edge.inputChar, to]
+          }
+          const rule = this.outputCore!.factory.createProductionRule(from, output, this.outputCore!.grammar)
+          const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
+          const highlight = [edge.id];
+          this.results.push({ highlight: highlight, command: command});
+        }
+      }
+    }
+
+    //for every final state add rule from that state to epsilon
+    for (const state of this.inputCore.automaton.finalStateIds) {
+      const rule = this.outputCore!.factory.createProductionRule(state, [EPSILON], this.outputCore!.grammar)
+      const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
+      const highlight = [state];
+      this.results.push({ highlight: highlight, command: command});
+    }
+  }
 }
