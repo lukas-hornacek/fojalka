@@ -414,6 +414,11 @@ export class AutomatonToGrammarAlgorithm implements IAlgorithm {
     }
 
     this.outputCore = new GrammarCore(GrammarType.REGULAR, mode);
+    //assign correct nonterminal and terminal symbols to grammar
+    this.outputCore.grammar.nonTerminalSymbols = this.inputCore.automaton.states;
+    this.outputCore.grammar.terminalSymbols = this.getAlphabet();
+    this.outputCore.grammar.initialNonTerminalSymbol = this.inputCore.automaton.initialStateId;
+
     this.precomputeResults();
 
     return this.outputCore;
@@ -455,22 +460,37 @@ export class AutomatonToGrammarAlgorithm implements IAlgorithm {
           if (edge.inputChar === EPSILON) {
             output = [to];
           } else {
-            output = [edge.inputChar, to]
+            output = [edge.inputChar, to];
           }
-          const rule = this.outputCore!.factory.createProductionRule(from, output, this.outputCore!.grammar)
+          const rule = this.outputCore!.factory.createProductionRule(from, output, this.outputCore!.grammar);
           const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
-          const highlight = [edge.id];
-          this.results.push({ highlight: highlight, command: command});
+          this.results.push({ highlight: [edge.id], command: command });
         }
       }
     }
 
     //for every final state add rule from that state to epsilon
     for (const state of this.inputCore.automaton.finalStateIds) {
-      const rule = this.outputCore!.factory.createProductionRule(state, [EPSILON], this.outputCore!.grammar)
+      const rule = this.outputCore!.factory.createProductionRule(state, [EPSILON], this.outputCore!.grammar);
       const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
-      const highlight = [state];
-      this.results.push({ highlight: highlight, command: command});
+      this.results.push({ highlight: [state], command: command });
     }
+  }
+
+  getAlphabet() {
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
+
+    const alphabet: string[] = [];
+    for (const fromState in delta) {
+      for (const toState in delta[fromState]) {
+        for (const edge of delta[fromState][toState]) {
+          if (!alphabet.includes(edge.inputChar) && edge.inputChar !== EPSILON) {
+            alphabet.push(edge.inputChar);
+          }
+        }
+      }
+    }
+
+    return alphabet;
   }
 }
