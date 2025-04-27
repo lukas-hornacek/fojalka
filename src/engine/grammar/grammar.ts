@@ -104,7 +104,7 @@ export class GrammarMemento {
     terminalSymbols: string[],
     initialNonTerminalSymbol: string,
     productionRules: ProductionRule[]) {
-    
+
     this.grammarType = grammarType;
     this.nonTerminalSymbols = [...nonTerminalSymbols];
     this.terminalSymbols = [...terminalSymbols];
