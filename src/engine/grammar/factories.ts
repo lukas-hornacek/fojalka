@@ -64,7 +64,7 @@ export class RegularGrammarFactory extends IGrammarFactory {
 
   public createProductionRule(inputNonTerminal: string, outputSymbols: string[], grammar: Grammar): ProductionRule {
     const lastOutputSymbol = outputSymbols.slice(-1)[0];
-    const outputIsEpsilon = outputSymbols.length === 1 && lastOutputSymbol === EPSILON;
+    const outputIsEpsilon = lastOutputSymbol === EPSILON;
     const lastOutputSymbolIsTerminal = grammar.hasTerminalSymbol(lastOutputSymbol);
     const lastOutputSymbolIsNonTerminal = grammar.hasNonTerminalSymbol(lastOutputSymbol);
     const prefixOutputSymbols = outputSymbols.slice(0, -1);
