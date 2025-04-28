@@ -20,8 +20,7 @@ export class NextStepVisitor implements IConfigurationVisitor {
   // stores the edge traversed in this.result
   visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration {
     if (configuration.remainingInput.length === 0) {
-      //TODO this should be error handling as well
-      return configuration;
+      throw new Error("Input end reached");
     }
     const nextSymbol = configuration.remainingInput[0];
 
@@ -38,7 +37,7 @@ export class NextStepVisitor implements IConfigurationVisitor {
     }
 
     if (nextState === undefined) {
-      return configuration;
+      throw new Error("Step for the symbol doesn't exist in the delta function"); 
     } else {
       const newConfiguration = new FiniteConfiguration(nextState, configuration.remainingInput.slice(1));
       return newConfiguration;
@@ -47,13 +46,12 @@ export class NextStepVisitor implements IConfigurationVisitor {
 
   visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration {
     if (configuration.remainingInput.length === 0) {
-      //TODO this should be error handling as well
-      return configuration;
+      throw new Error("Input end reached");
     }
 
     
     if ( this.automaton.automatonType!=AutomatonType.PDA ){
-      // TODO errorMessage
+      throw new Error("Wrong automaton type");
     }
 
     const nextSymbol = configuration.remainingInput[0];
@@ -74,13 +72,16 @@ export class NextStepVisitor implements IConfigurationVisitor {
           }
         }
         else{
-          // TODO error handndling again, or we can just skip edges in delta function that are not of correct type
+          // Not sure, maybe we can just skip edges in delta function that are not of correct type
+          // the way I implemented it now, will throw if there is a single edge of incorrect type, even if it isn't
+          // the one we are looking for
+          throw new Error("AutomatonType is pushDown but one of its edges isn't");
         }
       }
     }
 
     if (nextState === undefined || stackWrite === undefined) {
-      return configuration; 
+      throw new Error("Step for the (symbol, top of stack) combination in the delta function doesn't exist"); 
     }
     else {
       let newStack: string [] = configuration.stack.slice(0, -1).concat(stackWrite);
