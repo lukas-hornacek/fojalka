@@ -1,3 +1,4 @@
+import { cloneDeep } from "lodash";
 import { arraysEqual } from "../../utils.ts";
 import { ErrorMessage, IErrorMessage } from "../common.ts";
 import { GrammarEditCommand } from "./commands/edit.ts";
@@ -103,10 +104,11 @@ export class GrammarMemento {
     terminalSymbols: string[],
     initialNonTerminalSymbol: string,
     productionRules: ProductionRule[]) {
+
     this.grammarType = grammarType;
-    this.nonTerminalSymbols = nonTerminalSymbols;
-    this.terminalSymbols = terminalSymbols;
+    this.nonTerminalSymbols = [...nonTerminalSymbols];
+    this.terminalSymbols = [...terminalSymbols];
     this.initialNonTerminalSymbol = initialNonTerminalSymbol;
-    this.productionRules = productionRules;
+    this.productionRules = cloneDeep(productionRules);
   }
 }

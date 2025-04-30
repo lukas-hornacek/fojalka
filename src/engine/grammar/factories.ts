@@ -4,6 +4,7 @@ import {
   ProductionRule,
 } from "./grammar.ts";
 import { ErrorMessage } from "../common.ts";
+import { EPSILON } from "../../constants.ts";
 
 export abstract class IGrammarFactory {
   public abstract createGrammar(nonTerminalSymbols: string[], terminalSymbols: string[], initialNonTerminalSymbol: string): Grammar;
@@ -47,7 +48,9 @@ export class AbstractGrammarFactory extends IGrammarFactory {
 
     for (const outputSymbol of outputSymbols) {
       if (!grammar.hasNonTerminalSymbol(outputSymbol) && !grammar.hasTerminalSymbol(outputSymbol)) {
-        throw new ErrorMessage(`Cannot add production rule: output symbol ${outputSymbol} is not present in grammar's non-terminals ${grammar.nonTerminalSymbols} or terminals ${grammar.terminalSymbols}`);
+        if (outputSymbol !== EPSILON || outputSymbols.length !== 1) {
+          throw new ErrorMessage(`Cannot add production rule: output symbol ${outputSymbol} is not present in grammar's non-terminals ${grammar.nonTerminalSymbols} or terminals ${grammar.terminalSymbols}`);
+        }
       }
     }
     return this.internalFactory.createProductionRule(inputNonTerminal, outputSymbols, grammar);
@@ -61,7 +64,8 @@ export class RegularGrammarFactory extends IGrammarFactory {
 
   public createProductionRule(inputNonTerminal: string, outputSymbols: string[], grammar: Grammar): ProductionRule {
     const lastOutputSymbol = outputSymbols.slice(-1)[0];
-    const lastOutputSymbolIsEpsilon = lastOutputSymbol.length === 0;
+    const outputIsEpsilon = lastOutputSymbol === EPSILON;
+    const lastOutputSymbolIsTerminal = grammar.hasTerminalSymbol(lastOutputSymbol);
     const lastOutputSymbolIsNonTerminal = grammar.hasNonTerminalSymbol(lastOutputSymbol);
     const prefixOutputSymbols = outputSymbols.slice(0, -1);
     // fuck this, this is undefined.....
@@ -72,7 +76,7 @@ export class RegularGrammarFactory extends IGrammarFactory {
     for (const prefixOutputSymbol of prefixOutputSymbols) {
       prefixOutputSymbolsIsTerminal &&= grammar.hasTerminalSymbol(prefixOutputSymbol);
     }
-    const productionRuleIsRegular = prefixOutputSymbolsIsTerminal && (lastOutputSymbolIsEpsilon || lastOutputSymbolIsNonTerminal);
+    const productionRuleIsRegular = prefixOutputSymbolsIsTerminal && (lastOutputSymbolIsTerminal || lastOutputSymbolIsNonTerminal) || outputIsEpsilon;
 
     if (!productionRuleIsRegular) {
       throw new ErrorMessage(`Cannot add production rule: production rule ${inputNonTerminal} -> ${outputSymbols.join("")} is not a regular rule.`);

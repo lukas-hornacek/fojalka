@@ -1,10 +1,11 @@
 import { SECONDARY_CYTOSCAPE_ID, EPSILON, INITIAL_STATE } from "../constants";
 import { AutomatonCore } from "../core/automatonCore";
 import { ICoreType, Kind, ModeHolder } from "../core/core";
+import { GrammarCore } from "../core/grammarCore";
 import { AutomatonType } from "./automaton/automaton";
 import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RemoveEdgeCommand, RenameStateCommand, SetStateFinalFlagCommand } from "./automaton/commands/edit";
 import { IErrorMessage, ErrorMessage } from "./common";
-import { GrammarEditCommand } from "./grammar/commands/edit";
+import { AddProductionRuleCommand, GrammarEditCommand } from "./grammar/commands/edit";
 import { GrammarType } from "./grammar/grammar";
 
 export type AlgorithmParams = {
@@ -391,4 +392,105 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     return endStates;
   }
 
+}
+
+export class AutomatonToGrammarAlgorithm implements IAlgorithm {
+  inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
+  outputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
+
+  inputCore: AutomatonCore;
+  outputCore?: GrammarCore;
+
+  results: AlgorithmResult[] = [];
+  index: number = 0;
+
+  constructor(_inputCore: AutomatonCore) {
+    this.inputCore = _inputCore;
+  }
+
+  init(mode: ModeHolder) {
+    if (this.inputCore.automaton.automatonType !== this.inputType.AutomatonType) {
+      throw new Error("Cannot use algorithm, as it only works with finite automata.");
+    }
+
+    this.outputCore = new GrammarCore(GrammarType.REGULAR, mode);
+    //assign correct nonterminal and terminal symbols to grammar
+    this.outputCore.grammar.nonTerminalSymbols = this.inputCore.automaton.states;
+    this.outputCore.grammar.terminalSymbols = this.getAlphabet();
+    this.outputCore.grammar.initialNonTerminalSymbol = this.inputCore.automaton.initialStateId;
+
+    this.precomputeResults();
+
+    return this.outputCore;
+  }
+
+  next() {
+    if (this.outputCore === undefined) {
+      throw new Error("Cannot simulate algorithm step before start.");
+    }
+    //algorithm has already ended
+    if (this.index === this.results.length) {
+      return undefined;
+    }
+
+    return this.results[this.index++];
+  }
+
+  undo() {
+    if (this.outputCore === undefined) {
+      return new ErrorMessage("Cannot undo algorithm step before start.");
+    }
+    if (this.index === 0) {
+      return new ErrorMessage("There is nothing to undo.");
+    }
+
+    this.outputCore.grammar.undo();
+    this.index--;
+  }
+
+  //function computes all commands and highlights in advance and stores it in results
+  precomputeResults() {
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
+
+    //for every edge add rule from one state to a word consisting of the symbol and the other state
+    for (const from in delta) {
+      for (const to in delta[from]) {
+        for (const edge of delta [from][to]) {
+          let output = [];
+          if (edge.inputChar === EPSILON) {
+            output = [to];
+          } else {
+            output = [edge.inputChar, to];
+          }
+          const rule = this.outputCore!.factory.createProductionRule(from, output, this.outputCore!.grammar);
+          const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
+          this.results.push({ highlight: [edge.id], command: command });
+        }
+      }
+    }
+
+    //for every final state add rule from that state to epsilon
+    for (const state of this.inputCore.automaton.finalStateIds) {
+      const rule = this.outputCore!.factory.createProductionRule(state, [EPSILON], this.outputCore!.grammar);
+      const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
+      this.results.push({ highlight: [state], command: command });
+    }
+  }
+
+  getAlphabet() {
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
+
+    const alphabet: string[] = [];
+    for (const fromState in delta) {
+      for (const toState in delta[fromState]) {
+        for (const edge of delta[fromState][toState]) {
+          if (!alphabet.includes(edge.inputChar) && edge.inputChar !== EPSILON) {
+            alphabet.push(edge.inputChar);
+          }
+        }
+      }
+    }
+
+    return alphabet;
+  }
 }
