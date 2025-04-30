@@ -40,16 +40,15 @@ export class NextStepCommand extends AutomatonRunCommand<IEdge> {
     this.saveBackup();
     const nextStepVisitor = new NextStepVisitor(this.simulation.automaton);
 
-    try{
-    const newConfiguration = this.simulation.configuration.accept(nextStepVisitor);
-    this.simulation.configuration = newConfiguration;
-    this.result = nextStepVisitor.result;
+    try {
+      const newConfiguration = this.simulation.configuration.accept(nextStepVisitor);
+      this.simulation.configuration = newConfiguration;
+      this.result = nextStepVisitor.result;
     } catch (error) {
-      if (error instanceof Error){
+      if (error instanceof Error) {
         return new ErrorMessage(error.message);
       }
     }
-    
 
     return;
   }

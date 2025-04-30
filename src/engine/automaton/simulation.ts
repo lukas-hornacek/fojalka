@@ -45,11 +45,11 @@ export class AutomatonSimulation implements IAutomatonSimulation {
   run(): boolean {
     while (this.configuration.remainingInput.length > 0) {
       const nextCommand = new NextStepCommand(this);
-      const error = nextCommand.execute()
+      const error = nextCommand.execute();
       if (error !== undefined) {
         throw new Error(error.details);
       }
-      else{
+      else {
         this.commandHistory.push(nextCommand);
       }
     }

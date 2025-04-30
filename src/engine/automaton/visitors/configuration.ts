@@ -37,7 +37,7 @@ export class NextStepVisitor implements IConfigurationVisitor {
     }
 
     if (nextState === undefined) {
-      throw new Error("Step for the symbol doesn't exist in the delta function"); 
+      throw new Error("Step for the symbol doesn't exist in the delta function");
     } else {
       const newConfiguration = new FiniteConfiguration(nextState, configuration.remainingInput.slice(1));
       return newConfiguration;
@@ -49,13 +49,12 @@ export class NextStepVisitor implements IConfigurationVisitor {
       throw new Error("Input end reached");
     }
 
-    
-    if ( this.automaton.automatonType!=AutomatonType.PDA ){
+    if (this.automaton.automatonType != AutomatonType.PDA) {
       throw new Error("Wrong automaton type");
     }
 
     const nextSymbol = configuration.remainingInput[0];
-    const stackSymbol = configuration.stack[configuration.stack.length-1];
+    const stackSymbol = configuration.stack[configuration.stack.length - 1];
 
     let nextState: string | undefined;
     let stackWrite: string[] | undefined;
@@ -63,15 +62,15 @@ export class NextStepVisitor implements IConfigurationVisitor {
     for (const fromState in delta) {
       const edges = delta[fromState];
       for (let i = 0; i < edges.length; i++) {
-        const pdaEdge = edges[i]
-        if ( pdaEdge instanceof PDAEdge) {
+        const pdaEdge = edges[i];
+        if (pdaEdge instanceof PDAEdge) {
           if (pdaEdge.inputChar === nextSymbol && pdaEdge.readStackChar === stackSymbol) {
             nextState = fromState;
-            stackWrite = pdaEdge.writeStackWord
+            stackWrite = pdaEdge.writeStackWord;
             this.result = edges[i];
           }
         }
-        else{
+        else {
           // Not sure, maybe we can just skip edges in delta function that are not of correct type
           // the way I implemented it now, will throw if there is a single edge of incorrect type, even if it isn't
           // the one we are looking for
@@ -81,11 +80,11 @@ export class NextStepVisitor implements IConfigurationVisitor {
     }
 
     if (nextState === undefined || stackWrite === undefined) {
-      throw new Error("Step for the (symbol, top of stack) combination in the delta function doesn't exist"); 
+      throw new Error("Step for the (symbol, top of stack) combination in the delta function doesn't exist");
     }
     else {
-      let newStack: string [] = configuration.stack.slice(0, -1).concat(stackWrite);
-      return new PDAConfiguration(nextState, configuration.remainingInput.slice(1), newStack)
+      const newStack: string [] = configuration.stack.slice(0, -1).concat(stackWrite);
+      return new PDAConfiguration(nextState, configuration.remainingInput.slice(1), newStack);
     }
   };
 }
