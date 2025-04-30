@@ -550,13 +550,43 @@ export class GrammarToAutomatonAlgorithm implements IAlgorithm {
 
   //function computes all commands and highlights in advance and stores it in results
   precomputeResults() {
+    let currentCommand: AutomatonEditCommand = new RenameStateCommand(this.outputCore!.automaton, INITIAL_STATE, this.inputCore.grammar.initialNonTerminalSymbol);
+    this.results.push({ highlight: [this.inputCore.grammar.initialNonTerminalSymbol], command: currentCommand });
 
+    for (const nonterminal of this.inputCore.grammar.nonTerminalSymbols) {
+      if (nonterminal !== this.inputCore.grammar.initialNonTerminalSymbol) {
+        currentCommand = new AddStateCommand(this.outputCore!.automaton, nonterminal);
+        this.results.push({ highlight: [nonterminal], command: currentCommand });
+      }
+    }
+
+    currentCommand = new AddStateCommand(this.outputCore!.automaton, "fin");
+    this.results.push({ highlight: [], command: currentCommand });
+
+    currentCommand = new SetStateFinalFlagCommand(this.outputCore!.automaton, "fin", true);
+    this.results.push({ highlight: [], command: currentCommand });
+
+    for (const rule of this.inputCore.grammar.productionRules) {
+      if (rule.outputSymbols.length === 2) {
+        const edge = this.outputCore!.createEdge({ id: "", inputChar: rule.outputSymbols[0] });
+        currentCommand = new AddEdgeCommand(this.outputCore!.automaton, rule.inputNonTerminal, rule.outputSymbols[1], edge);
+      } 
+      else if (this.inputCore.grammar.hasNonTerminalSymbol(rule.outputSymbols[0])) {
+        const edge = this.outputCore!.createEdge({ id: "", inputChar: EPSILON });
+        currentCommand = new AddEdgeCommand(this.outputCore!.automaton, rule.inputNonTerminal, rule.outputSymbols[0], edge);
+      } 
+      else {
+        const edge = this.outputCore!.createEdge({ id: "", inputChar: rule.outputSymbols[0] });
+        currentCommand = new AddEdgeCommand(this.outputCore!.automaton, rule.inputNonTerminal, "fin", edge);
+      }
+      this.results.push({ highlight: [rule.id], command: currentCommand });
+    }
   }
 
   //function checks if all rules in grammar have at most one terminal on the right side and length of the right side at most 2
   isGrammarInNormalForm() {
     for (const rule of this.inputCore.grammar.productionRules) {
-      if (rule.outputSymbols.length > 2) { 
+      if (rule.outputSymbols.length > 2) {
         return false;
       }
       if (rule.outputSymbols.length == 2 && !this.inputCore.grammar.hasNonTerminalSymbol(rule.outputSymbols[1])) {
