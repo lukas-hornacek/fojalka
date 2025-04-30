@@ -494,3 +494,76 @@ export class AutomatonToGrammarAlgorithm implements IAlgorithm {
     return alphabet;
   }
 }
+
+export class GrammarToAutomatonAlgorithm implements IAlgorithm {
+  inputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
+  outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
+
+  inputCore: GrammarCore;
+  outputCore?: AutomatonCore;
+
+  results: AlgorithmResult[] = [];
+  index: number = 0;
+
+  constructor(_inputCore: GrammarCore) {
+    this.inputCore = _inputCore;
+  }
+
+  init(mode: ModeHolder) {
+    if (this.inputCore.grammar.grammarType !== this.inputType.GrammarType) {
+      throw new Error("Cannot use algorithm, as it only works with regular grammars.");
+    }
+    if (!this.isGrammarInNormalForm()) {
+      throw new Error("Cannot use algorithm, as the grammar is not in required normal form.");
+    }
+
+    this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
+
+    this.precomputeResults();
+
+    return this.outputCore;
+  }
+
+  next() {
+    if (this.outputCore === undefined) {
+      throw new Error("Cannot simulate algorithm step before start.");
+    }
+    //algorithm has already ended
+    if (this.index === this.results.length) {
+      return undefined;
+    }
+
+    return this.results[this.index++];
+  }
+
+  undo() {
+    if (this.outputCore === undefined) {
+      return new ErrorMessage("Cannot undo algorithm step before start.");
+    }
+    if (this.index === 0) {
+      return new ErrorMessage("There is nothing to undo.");
+    }
+
+    this.outputCore.automaton.undo();
+    this.index--;
+  }
+
+  //function computes all commands and highlights in advance and stores it in results
+  precomputeResults() {
+
+  }
+
+  //function checks if all rules in grammar have at most one terminal on the right side and length of the right side at most 2
+  isGrammarInNormalForm() {
+    for (const rule of this.inputCore.grammar.productionRules) {
+      if (rule.outputSymbols.length > 2) { 
+        return false;
+      }
+      if (rule.outputSymbols.length == 2 && !this.inputCore.grammar.hasNonTerminalSymbol(rule.outputSymbols[1])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+}
