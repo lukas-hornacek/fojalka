@@ -415,7 +415,7 @@ export class AutomatonToGrammarAlgorithm implements IAlgorithm {
 
     this.outputCore = new GrammarCore(GrammarType.REGULAR, mode);
     //assign correct nonterminal and terminal symbols to grammar
-    this.outputCore.grammar.nonTerminalSymbols = this.inputCore.automaton.states;
+    this.outputCore.grammar.nonTerminalSymbols = [...this.inputCore.automaton.states];
     this.outputCore.grammar.terminalSymbols = this.getAlphabet();
     this.outputCore.grammar.initialNonTerminalSymbol = this.inputCore.automaton.initialStateId;
 
@@ -650,8 +650,8 @@ export class GrammarNormalFormAlgorithm implements IAlgorithm {
 
   //function computes all commands and highlights in advance and stores it in results
   precomputeResults() {
-    this.outputCore!.grammar.nonTerminalSymbols = this.inputCore.grammar.nonTerminalSymbols;
-    this.outputCore!.grammar.terminalSymbols = this.inputCore.grammar.terminalSymbols;
+    this.outputCore!.grammar.nonTerminalSymbols = [...this.inputCore.grammar.nonTerminalSymbols];
+    this.outputCore!.grammar.terminalSymbols = [...this.inputCore.grammar.terminalSymbols];
     this.outputCore!.grammar.initialNonTerminalSymbol = this.inputCore.grammar.initialNonTerminalSymbol;
 
     let id = 1;
