@@ -657,6 +657,7 @@ export class GrammarNormalFormAlgorithm implements IAlgorithm {
     let id = 1;
     for (const rule of this.inputCore.grammar.productionRules) {
       const lastOutputSymbol = rule.outputSymbols.slice(-1)[0];
+      const secondToLastOutputSymbol = rule.outputSymbols.slice(-2)[0];
 
       if (rule.outputSymbols.length > 2 || rule.outputSymbols.length === 2 && this.inputCore.grammar.hasTerminalSymbol(lastOutputSymbol)) {
         const prefixOutputSymbols = rule.outputSymbols.slice(0, -2);
@@ -679,16 +680,16 @@ export class GrammarNormalFormAlgorithm implements IAlgorithm {
           const newSymbol = "ψ" + id + "," + i;
           this.outputCore!.grammar.nonTerminalSymbols.push(newSymbol);
 
-          let newRule = this.outputCore!.factory.createProductionRule(input, [rule.outputSymbols[-2], newSymbol], this.outputCore!.grammar);
+          let newRule = this.outputCore!.factory.createProductionRule(input, [secondToLastOutputSymbol, newSymbol], this.outputCore!.grammar);
           let command = new AddProductionRuleCommand(this.outputCore!.grammar, newRule);
           this.results.push({ highlight: [rule.id], command: command });
 
-          newRule = this.outputCore!.factory.createProductionRule(newSymbol, [rule.outputSymbols[-1]], this.outputCore!.grammar);
+          newRule = this.outputCore!.factory.createProductionRule(newSymbol, [lastOutputSymbol], this.outputCore!.grammar);
           command = new AddProductionRuleCommand(this.outputCore!.grammar, newRule);
           this.results.push({ highlight: [rule.id], command: command });
         }
         else {
-          const newRule = this.outputCore!.factory.createProductionRule(input, [rule.outputSymbols[-2], rule.outputSymbols[-1]], this.outputCore!.grammar);
+          const newRule = this.outputCore!.factory.createProductionRule(input, [secondToLastOutputSymbol, lastOutputSymbol], this.outputCore!.grammar);
           const command = new AddProductionRuleCommand(this.outputCore!.grammar, newRule);
           this.results.push({ highlight: [rule.id], command: command });
         }
