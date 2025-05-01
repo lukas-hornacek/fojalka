@@ -1,4 +1,4 @@
-import { IAlgorithm } from "../engine/algorithm";
+import { IAlgorithm } from "../engine/algorithm/algorithm";
 import { ErrorMessage, IErrorMessage } from "../engine/common";
 import { IAutomatonCore } from "./automatonCore";
 import { IGrammarCore } from "./grammarCore";

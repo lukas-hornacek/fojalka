@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { AutomatonToGrammarAlgorithm } from "../src/engine/algorithm";
+import { AutomatonToGrammarAlgorithm } from "../src/engine/algorithm/automatonAlgorithms";
 import { AutomatonCore } from "../src/core/automatonCore";
 import { Automaton, AutomatonType } from "../src/engine/automaton/automaton";
 import { ModeHolder } from "../src/core/core";

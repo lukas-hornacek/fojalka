@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { GrammarNormalFormAlgorithm, GrammarToAutomatonAlgorithm } from "../src/engine/algorithm";
+import { GrammarNormalFormAlgorithm, GrammarToAutomatonAlgorithm } from "../src/engine/algorithm/grammarAlgorithms";
 import { ModeHolder } from "../src/core/core";
 import { EPSILON, INITIAL_NONTERMINAL } from "../src/constants";
 import { GrammarEditCommand } from "../src/engine/grammar/commands/edit";
