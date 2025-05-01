@@ -157,3 +157,74 @@ test("testing grammar to automaton", () => {
 
 });
 
+test("testing undo functions", () => {
+  //testing first algorithm
+  const core = new GrammarCore(GrammarType.REGULAR, new ModeHolder());
+  const algorithm = new GrammarNormalFormAlgorithm(core);
+  const algorithm2 = new GrammarNormalFormAlgorithm(core);
+
+  core.grammar = new Grammar(GrammarType.REGULAR, [INITIAL_NONTERMINAL, "A", "B"], ["a", "b"], INITIAL_NONTERMINAL);
+  let rule = core.factory.createProductionRule(INITIAL_NONTERMINAL, ["a", "b", "a", INITIAL_NONTERMINAL], core.grammar);
+  core.grammar.productionRules.push(rule);
+  rule = core.factory.createProductionRule(INITIAL_NONTERMINAL, ["b", "A"], core.grammar);
+  core.grammar.productionRules.push(rule);
+  rule = core.factory.createProductionRule(INITIAL_NONTERMINAL, ["B"], core.grammar);
+  core.grammar.productionRules.push(rule);
+  rule = core.factory.createProductionRule(INITIAL_NONTERMINAL, ["b"], core.grammar);
+  core.grammar.productionRules.push(rule);
+  rule = core.factory.createProductionRule("A", ["a", "A"], core.grammar);
+  core.grammar.productionRules.push(rule);
+  rule = core.factory.createProductionRule("A", [EPSILON], core.grammar);
+  core.grammar.productionRules.push(rule);
+  rule = core.factory.createProductionRule("B", ["B"], core.grammar);
+  core.grammar.productionRules.push(rule);
+  rule = core.factory.createProductionRule("B", ["a", "a"], core.grammar);
+  core.grammar.productionRules.push(rule);
+
+  const core1 = algorithm.init(new ModeHolder());
+  const core2 = algorithm2.init(new ModeHolder());
+
+  //testing if next + next + undo + undo equals the original grammar
+  core2.grammar.executeCommand((algorithm2.next()?.command as GrammarEditCommand));
+  core2.grammar.executeCommand((algorithm2.next()?.command as GrammarEditCommand));
+  algorithm2.undo();
+  algorithm2.undo();
+  expect(core1.grammar).toEqual(core2.grammar);
+
+  //testing if next + undo works in the entire algorthm
+  for (let i = 0; i < algorithm.results!.length; i++) {
+    core1.grammar.executeCommand((algorithm.next()?.command as GrammarEditCommand));
+    algorithm.undo();
+    expect(core1.grammar).toEqual(core2.grammar);
+
+    core1.grammar.executeCommand((algorithm.next()?.command as GrammarEditCommand));
+    core2.grammar.executeCommand((algorithm2.next()?.command as GrammarEditCommand));
+    expect(core1.grammar).toEqual(core2.grammar);
+  }
+
+  //testing second algorithm
+  const algorithm3 = new GrammarToAutomatonAlgorithm(core1);
+  const algorithm4 = new GrammarToAutomatonAlgorithm(core1);
+
+  const core3 = algorithm3.init(new ModeHolder());
+  const core4 = algorithm4.init(new ModeHolder());
+
+  //testing if next + next + undo + undo equals the original automaton
+  core4.automaton.executeCommand((algorithm4.next()?.command as AutomatonEditCommand));
+  core4.automaton.executeCommand((algorithm4.next()?.command as AutomatonEditCommand));
+  algorithm4.undo();
+  algorithm4.undo();
+  expect(core3.automaton).toEqual(core4.automaton);
+
+  //testing if next + undo works in the entire algorthm
+  for (let i = 0; i < algorithm3.results!.length - 1; i++) {
+    core4.automaton.executeCommand((algorithm4.next()?.command as AutomatonEditCommand));
+    algorithm4.undo();
+    expect(core3.automaton).toEqual(core4.automaton);
+
+    core3.automaton.executeCommand((algorithm3.next()?.command as AutomatonEditCommand));
+    core4.automaton.executeCommand((algorithm4.next()?.command as AutomatonEditCommand));
+    expect(core3.automaton).toEqual(core4.automaton);
+  }
+
+});
