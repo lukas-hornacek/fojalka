@@ -570,11 +570,11 @@ export class GrammarToAutomatonAlgorithm implements IAlgorithm {
       if (rule.outputSymbols.length === 2) {
         const edge = this.outputCore!.createEdge({ id: "", inputChar: rule.outputSymbols[0] });
         currentCommand = new AddEdgeCommand(this.outputCore!.automaton, rule.inputNonTerminal, rule.outputSymbols[1], edge);
-      } 
+      }
       else if (this.inputCore.grammar.hasNonTerminalSymbol(rule.outputSymbols[0])) {
         const edge = this.outputCore!.createEdge({ id: "", inputChar: EPSILON });
         currentCommand = new AddEdgeCommand(this.outputCore!.automaton, rule.inputNonTerminal, rule.outputSymbols[0], edge);
-      } 
+      }
       else {
         const edge = this.outputCore!.createEdge({ id: "", inputChar: rule.outputSymbols[0] });
         currentCommand = new AddEdgeCommand(this.outputCore!.automaton, rule.inputNonTerminal, "fin", edge);
@@ -597,3 +597,60 @@ export class GrammarToAutomatonAlgorithm implements IAlgorithm {
     return true;
   }
 }
+
+export class GrammarNormalFormAlgorithm implements IAlgorithm {
+  inputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
+  outputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
+
+  inputCore: GrammarCore;
+  outputCore?: GrammarCore;
+
+  results: AlgorithmResult[] = [];
+  index: number = 0;
+
+  constructor(_inputCore: GrammarCore) {
+    this.inputCore = _inputCore;
+  }
+
+  init(mode: ModeHolder) {
+    if (this.inputCore.grammar.grammarType !== this.inputType.GrammarType) {
+      throw new Error("Cannot use algorithm, as it only works with regular grammars.");
+    }
+
+    this.outputCore = new GrammarCore(GrammarType.REGULAR, mode);
+
+    this.precomputeResults();
+
+    return this.outputCore;
+  }
+
+  next() {
+    if (this.outputCore === undefined) {
+      throw new Error("Cannot simulate algorithm step before start.");
+    }
+    //algorithm has already ended
+    if (this.index === this.results.length) {
+      return undefined;
+    }
+
+    return this.results[this.index++];
+  }
+
+  undo() {
+    if (this.outputCore === undefined) {
+      return new ErrorMessage("Cannot undo algorithm step before start.");
+    }
+    if (this.index === 0) {
+      return new ErrorMessage("There is nothing to undo.");
+    }
+
+    this.outputCore.grammar.undo();
+    this.index--;
+  }
+
+  //function computes all commands and highlights in advance and stores it in results
+  precomputeResults() {
+    
+  }
+}
+
