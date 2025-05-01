@@ -5,7 +5,7 @@ import { AutomatonType } from "../src/engine/automaton/automaton.ts";
 import { FiniteAutomatonEdge, PDAEdge } from "../src/engine/automaton/edge.ts";
 import { FiniteConfiguration, PDAConfiguration } from "../src/engine/automaton/configuration.ts";
 import { AutomatonSimulation } from "../src/engine/automaton/simulation.ts";
-import { AbstractAutomatonFactory, PDAFactory } from "../src/engine/automaton/factories";
+import { AbstractAutomatonFactory } from "../src/engine/automaton/factories";
 
 test("nextStepCommand Visitor test", () =>{
   const factory = new AbstractAutomatonFactory(AutomatonType.FINITE);
@@ -34,15 +34,15 @@ test("nextStepCommand Visitor test", () =>{
 });
 
 test("next step on PDA test", () =>{
-  const factory = new PDAFactory();
+  const factory = new AbstractAutomatonFactory(AutomatonType.PDA);
 
   const automaton1 = factory.createAutomaton("0");
 
   automaton1.executeCommand(new AddStateCommand(automaton1, "1"));
   automaton1.executeCommand(new AddStateCommand(automaton1, "2"));
 
-  automaton1.executeCommand(new AddEdgeCommand(automaton1, "0", "1", new PDAEdge("0", "a", "Z0", ["a"])));
-  automaton1.executeCommand(new AddEdgeCommand(automaton1, "0", "1", new PDAEdge("1", "b", "Z0", ["b"])));
+  automaton1.executeCommand(new AddEdgeCommand(automaton1, "0", "1", factory.createEdge({ id: "", inputChar: "a", readStackChar: "Z0", writeStackWord: ["a"] })));
+  automaton1.executeCommand(new AddEdgeCommand(automaton1, "0", "1", factory.createEdge({ id: "", inputChar: "b", readStackChar: "Z0", writeStackWord: ["b"] })));
 
   const configuration1 = new PDAConfiguration("0", ["b", "b", "a"], ["Z0"]);
   const simulation1 = new AutomatonSimulation(automaton1, configuration1);
@@ -53,7 +53,7 @@ test("next step on PDA test", () =>{
 
   expect (command1.result).toBeInstanceOf(PDAEdge);
   if (command1.result instanceof PDAEdge) {
-    expect (command1.result?.id).toBe("1");
+    expect (command1.result?.id).toBe("_1");
     expect (command1.result?.writeStackWord).toStrictEqual(["b"]);
   }
 
@@ -69,7 +69,7 @@ test("next step on PDA test", () =>{
   automaton2.executeCommand(new AddStateCommand(automaton2, "1"));
 
   automaton2.executeCommand(new AddEdgeCommand(automaton2, "0", "1", new FiniteAutomatonEdge("0", "a")));
-  automaton2.executeCommand(new AddEdgeCommand(automaton2, "0", "1", new PDAEdge("1", "b", "Z0", ["b"])));
+  automaton2.executeCommand(new AddEdgeCommand(automaton2, "0", "1", factory.createEdge({ id: "", inputChar: "b", readStackChar: "Z0", writeStackWord: ["b"] })));
 
   const configuration2 = new PDAConfiguration("0", ["a"], ["Z0"]);
   const simulation2 = new AutomatonSimulation(automaton2, configuration2);
@@ -82,8 +82,8 @@ test("next step on PDA test", () =>{
 
   automaton3.executeCommand(new AddStateCommand(automaton3, "1"));
 
-  automaton3.executeCommand(new AddEdgeCommand(automaton3, "0", "1", new PDAEdge("0", "a", "Z0", ["a"])));
-  automaton3.executeCommand(new AddEdgeCommand(automaton3, "0", "1", new PDAEdge("1", "b", "Z0", ["b"])));
+  automaton3.executeCommand(new AddEdgeCommand(automaton3, "0", "1", factory.createEdge({ id: "", inputChar: "a", readStackChar: "Z0", writeStackWord: ["a"] })));
+  automaton3.executeCommand(new AddEdgeCommand(automaton3, "0", "1", factory.createEdge({ id: "", inputChar: "b", readStackChar: "Z0", writeStackWord: ["b"] })));
 
   const configuration3_1 = new PDAConfiguration("0", ["c"], ["Z0"]);
   const configuration3_2 = new PDAConfiguration("0", ["a"], ["b"]);
