@@ -650,7 +650,56 @@ export class GrammarNormalFormAlgorithm implements IAlgorithm {
 
   //function computes all commands and highlights in advance and stores it in results
   precomputeResults() {
-    
+    this.outputCore!.grammar.nonTerminalSymbols = this.inputCore.grammar.nonTerminalSymbols;
+    this.outputCore!.grammar.terminalSymbols = this.inputCore.grammar.terminalSymbols;
+    this.outputCore!.grammar.initialNonTerminalSymbol = this.inputCore.grammar.initialNonTerminalSymbol;
+
+    let id = 1;
+    for (const rule of this.inputCore.grammar.productionRules) {
+      const lastOutputSymbol = rule.outputSymbols.slice(-1)[0];
+
+      if (rule.outputSymbols.length > 2 || rule.outputSymbols.length === 2 && this.inputCore.grammar.hasTerminalSymbol(lastOutputSymbol)) {
+        const prefixOutputSymbols = rule.outputSymbols.slice(0, -2);
+        let input = rule.inputNonTerminal;
+        let i = 1;
+
+        for (const symbol of prefixOutputSymbols) {
+          const newSymbol = "ψ" + id + "," + i;
+          this.outputCore!.grammar.nonTerminalSymbols.push(newSymbol);
+
+          const newRule = this.outputCore!.factory.createProductionRule(input, [symbol, newSymbol], this.outputCore!.grammar);
+          const command = new AddProductionRuleCommand(this.outputCore!.grammar, newRule);
+          this.results.push({ highlight: [rule.id], command: command });
+
+          input = newSymbol;
+          i++;
+        }
+
+        if (this.inputCore.grammar.hasTerminalSymbol(lastOutputSymbol)) {
+          const newSymbol = "ψ" + id + "," + i;
+          this.outputCore!.grammar.nonTerminalSymbols.push(newSymbol);
+
+          let newRule = this.outputCore!.factory.createProductionRule(input, [rule.outputSymbols[-2], newSymbol], this.outputCore!.grammar);
+          let command = new AddProductionRuleCommand(this.outputCore!.grammar, newRule);
+          this.results.push({ highlight: [rule.id], command: command });
+
+          newRule = this.outputCore!.factory.createProductionRule(newSymbol, [rule.outputSymbols[-1]], this.outputCore!.grammar);
+          command = new AddProductionRuleCommand(this.outputCore!.grammar, newRule);
+          this.results.push({ highlight: [rule.id], command: command });
+        }
+        else {
+          const newRule = this.outputCore!.factory.createProductionRule(input, [rule.outputSymbols[-2], rule.outputSymbols[-1]], this.outputCore!.grammar);
+          const command = new AddProductionRuleCommand(this.outputCore!.grammar, newRule);
+          this.results.push({ highlight: [rule.id], command: command });
+        }
+
+        id++;
+      }
+      else {
+        const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
+        this.results.push({ highlight: [rule.id], command: command });
+      }
+    }
   }
 }
 
