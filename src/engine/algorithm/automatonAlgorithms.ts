@@ -7,19 +7,17 @@ import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RemoveEdgeComman
 import { ErrorMessage } from "../common";
 import { AddProductionRuleCommand } from "../grammar/commands/edit";
 import { GrammarType } from "../grammar/grammar";
-import { AlgorithmParams, AlgorithmResult, IAlgorithm } from "./algorithm";
+import { Algorithm, AlgorithmParams } from "./algorithm";
 
-export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
+export class NondeterministicToDeterministicAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
   inputCore: AutomatonCore;
   outputCore?: AutomatonCore;
 
-  results: AlgorithmResult[] = [];
-  index: number = 0;
-
   constructor(_inputCore: AutomatonCore) {
+    super();
     this.inputCore = _inputCore;
   }
 
@@ -35,18 +33,6 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
     this.precomputeResults();
 
     return this.outputCore;
-  }
-
-  next() {
-    if (this.outputCore === undefined) {
-      throw new Error("Cannot simulate algorithm step before start.");
-    }
-    //algorithm has already ended
-    if (this.index === this.results.length) {
-      return undefined;
-    }
-
-    return this.results[this.index++];
   }
 
   undo() {
@@ -165,7 +151,7 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
 
 }
 
-export class RemoveEpsilonAlgorithm implements IAlgorithm {
+export class RemoveEpsilonAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
@@ -174,10 +160,8 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
   //only for the mode in init, so it wont be unused variable
   outputCore?: AutomatonCore;
 
-  results?: AlgorithmResult[];
-  index: number = 0;
-
   constructor(_inputCore: AutomatonCore) {
+    super();
     this.inputCore = _inputCore;
   }
 
@@ -195,18 +179,6 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
 
     return undefined;
-  }
-
-  next() {
-    if (this.results === undefined) {
-      throw new Error("Cannot simulate algorithm step before start.");
-    }
-    //algorithm has already ended
-    if (this.index === this.results.length) {
-      return undefined;
-    }
-
-    return this.results[this.index++];
   }
 
   undo() {
@@ -350,17 +322,15 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
 
 }
 
-export class AutomatonToGrammarAlgorithm implements IAlgorithm {
+export class AutomatonToGrammarAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
   outputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
 
   inputCore: AutomatonCore;
   outputCore?: GrammarCore;
 
-  results: AlgorithmResult[] = [];
-  index: number = 0;
-
   constructor(_inputCore: AutomatonCore) {
+    super();
     this.inputCore = _inputCore;
   }
 
@@ -370,26 +340,10 @@ export class AutomatonToGrammarAlgorithm implements IAlgorithm {
     }
 
     this.outputCore = new GrammarCore(GrammarType.REGULAR, mode);
-    //assign correct nonterminal and terminal symbols to grammar
-    this.outputCore.grammar.nonTerminalSymbols = [...this.inputCore.automaton.states];
-    this.outputCore.grammar.terminalSymbols = this.getAlphabet();
-    this.outputCore.grammar.initialNonTerminalSymbol = this.inputCore.automaton.initialStateId;
 
     this.precomputeResults();
 
     return this.outputCore;
-  }
-
-  next() {
-    if (this.outputCore === undefined) {
-      throw new Error("Cannot simulate algorithm step before start.");
-    }
-    //algorithm has already ended
-    if (this.index === this.results.length) {
-      return undefined;
-    }
-
-    return this.results[this.index++];
   }
 
   undo() {
@@ -406,7 +360,13 @@ export class AutomatonToGrammarAlgorithm implements IAlgorithm {
 
   //function computes all commands and highlights in advance and stores it in results
   precomputeResults() {
+    this.results = [];
     const delta = this.inputCore.automaton.deltaFunctionMatrix;
+
+    //assign correct nonterminal and terminal symbols to grammar
+    this.outputCore!.grammar.nonTerminalSymbols = [...this.inputCore.automaton.states];
+    this.outputCore!.grammar.terminalSymbols = this.getAlphabet();
+    this.outputCore!.grammar.initialNonTerminalSymbol = this.inputCore.automaton.initialStateId;
 
     //for every edge add rule from one state to a word consisting of the symbol and the other state
     for (const from in delta) {

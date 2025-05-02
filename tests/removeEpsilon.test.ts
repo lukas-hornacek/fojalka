@@ -14,8 +14,6 @@ test("testing algorithm functions", () => {
   let algorithm = new RemoveEpsilonAlgorithm(core);
 
   expect(algorithm.inputCore).toBe(core);
-  expect(algorithm.results).toBeUndefined();
-  expect(algorithm.index).toBe(0);
   expect(() => algorithm.init(new ModeHolder)).toThrowError("Cannot use algorithm, as it only works with finite automata.");
 
   core = new AutomatonCore(AutomatonType.FINITE, "test_core", new ModeHolder());

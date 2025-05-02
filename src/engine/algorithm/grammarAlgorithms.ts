@@ -7,19 +7,17 @@ import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RenameStateComma
 import { ErrorMessage } from "../common";
 import { AddProductionRuleCommand } from "../grammar/commands/edit";
 import { GrammarType } from "../grammar/grammar";
-import { AlgorithmParams, AlgorithmResult, IAlgorithm } from "./algorithm";
+import { Algorithm, AlgorithmParams } from "./algorithm";
 
-export class GrammarToAutomatonAlgorithm implements IAlgorithm {
+export class GrammarToAutomatonAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
   inputCore: GrammarCore;
   outputCore?: AutomatonCore;
 
-  results: AlgorithmResult[] = [];
-  index: number = 0;
-
   constructor(_inputCore: GrammarCore) {
+    super();
     this.inputCore = _inputCore;
   }
 
@@ -38,18 +36,6 @@ export class GrammarToAutomatonAlgorithm implements IAlgorithm {
     return this.outputCore;
   }
 
-  next() {
-    if (this.outputCore === undefined) {
-      throw new Error("Cannot simulate algorithm step before start.");
-    }
-    //algorithm has already ended
-    if (this.index === this.results.length) {
-      return undefined;
-    }
-
-    return this.results[this.index++];
-  }
-
   undo() {
     if (this.outputCore === undefined) {
       return new ErrorMessage("Cannot undo algorithm step before start.");
@@ -64,11 +50,14 @@ export class GrammarToAutomatonAlgorithm implements IAlgorithm {
 
   //function computes all commands and highlights in advance and stores it in results
   precomputeResults() {
-    let currentCommand: AutomatonEditCommand = new RenameStateCommand(this.outputCore!.automaton, INITIAL_STATE, this.inputCore.grammar.initialNonTerminalSymbol);
-    this.results.push({ highlight: [this.inputCore.grammar.initialNonTerminalSymbol], command: currentCommand });
+    this.results = [];
+
+    const initialNonTerminal = this.inputCore.grammar.initialNonTerminalSymbol;
+    let currentCommand: AutomatonEditCommand = new RenameStateCommand(this.outputCore!.automaton, INITIAL_STATE, initialNonTerminal);
+    this.results.push({ highlight: [initialNonTerminal], command: currentCommand });
 
     for (const nonterminal of this.inputCore.grammar.nonTerminalSymbols) {
-      if (nonterminal !== this.inputCore.grammar.initialNonTerminalSymbol) {
+      if (nonterminal !== initialNonTerminal) {
         currentCommand = new AddStateCommand(this.outputCore!.automaton, nonterminal);
         this.results.push({ highlight: [nonterminal], command: currentCommand });
       }
@@ -112,17 +101,15 @@ export class GrammarToAutomatonAlgorithm implements IAlgorithm {
   }
 }
 
-export class GrammarNormalFormAlgorithm implements IAlgorithm {
+export class GrammarNormalFormAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
   outputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
 
   inputCore: GrammarCore;
   outputCore?: GrammarCore;
 
-  results: AlgorithmResult[] = [];
-  index: number = 0;
-
   constructor(_inputCore: GrammarCore) {
+    super();
     this.inputCore = _inputCore;
   }
 
@@ -136,18 +123,6 @@ export class GrammarNormalFormAlgorithm implements IAlgorithm {
     this.precomputeResults();
 
     return this.outputCore;
-  }
-
-  next() {
-    if (this.outputCore === undefined) {
-      throw new Error("Cannot simulate algorithm step before start.");
-    }
-    //algorithm has already ended
-    if (this.index === this.results.length) {
-      return undefined;
-    }
-
-    return this.results[this.index++];
   }
 
   undo() {
@@ -167,6 +142,8 @@ export class GrammarNormalFormAlgorithm implements IAlgorithm {
     this.outputCore!.grammar.nonTerminalSymbols = [...this.inputCore.grammar.nonTerminalSymbols];
     this.outputCore!.grammar.terminalSymbols = [...this.inputCore.grammar.terminalSymbols];
     this.outputCore!.grammar.initialNonTerminalSymbol = this.inputCore.grammar.initialNonTerminalSymbol;
+
+    this.results = [];
 
     let id = 1;
     for (const rule of this.inputCore.grammar.productionRules) {

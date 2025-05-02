@@ -34,6 +34,31 @@ export interface IAlgorithm {
   undo(): IErrorMessage | undefined,
 }
 
+export abstract class Algorithm implements IAlgorithm {
+  inputType!: AlgorithmParams;
+  outputType?: AlgorithmParams;
+
+  results?: AlgorithmResult[];
+  protected index: number = 0;
+
+  next(): AlgorithmResult | undefined {
+    if (this.results === undefined) {
+      throw new Error("Cannot simulate algorithm step before start.");
+    }
+    //algorithm has already ended
+    if (this.index === this.results.length) {
+      return undefined;
+    }
+
+    return this.results[this.index++];
+  }
+
+  abstract undo(): IErrorMessage | undefined;
+  abstract init(mode: ModeHolder): ICoreType | undefined;
+  protected abstract precomputeResults(): void;
+
+}
+
 // TODO remove this
 export class TestingAlgorithm implements IAlgorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
