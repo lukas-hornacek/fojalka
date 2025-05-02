@@ -47,7 +47,6 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
     this.index--;
   }
 
-  //function computes all commands and highlits in advance and stores it in results
   precomputeResults() {
     const visited: string[][] = [];
     const notProcessed: string[][] = [];
@@ -193,7 +192,6 @@ export class RemoveEpsilonAlgorithm extends Algorithm {
     this.index--;
   }
 
-  //function computes all commands and highlits in advance and stores it in results
   precomputeResults() {
     this.results = [];
     const epsilonTails: Record<string, string[]> = {};
@@ -358,7 +356,6 @@ export class AutomatonToGrammarAlgorithm extends Algorithm {
     this.index--;
   }
 
-  //function computes all commands and highlights in advance and stores it in results
   precomputeResults() {
     this.results = [];
     const delta = this.inputCore.automaton.deltaFunctionMatrix;

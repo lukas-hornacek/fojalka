@@ -30,7 +30,6 @@ export class GrammarToAutomatonAlgorithm extends Algorithm {
     }
 
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
-
     this.precomputeResults();
 
     return this.outputCore;
@@ -48,10 +47,10 @@ export class GrammarToAutomatonAlgorithm extends Algorithm {
     this.index--;
   }
 
-  //function computes all commands and highlights in advance and stores it in results
   precomputeResults() {
     this.results = [];
 
+    //add state for each nonterminal
     const initialNonTerminal = this.inputCore.grammar.initialNonTerminalSymbol;
     let currentCommand: AutomatonEditCommand = new RenameStateCommand(this.outputCore!.automaton, INITIAL_STATE, initialNonTerminal);
     this.results.push({ highlight: [initialNonTerminal], command: currentCommand });
@@ -63,23 +62,28 @@ export class GrammarToAutomatonAlgorithm extends Algorithm {
       }
     }
 
+    //add final state
     currentCommand = new AddStateCommand(this.outputCore!.automaton, "fin");
     this.results.push({ highlight: [], command: currentCommand });
 
     currentCommand = new SetStateFinalFlagCommand(this.outputCore!.automaton, "fin", true);
     this.results.push({ highlight: [], command: currentCommand });
 
+    //add edges corresponding to the production rules
     for (const rule of this.inputCore.grammar.productionRules) {
+      const firstOuputSymbol = rule.outputSymbols[0];
+      const secondOuputSymbol = rule.outputSymbols[1];
+
       if (rule.outputSymbols.length === 2) {
-        const edge = this.outputCore!.createEdge({ id: "", inputChar: rule.outputSymbols[0] });
-        currentCommand = new AddEdgeCommand(this.outputCore!.automaton, rule.inputNonTerminal, rule.outputSymbols[1], edge);
+        const edge = this.outputCore!.createEdge({ id: "", inputChar: firstOuputSymbol });
+        currentCommand = new AddEdgeCommand(this.outputCore!.automaton, rule.inputNonTerminal, secondOuputSymbol, edge);
       }
-      else if (this.inputCore.grammar.hasNonTerminalSymbol(rule.outputSymbols[0])) {
+      else if (this.inputCore.grammar.hasNonTerminalSymbol(firstOuputSymbol)) {
         const edge = this.outputCore!.createEdge({ id: "", inputChar: EPSILON });
-        currentCommand = new AddEdgeCommand(this.outputCore!.automaton, rule.inputNonTerminal, rule.outputSymbols[0], edge);
+        currentCommand = new AddEdgeCommand(this.outputCore!.automaton, rule.inputNonTerminal, firstOuputSymbol, edge);
       }
       else {
-        const edge = this.outputCore!.createEdge({ id: "", inputChar: rule.outputSymbols[0] });
+        const edge = this.outputCore!.createEdge({ id: "", inputChar: firstOuputSymbol });
         currentCommand = new AddEdgeCommand(this.outputCore!.automaton, rule.inputNonTerminal, "fin", edge);
       }
       this.results.push({ highlight: [rule.id], command: currentCommand });
@@ -101,6 +105,7 @@ export class GrammarToAutomatonAlgorithm extends Algorithm {
   }
 }
 
+//transforms grammar into normal form where all rules in the grammar have at most one terminal on the right side
 export class GrammarNormalFormAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
   outputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
@@ -119,7 +124,6 @@ export class GrammarNormalFormAlgorithm extends Algorithm {
     }
 
     this.outputCore = new GrammarCore(GrammarType.REGULAR, mode);
-
     this.precomputeResults();
 
     return this.outputCore;
@@ -137,8 +141,8 @@ export class GrammarNormalFormAlgorithm extends Algorithm {
     this.index--;
   }
 
-  //function computes all commands and highlights in advance and stores it in results
   precomputeResults() {
+    //add all original symbols to grammar
     this.outputCore!.grammar.nonTerminalSymbols = [...this.inputCore.grammar.nonTerminalSymbols];
     this.outputCore!.grammar.terminalSymbols = [...this.inputCore.grammar.terminalSymbols];
     this.outputCore!.grammar.initialNonTerminalSymbol = this.inputCore.grammar.initialNonTerminalSymbol;
@@ -150,6 +154,8 @@ export class GrammarNormalFormAlgorithm extends Algorithm {
       const lastOutputSymbol = rule.outputSymbols.slice(-1)[0];
       const secondToLastOutputSymbol = rule.outputSymbols.slice(-2)[0];
 
+      //for each rule that has more than one terminal on the right side add new nonterminal symbols
+      //using the new nonterminals divide the rule into several short rules
       if (rule.outputSymbols.length > 2 || rule.outputSymbols.length === 2 && this.inputCore.grammar.hasTerminalSymbol(lastOutputSymbol)) {
         const prefixOutputSymbols = rule.outputSymbols.slice(0, -2);
         let input = rule.inputNonTerminal;
@@ -167,6 +173,7 @@ export class GrammarNormalFormAlgorithm extends Algorithm {
           i++;
         }
 
+        //special case when the final two output symbols are both terminal
         if (this.inputCore.grammar.hasTerminalSymbol(lastOutputSymbol)) {
           const newSymbol = "ψ" + id + "," + i;
           this.outputCore!.grammar.nonTerminalSymbols.push(newSymbol);

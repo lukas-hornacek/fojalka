@@ -55,6 +55,8 @@ export abstract class Algorithm implements IAlgorithm {
 
   abstract undo(): IErrorMessage | undefined;
   abstract init(mode: ModeHolder): ICoreType | undefined;
+
+  //function computes all commands and highlights in advance and stores it in results
   protected abstract precomputeResults(): void;
 
 }
