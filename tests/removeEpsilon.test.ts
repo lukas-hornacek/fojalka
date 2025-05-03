@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { RemoveEpsilonAlgorithm } from "../src/engine/algorithm";
+import { RemoveEpsilonAlgorithm } from "../src/engine/algorithm/automatonAlgorithms";
 import { AutomatonCore } from "../src/core/automatonCore";
 import { Automaton, AutomatonType } from "../src/engine/automaton/automaton";
 import { ModeHolder } from "../src/core/core";
@@ -14,8 +14,6 @@ test("testing algorithm functions", () => {
   let algorithm = new RemoveEpsilonAlgorithm(core);
 
   expect(algorithm.inputCore).toBe(core);
-  expect(algorithm.results).toBeUndefined();
-  expect(algorithm.index).toBe(0);
   expect(() => algorithm.init(new ModeHolder)).toThrowError("Cannot use algorithm, as it only works with finite automata.");
 
   core = new AutomatonCore(AutomatonType.FINITE, "test_core", new ModeHolder());

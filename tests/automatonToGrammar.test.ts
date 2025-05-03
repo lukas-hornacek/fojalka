@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { AutomatonToGrammarAlgorithm } from "../src/engine/algorithm";
+import { AutomatonToGrammarAlgorithm } from "../src/engine/algorithm/automatonAlgorithms";
 import { AutomatonCore } from "../src/core/automatonCore";
 import { Automaton, AutomatonType } from "../src/engine/automaton/automaton";
 import { ModeHolder } from "../src/core/core";
@@ -131,7 +131,7 @@ test("testing algorithm functions", () => {
   expect(core2.grammar).toEqual(core3.grammar);
 
   //testing if next + undo works in the entire algorthm
-  for (let i = 0; i < algorithm.results.length - 1; i++) {
+  for (let i = 0; i < algorithm.results!.length - 1; i++) {
     core2.grammar.executeCommand((algorithm.next()?.command as GrammarEditCommand));
     core3.grammar.executeCommand((algorithm2.next()?.command as GrammarEditCommand));
     expect(core2.grammar).toEqual(core3.grammar);
