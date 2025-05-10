@@ -1,3 +1,4 @@
+import cytoscape from "cytoscape";
 import { IAlgorithm } from "../engine/algorithm";
 import { ErrorMessage, IErrorMessage } from "../engine/common";
 import { IAutomatonCore } from "./automatonCore";
@@ -43,6 +44,9 @@ export interface ICore {
   algorithmUndo: () => IErrorMessage | undefined;
   // deletes algorithm (and secondary window) without switching to edit mode
   algorithmDelete: (keepSecondary: boolean) => IErrorMessage | undefined;
+
+  // get (readonly) cytoscape
+  getCytoscape: () => cytoscape.Core | undefined;
 }
 
 // component that holds global state and Grammar/Automaton cores
@@ -59,6 +63,10 @@ export class Core implements ICore {
   constructor(primary: ICoreType) {
     this.primary = primary;
     this.primary.mode = this.mode;
+  }
+
+  getCytoscape() {
+    return this.primary.getCytoscape();
   }
 
   switchToEditMode(keepSecondary: boolean) {

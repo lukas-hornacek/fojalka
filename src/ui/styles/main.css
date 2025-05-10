@@ -1,0 +1,18 @@
+#cy-primary, #cy-secondary {
+    height: 90%;
+    width: 90%;
+    border: solid;
+}
+
+#cy-window {
+    min-height: 70vh;
+}
+
+#cy-window * {
+    min-height: 70vh;
+}
+
+.selectedButton {
+    background-color: lightblue;
+    color: black;
+}

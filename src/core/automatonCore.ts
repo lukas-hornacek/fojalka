@@ -47,6 +47,8 @@ export interface IAutomatonCore {
   createEdge(edgeProps: IUniversalEdgeProps): IEdge;
   // needed by algorithm to visualise individual commands
   visitor: IEditCommandVisitor;
+
+  getCytoscape: () => cytoscape.Core | undefined;
 }
 
 export class AutomatonCore implements IAutomatonCore {
@@ -71,6 +73,10 @@ export class AutomatonCore implements IAutomatonCore {
     this.visual = new AutomatonVisual(id);
     this.visitor = new VisualVisitor(this.visual);
     this.mode = mode;
+  }
+
+  getCytoscape() {
+    return this.visual.getCytoscape();
   }
 
   init(): undefined {

@@ -33,6 +33,9 @@ export interface IAutomatonVisual {
   highlightElements: (ids: string[]) => void;
   // removes all current highlights
   clearHighlights: () => void;
+
+  getCytoscape: () => cytoscape.Core | undefined;
+
 }
 
 export class AutomatonVisual implements IAutomatonVisual {
@@ -69,6 +72,7 @@ export class AutomatonVisual implements IAutomatonVisual {
         },
       ],
       layout: { name: "preset" },
+      maxZoom: 10
     });
 
     // for debugging only
@@ -76,6 +80,11 @@ export class AutomatonVisual implements IAutomatonVisual {
       console.log(e.target.id());
     });
   }
+
+  getCytoscape() {
+    return this.cy;
+  }
+  
 
   fit() {
     this.cy?.fit();

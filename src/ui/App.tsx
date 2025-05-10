@@ -1,4 +1,4 @@
-import "./App.css";
+import "./styles/main.css";
 import EditButtons from "./EditButtons";
 import { CoreProvider } from "../core/CoreContext";
 import VisualWindows from "./VisualWindows";
