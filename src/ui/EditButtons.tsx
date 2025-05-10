@@ -1,7 +1,8 @@
-import { useContext, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { CoreContext } from "../core/CoreContext";
 import { Kind } from "../core/core";
 import ReactModal, { Styles } from "react-modal";
+import Mousetrap from "mousetrap";
 
 ReactModal.setAppElement("#root");
 
@@ -28,15 +29,92 @@ export default function EditButtons() {
   const [isVisibleModal, setIsStateModal] = useState<boolean>(false);
   const [mode, setMode] = useState<mode>("none");
 
-  const id = useRef("");
+  /* const id = useRef(""); */
   const from = useRef("");
   const to = useRef("");
-/*   const char = useRef(""); */
+  /*   const char = useRef(""); */
 
   const clickPosition = useRef<cytoscape.Position>({ x: 0, y: 0 });
 
+  // keyboard shortcuts
+  // https://www.npmjs.com/package/mousetrap
+  Mousetrap.bind("+", function () {
+    addState();
+  });
+  Mousetrap.bind("s", function () {
+    addState();
+  });
 
+  Mousetrap.bind("e", function () {
+    addEdge();
+  });
 
+  Mousetrap.bind("x", function () {
+    removeElement();
+  });
+  Mousetrap.bind("del", function () {
+    removeElement();
+  });
+
+  Mousetrap.bind("esc", function () {
+    setMode("none");
+  });
+
+  // handlers
+  const addNodeHandler = (e: cytoscape.EventObject) => {
+    if (e.target.id == null) {
+      // we don't want to create two nodes on top of each other
+      clickPosition.current = e.position;
+      console.log(e.position);
+
+      setIsStateModal(true);
+    }
+  };
+
+  const addEdgeHandler = (e: cytoscape.EventObject) => {
+    if (from.current == "") {
+      // first click
+      from.current = e.target.id();
+      console.log("selected first node:", from.current);
+    } else {
+      // second click
+      to.current = e.target.id();
+      console.log("selected second node:", to.current);
+
+      setIsStateModal(true);
+    }
+  };
+
+  const clickElsewhereHandler = (e: cytoscape.EventObject) => {
+    if (e.target.id == null) {
+      console.log("clicked elsewhere");
+      from.current = "";
+    }
+  };
+
+  // set handler based on the mode
+  useEffect(() => {
+    const core = coreContext!.primary;
+    const cy = core.getCytoscape();
+
+    switch (mode) {
+      case "createNode":
+        // remove other listeners and install mine
+        cy!.removeListener("tap");
+        cy!.on("tap", addNodeHandler);
+        return;
+      case "createEdge":
+        cy!.removeListener("tap");
+        cy!.on("tap", "node", addEdgeHandler);
+        cy!.on("tap", clickElsewhereHandler);
+        return;
+      case "none":
+        if (cy != null) {
+          cy.removeListener("tap");
+        }
+        return;
+    }
+  }, [mode]);
 
   if (!coreContext) {
     throw new Error("AutomatonWindow must be used within a CoreProvider");
@@ -44,25 +122,21 @@ export default function EditButtons() {
 
   function closeModal() {
     console.log("closed modal");
-    setMode("none");
     setIsStateModal(false);
   }
 
   function addState() {
     const core = coreContext!.primary;
 
+    // the button works like a toggle
+    if (mode == "createNode") {
+      setMode("none");
+      return;
+    }
+
     switch (core.kind) {
       case Kind.AUTOMATON: {
         setMode("createNode");
-
-        // add an event handler which runs once and opens a dialog window on click
-        const cy = core.getCytoscape();
-        cy!.one("tap", (e) => {
-          clickPosition.current = e.position;
-          console.log(e.position);
-
-          setIsStateModal(true);
-        });
 
         break;
       }
@@ -72,51 +146,18 @@ export default function EditButtons() {
     }
   }
 
-  function removeState() {
-    const core = coreContext!.primary;
-
-    switch (core.kind) {
-      case Kind.AUTOMATON: {
-        const e = core.removeState(id.current);
-        if (e !== undefined) {
-          console.log(e.details);
-        }
-        break;
-      }
-      case Kind.GRAMMAR:
-        console.log("Cannot remove state from grammar.");
-        break;
-    }
-  }
-
   function addEdge() {
     const core = coreContext!.primary;
+
+    // the button works like a toggle
+    if (mode == "createEdge") {
+      setMode("none");
+      return;
+    }
 
     switch (core.kind) {
       case Kind.AUTOMATON: {
         setMode("createEdge");
-
-        // add an event handler which runs once and opens a dialog window on click
-        const cy = core.getCytoscape();
-        cy!.one("tap", "node", (e) => {
-          // remember fist node
-          from.current = e.target.id();
-          console.log("selected first node:", from.current);
-
-          // highlight selected
-          cy!.getElementById(from.current).style("background-color", "orange");
-
-          // upon clicking the second time a dialog opens
-          cy!.one("tap", "node", (e) => {
-            to.current = e.target.id();
-            console.log("selected second node:", to.current);
-
-            // unhighlight
-            cy!.getElementById(from.current).removeStyle("background-color");
-
-            setIsStateModal(true);
-          });
-        });
 
         break;
       }
@@ -126,19 +167,44 @@ export default function EditButtons() {
     }
   }
 
-  function removeEdge() {
+  function removeElement() {
+    setMode("none");
+
     const core = coreContext!.primary;
+    const cy = core.getCytoscape();
 
     switch (core.kind) {
       case Kind.AUTOMATON: {
-        const e = core.removeEdge(from.current, to.current, id.current);
-        if (e !== undefined) {
-          console.log(e.details);
-        }
+        // remove nodes
+        cy!
+          .elements("node:selected")
+          .toArray()
+          .map((x) => {
+            const e = core.removeState(x.data("id"));
+            if (e !== undefined) {
+              console.log(e.details);
+            }
+          });
+
+        // remove edges
+        cy!
+          .elements("edge:selected")
+          .toArray()
+          .map((x) => {
+            const e = core.removeEdge(
+              x.data("source"),
+              x.data("target"),
+              x.data("id")
+            );
+            if (e !== undefined) {
+              console.log(e.details);
+            }
+          });
+
         break;
       }
       case Kind.GRAMMAR:
-        console.log("Cannot remove edge from grammar.");
+        console.log("Cannot remove elements from grammar.");
         break;
     }
   }
@@ -204,6 +270,9 @@ export default function EditButtons() {
         } else {
           console.log("edge added successfuly");
           closeModal();
+
+          // set the end node as the start node
+          from.current = to.current;
         }
         break;
       }
@@ -226,9 +295,6 @@ export default function EditButtons() {
             >
               Add state
             </button>
-            <button className="btn btn-primary" onClick={removeState}>
-              Remove state
-            </button>
 
             <button
               className={`btn btn-primary ${
@@ -238,8 +304,8 @@ export default function EditButtons() {
             >
               Add edge
             </button>
-            <button className="btn btn-primary" onClick={removeEdge}>
-              Remove edge
+            <button className="btn btn-primary" onClick={removeElement}>
+              Remove states or edges
             </button>
 
             <button className="btn btn-primary" onClick={undo}>

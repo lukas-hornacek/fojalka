@@ -59,20 +59,31 @@ export class AutomatonVisual implements IAutomatonVisual {
             label: "data(id)",
           },
         },
+
         {
           selector: "edge",
           style: {
             width: 3,
-            "line-color": "#ccc",
-            "target-arrow-color": "#ccc",
+            "line-color": "#999",
+            "target-arrow-color": "#aaa",
             "target-arrow-shape": "triangle",
             "curve-style": "bezier",
             label: "data(label)",
           },
         },
+        {
+          selector: ":selected",
+          css: {
+            "background-color": "SteelBlue",
+            "line-color": "SteelBlue",
+            "target-arrow-color": "SteelBlue",
+            "source-arrow-color": "SteelBlue"
+          }
+        },
       ],
       layout: { name: "preset" },
-      maxZoom: 10
+      maxZoom: 10,
+      selectionType: "single",
     });
 
     // for debugging only
@@ -84,7 +95,6 @@ export class AutomatonVisual implements IAutomatonVisual {
   getCytoscape() {
     return this.cy;
   }
-  
 
   fit() {
     this.cy?.fit();
