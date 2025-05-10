@@ -93,6 +93,11 @@ export class Core implements ICore {
     if (this.algorithm !== undefined) {
       return new ErrorMessage("Cannot start new algorithm when an algorithm is already in progress.");
     }
+    if (this.primary.kind === Kind.AUTOMATON) {
+      if (this.primary.simulationInProgress()) {
+        return new ErrorMessage("Cannot start algorithm when a simulation is in progress.");
+      }
+    }
 
     try {
       this.algorithm = algorithm;
@@ -101,6 +106,10 @@ export class Core implements ICore {
       if (e instanceof Error) {
         return new ErrorMessage(e.message);
       }
+    }
+
+    if (this.primary.kind === Kind.AUTOMATON) {
+      this.primary.algorithmInProgress(true);
     }
   }
 
@@ -182,6 +191,9 @@ export class Core implements ICore {
         return new ErrorMessage("Cannot keep second window, because the window does not exit.");
       }
       this.primary = this.secondary;
+    }
+    if (this.primary.kind === Kind.AUTOMATON) {
+      this.primary.algorithmInProgress(false);
     }
     this.secondary = undefined;
     this.algorithm = undefined;

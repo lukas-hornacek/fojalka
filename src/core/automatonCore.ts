@@ -40,6 +40,9 @@ export interface IAutomatonCore {
   runNext: () => IErrorMessage | undefined;
   runUndo: () => IErrorMessage | undefined;
 
+  simulationInProgress: () => boolean;
+  algorithmInProgress: (inProgress: boolean) => void;
+
   highlight: (ids: string[]) => IErrorMessage | undefined;
 
   // provides access to factory method that is needed by IAlgorithm
@@ -63,6 +66,8 @@ export class AutomatonCore implements IAutomatonCore {
   // optionally hold current simulation
   // the simulation also contains configuration
   simulation?: IAutomatonSimulation;
+
+  algorithm: boolean = false;
 
   constructor(automatonType: AutomatonType, id: string, mode: ModeHolder) {
     this.automatonType = automatonType;
@@ -240,6 +245,9 @@ export class AutomatonCore implements IAutomatonCore {
     if (this.mode.mode !== Mode.VISUAL) {
       return new ErrorMessage("Operation is only permitted in visual mode.");
     }
+    if (this.algorithm) {
+      return new ErrorMessage("Cannot start new simulation when an algorithm is in progress.");
+    }
 
     this.simulation = this.automaton.createRunSimulation(word);
   }
@@ -318,4 +326,12 @@ export class AutomatonCore implements IAutomatonCore {
       }
     }
   }
+
+  simulationInProgress() {
+    return this.simulation !== undefined;
+  }
+
+  algorithmInProgress(inProgress: boolean) {
+    this.algorithm = inProgress;
+  };
 }
