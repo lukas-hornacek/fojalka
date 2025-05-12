@@ -39,6 +39,7 @@ export interface IAutomatonCore {
   runStart: (word: string[]) => void;
   runNext: () => IErrorMessage | undefined;
   runUndo: () => IErrorMessage | undefined;
+  runEnd: () => IErrorMessage | undefined;
 
   simulationInProgress: () => boolean;
   algorithmInProgress: (inProgress: boolean) => void;
@@ -248,6 +249,9 @@ export class AutomatonCore implements IAutomatonCore {
     if (this.algorithm) {
       return new ErrorMessage("Cannot start new simulation when an algorithm is in progress.");
     }
+    if (this.simulation !== undefined) {
+      return new ErrorMessage("Cannot start new simulation when a simulation is already in progress.");
+    }
 
     this.simulation = this.automaton.createRunSimulation(word);
   }
@@ -261,7 +265,6 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Run simulation does not exist. Try starting a simulation first.");
     }
 
-    // TODO update NextStepCommand to return error if simulation ends
     const nextCommand = new NextStepCommand(this.simulation);
     const error = this.simulation.executeCommand(nextCommand);
     if (error !== undefined) {
@@ -292,6 +295,18 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage(e.details);
     }
     return new ErrorMessage("Not implemented.");
+  }
+
+  runEnd() {
+    if (this.mode.mode !== Mode.VISUAL) {
+      return new ErrorMessage("Operation is only permitted in visual mode.");
+    }
+    if (this.simulation === undefined) {
+      return new ErrorMessage("Run simulation does not exist. Try starting a simulation first.");
+    }
+
+    this.visual.clearHighlights();
+    this.simulation = undefined;
   }
 
   createEdge(edgeProps: IUniversalEdgeProps) {
