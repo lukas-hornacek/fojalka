@@ -1,14 +1,32 @@
 import { AutomatonType, IAutomaton } from "../engine/automaton/automaton";
-import { AbstractAutomatonFactory, IAutomatonFactory, IUniversalEdgeProps } from "../engine/automaton/factories";
+import {
+  AbstractAutomatonFactory,
+  IAutomatonFactory,
+  IUniversalEdgeProps,
+} from "../engine/automaton/factories";
 import { IErrorMessage, ErrorMessage } from "../engine/common";
 import { IAutomatonVisual, AutomatonVisual } from "../visual/automatonVisual";
 import { Kind, Mode, ModeHolder } from "./core";
 import { IEdge } from "../engine/automaton/edge";
-import { IEditCommandVisitor, VisualVisitor } from "../engine/automaton/visitors/editCommand";
+import {
+  IEditCommandVisitor,
+  VisualVisitor,
+} from "../engine/automaton/visitors/editCommand";
 import { IAutomatonSimulation } from "../engine/automaton/simulation";
-import { AutomatonEditCommand, AddStateCommand, RemoveStateCommand, AddEdgeCommand, EditEdgeCommand, RemoveEdgeCommand, RenameStateCommand, SetInitialStateCommand, SetStateFinalFlagCommand } from "../engine/automaton/commands/edit";
+import {
+  AutomatonEditCommand,
+  AddStateCommand,
+  RemoveStateCommand,
+  AddEdgeCommand,
+  EditEdgeCommand,
+  RemoveEdgeCommand,
+  RenameStateCommand,
+  SetInitialStateCommand,
+  SetStateFinalFlagCommand,
+} from "../engine/automaton/commands/edit";
 import { NextStepCommand } from "../engine/automaton/commands/run";
-import { INITIAL_STATE } from "../constants";
+import { INITIAL_STATE, PRIMARY_CYTOSCAPE_ID } from "../constants";
+import { SavedAutomaton } from "../ui/importExport";
 
 export interface IAutomatonCore {
   kind: Kind.AUTOMATON;
@@ -22,15 +40,32 @@ export interface IAutomatonCore {
   fit: () => void;
 
   // edit functions
-  addState: (id: string, position: { x: number, y: number }) => IErrorMessage | undefined;
+  addState: (
+    id: string,
+    position: { x: number; y: number }
+  ) => IErrorMessage | undefined;
   removeState: (id: string) => IErrorMessage | undefined;
   renameState: (id: string, newId: string) => IErrorMessage | undefined;
   setInitialState: (id: string) => IErrorMessage | undefined;
-  setIsFinalState: (id: string, isFinalState: boolean) => IErrorMessage | undefined;
+  setIsFinalState: (
+    id: string,
+    isFinalState: boolean
+  ) => IErrorMessage | undefined;
 
-  addEdge: (from: string, to: string, props: IUniversalEdgeProps) => IErrorMessage | undefined;
-  removeEdge: (from: string, to: string, id: string) => IErrorMessage | undefined;
-  editEdge: (id: string, props: IUniversalEdgeProps) => IErrorMessage | undefined;
+  addEdge: (
+    from: string,
+    to: string,
+    props: IUniversalEdgeProps
+  ) => IErrorMessage | undefined;
+  removeEdge: (
+    from: string,
+    to: string,
+    id: string
+  ) => IErrorMessage | undefined;
+  editEdge: (
+    id: string,
+    props: IUniversalEdgeProps
+  ) => IErrorMessage | undefined;
 
   undo: () => IErrorMessage | undefined;
 
@@ -66,13 +101,89 @@ export class AutomatonCore implements IAutomatonCore {
   // the simulation also contains configuration
   simulation?: IAutomatonSimulation;
 
-  constructor(automatonType: AutomatonType, id: string, mode: ModeHolder) {
+  // function to be run after init
+  afterInit: (automatonCore: AutomatonCore) => void = () => {};
+
+  constructor(
+    automatonType: AutomatonType,
+    id: string,
+    mode: ModeHolder,
+    initialStateName: string = INITIAL_STATE,
+    initialStatePosition: { x: number; y: number } = { x: 0, y: 0 },
+    afterInit?: (automatonCore: AutomatonCore) => void
+  ) {
     this.automatonType = automatonType;
     this.factory = new AbstractAutomatonFactory(automatonType);
-    this.automaton = this.factory.createAutomaton(INITIAL_STATE);
-    this.visual = new AutomatonVisual(id);
+    this.automaton = this.factory.createAutomaton(initialStateName);
+    this.visual = new AutomatonVisual(
+      id,
+      initialStateName,
+      initialStatePosition
+    );
     this.visitor = new VisualVisitor(this.visual);
     this.mode = mode;
+    if (afterInit != undefined) {
+      this.afterInit = afterInit;
+    }
+  }
+
+  static fromSavedJSON(savedAutomatonString: string): AutomatonCore {
+    const imported: SavedAutomaton = JSON.parse(savedAutomatonString);
+
+    console.log(`Parsed text: `);
+    console.log(imported);
+
+    const newAutomatonCore = new AutomatonCore(
+      imported.automaton.automatonType,
+      PRIMARY_CYTOSCAPE_ID,
+      new ModeHolder(),
+      imported.automaton.initialStateId,
+      imported.visuals
+        .filter((x) => x.id === imported.automaton.initialStateId)
+        .map((x) => x.position)[0],
+      (automatonCore) => {
+        // run this after init
+        // copy over values from the JSON
+        automatonCore.automaton.automatonType =
+          imported.automaton.automatonType;
+
+        imported.automaton.states.forEach((s) => {
+          // this is the ugliest frickin' code I've written this year, it's in O(n^2), but it works
+          automatonCore.addState(
+            s,
+            imported.visuals.filter((x) => x.id === s).map((x) => x.position)[0]
+          );
+        });
+
+        automatonCore.automaton.finalStateIds =
+          imported.automaton.finalStateIds;
+
+        for (const from in imported.automaton.deltaFunctionMatrix) {
+          for (const to in imported.automaton.deltaFunctionMatrix[from]) {
+            for (const edge in imported.automaton.deltaFunctionMatrix[from][
+              to
+            ]) {
+              automatonCore.addEdge(from, to, {
+                id: "",
+                inputChar: imported.automaton.deltaFunctionMatrix[from][
+              to
+            ][edge].inputChar,
+              });
+
+              console.log(`from: ${from}, to: ${to}, edge: ${edge}`);
+            }
+          }
+        }
+
+        // fit it to the screen
+        automatonCore.fit();
+      }
+    );
+
+    // how the visualisation should start looking
+    //newAutomatonCore.visual.initialJSON = imported.visuals;
+
+    return newAutomatonCore;
   }
 
   getCytoscape() {
@@ -81,19 +192,24 @@ export class AutomatonCore implements IAutomatonCore {
 
   init(): undefined {
     this.visual.init();
+    this.afterInit(this);
   }
 
   undo() {
     // TODO refactor this to return information that can be used to reflect changes in visual
-    this.automaton.undo();
-    return new ErrorMessage("Not implemented.");
+    const result = this.automaton.undo();
+    if (result == undefined) {
+      this.visual.redrawAutomaton(this.automaton);
+    }
+    return result;
+    //return new ErrorMessage("Not implemented.");
   }
 
   fit() {
     this.visual.fit();
   }
 
-  addState(id: string, position: { x: number, y: number }) {
+  addState(id: string, position: { x: number; y: number }) {
     if (this.mode.mode !== Mode.EDIT) {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
@@ -103,7 +219,10 @@ export class AutomatonCore implements IAutomatonCore {
       return error;
     }
 
-    const command: AutomatonEditCommand = new AddStateCommand(this.automaton, id);
+    const command: AutomatonEditCommand = new AddStateCommand(
+      this.automaton,
+      id
+    );
     error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -118,7 +237,10 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: AutomatonEditCommand = new RemoveStateCommand(this.automaton, id);
+    const command: AutomatonEditCommand = new RemoveStateCommand(
+      this.automaton,
+      id
+    );
     const error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -137,7 +259,11 @@ export class AutomatonCore implements IAutomatonCore {
       return error;
     }
 
-    const command: AutomatonEditCommand = new RenameStateCommand(this.automaton, id, newId);
+    const command: AutomatonEditCommand = new RenameStateCommand(
+      this.automaton,
+      id,
+      newId
+    );
     error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -151,7 +277,10 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: AutomatonEditCommand = new SetInitialStateCommand(this.automaton, id);
+    const command: AutomatonEditCommand = new SetInitialStateCommand(
+      this.automaton,
+      id
+    );
     const error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -165,7 +294,11 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: AutomatonEditCommand = new SetStateFinalFlagCommand(this.automaton, id, isFinalState);
+    const command: AutomatonEditCommand = new SetStateFinalFlagCommand(
+      this.automaton,
+      id,
+      isFinalState
+    );
     const error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -185,7 +318,12 @@ export class AutomatonCore implements IAutomatonCore {
     }
 
     const edge: IEdge = this.factory.createEdge(props);
-    const command: AutomatonEditCommand = new AddEdgeCommand(this.automaton, from, to, edge);
+    const command: AutomatonEditCommand = new AddEdgeCommand(
+      this.automaton,
+      from,
+      to,
+      edge
+    );
     error = this.automaton.executeCommand(command);
     if (error !== undefined) {
       return error;
@@ -199,7 +337,12 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: AutomatonEditCommand = new RemoveEdgeCommand(this.automaton, from, to, id);
+    const command: AutomatonEditCommand = new RemoveEdgeCommand(
+      this.automaton,
+      from,
+      to,
+      id
+    );
 
     const error = this.automaton.executeCommand(command);
     if (error !== undefined) {
@@ -220,7 +363,11 @@ export class AutomatonCore implements IAutomatonCore {
     }
 
     const edge: IEdge = this.factory.createEdge(props);
-    const command: AutomatonEditCommand = new EditEdgeCommand(this.automaton, id, edge);
+    const command: AutomatonEditCommand = new EditEdgeCommand(
+      this.automaton,
+      id,
+      edge
+    );
 
     error = this.automaton.executeCommand(command);
     if (error !== undefined) {
@@ -256,7 +403,9 @@ export class AutomatonCore implements IAutomatonCore {
     }
 
     if (this.simulation === undefined) {
-      return new ErrorMessage("Run simulation does not exist. Try starting a simulation first.");
+      return new ErrorMessage(
+        "Run simulation does not exist. Try starting a simulation first."
+      );
     }
 
     // TODO update NextStepCommand to return error if simulation ends
@@ -282,7 +431,9 @@ export class AutomatonCore implements IAutomatonCore {
     }
 
     if (this.simulation === undefined) {
-      return new ErrorMessage("Run simulation does not exist. Try starting a simulation first.");
+      return new ErrorMessage(
+        "Run simulation does not exist. Try starting a simulation first."
+      );
     }
 
     const e = this.simulation.undo();
@@ -298,7 +449,9 @@ export class AutomatonCore implements IAutomatonCore {
 
   checkStateId(id: string) {
     if (id.trim().length === 0) {
-      return new ErrorMessage("State ID must contain at least one non-whitespace character.");
+      return new ErrorMessage(
+        "State ID must contain at least one non-whitespace character."
+      );
     }
     // prevents conflicts with edge IDs
     if (id.charAt(0) == "_") {
@@ -308,18 +461,32 @@ export class AutomatonCore implements IAutomatonCore {
 
   checkEdgeProps(props: IUniversalEdgeProps) {
     if (props.inputChar.trim().length === 0) {
-      return new ErrorMessage("Input char must contain at least one non-whitespace character.");
+      return new ErrorMessage(
+        "Input char must contain at least one non-whitespace character."
+      );
     }
     if (this.automatonType === AutomatonType.PDA) {
-      if (props.readStackChar === undefined || props.writeStackWord === undefined) {
-        return new ErrorMessage("PDA edge must specify character(s) read from and written to the stack");
+      if (
+        props.readStackChar === undefined ||
+        props.writeStackWord === undefined
+      ) {
+        return new ErrorMessage(
+          "PDA edge must specify character(s) read from and written to the stack"
+        );
       }
-      if (props.readStackChar.trim().length === 0 || props.writeStackWord.length === 0) {
-        return new ErrorMessage("Read and written stack character(s) must not contain whitespace-only symbols");
+      if (
+        props.readStackChar.trim().length === 0 ||
+        props.writeStackWord.length === 0
+      ) {
+        return new ErrorMessage(
+          "Read and written stack character(s) must not contain whitespace-only symbols"
+        );
       }
       for (const c in props.writeStackWord) {
         if (c.trim().length === 0) {
-          return new ErrorMessage("Read and written stack character(s) must not contain whitespace-only symbols");
+          return new ErrorMessage(
+            "Read and written stack character(s) must not contain whitespace-only symbols"
+          );
         }
       }
     }

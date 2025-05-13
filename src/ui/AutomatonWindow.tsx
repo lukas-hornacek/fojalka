@@ -1,8 +1,8 @@
 import { useEffect, useContext } from "react";
-import { CoreContext } from "../core/CoreContext";
 import { Kind } from "../core/core";
 import { TestingAlgorithm } from "../engine/algorithm";
 import { PRIMARY_CYTOSCAPE_ID, SECONDARY_CYTOSCAPE_ID } from "../constants";
+import { CoreContext } from "./EditButtons";
 
 export default function AutomatonWindow({ primary, cols }: { primary: boolean, cols: number }) {
   const coreContext = useContext(CoreContext);

@@ -1,10 +1,15 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import { CoreContext } from "../core/CoreContext";
-import { Kind } from "../core/core";
+import { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
+import { Core, ICore, Kind, ModeHolder } from "../core/core";
 import ReactModal, { Styles } from "react-modal";
 import Mousetrap from "mousetrap";
+import { exportAutomaton, SavedAutomaton } from "./importExport";
+import { AutomatonCore } from "../core/automatonCore";
+import { AutomatonType } from "../engine/automaton/automaton";
+import { PRIMARY_CYTOSCAPE_ID } from "../constants";
 
 ReactModal.setAppElement("#root");
+
+export const CoreContext = createContext<ICore | undefined>(undefined);
 
 const customModalStyles: Styles = {
   content: {
@@ -22,9 +27,13 @@ const customModalStyles: Styles = {
 
 type mode = "none" | "createNode" | "createEdge";
 
+interface Props {
+  children: ReactNode;
+}
+
 // buttons for testing interaction between UI and Core
-export default function EditButtons() {
-  const coreContext = useContext(CoreContext);
+export default function EditButtons( {children}: Props ) {
+  const [coreState, setCoreState] = useState<ICore>(new Core(new AutomatonCore(AutomatonType.FINITE, PRIMARY_CYTOSCAPE_ID, new ModeHolder())));
 
   const [isVisibleModal, setIsStateModal] = useState<boolean>(false);
   const [mode, setMode] = useState<mode>("none");
@@ -94,7 +103,7 @@ export default function EditButtons() {
 
   // set handler based on the mode
   useEffect(() => {
-    const core = coreContext!.primary;
+    const core = coreState.primary;
     const cy = core.getCytoscape();
 
     switch (mode) {
@@ -116,7 +125,7 @@ export default function EditButtons() {
     }
   }, [mode]);
 
-  if (!coreContext) {
+  if (!coreState) {
     throw new Error("AutomatonWindow must be used within a CoreProvider");
   }
 
@@ -126,7 +135,7 @@ export default function EditButtons() {
   }
 
   function addState() {
-    const core = coreContext!.primary;
+    const core = coreState.primary;
 
     // the button works like a toggle
     if (mode == "createNode") {
@@ -147,7 +156,7 @@ export default function EditButtons() {
   }
 
   function addEdge() {
-    const core = coreContext!.primary;
+    const core = coreState.primary;
 
     // the button works like a toggle
     if (mode == "createEdge") {
@@ -170,7 +179,7 @@ export default function EditButtons() {
   function removeElement() {
     setMode("none");
 
-    const core = coreContext!.primary;
+    const core = coreState.primary;
     const cy = core.getCytoscape();
 
     switch (core.kind) {
@@ -210,14 +219,14 @@ export default function EditButtons() {
   }
 
   function undo() {
-    const e = coreContext?.primary.undo();
+    const e = coreState.primary.undo();
     if (e !== undefined) {
       console.log(e.details);
     }
   }
 
   function fit() {
-    const core = coreContext!.primary;
+    const core = coreState.primary;
 
     switch (core.kind) {
       case Kind.AUTOMATON: {
@@ -231,7 +240,7 @@ export default function EditButtons() {
   }
 
   function formAddState(formData: FormData) {
-    const core = coreContext!.primary;
+    const core = coreState.primary;
 
     switch (core.kind) {
       case Kind.AUTOMATON: {
@@ -256,13 +265,15 @@ export default function EditButtons() {
   }
 
   function formAddEdge(formData: FormData) {
-    const core = coreContext!.primary;
+    const core = coreState.primary;
 
     switch (core.kind) {
       case Kind.AUTOMATON: {
+        const char = formData.get("edge-character")?.toString() || "";
+
         const e = core.addEdge(from.current, to.current, {
           id: "",
-          inputChar: formData.get("edge-character")?.toString() || "",
+          inputChar: char,
         });
         if (e !== undefined) {
           console.error(e.details);
@@ -283,7 +294,7 @@ export default function EditButtons() {
   }
 
   return (
-    <>
+    <CoreContext.Provider value={coreState}>
       <div className="row">
         <div className="col-2">
           <div className="stack">
@@ -314,6 +325,38 @@ export default function EditButtons() {
             <button className="btn btn-primary" onClick={fit}>
               Fit automaton to screen
             </button>
+
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                if (coreState.primary.kind === Kind.AUTOMATON) {
+                  console.log(exportAutomaton(coreState.primary));
+                }
+              }}
+            >
+              Export
+            </button>
+
+            <button type="button" id="import-button" onClick={() => {
+              // open file select dialog
+              document.getElementById("file-input")?.click();
+            }}>
+              Import
+            </button>
+            <input type="file" id="file-input" style={{display: "none"}} onChange={(e) => {
+              console.log("file changed")
+              const files = e.target.files;
+              if (files?.length !== 1) {
+                alert("Select exactly one input file");
+                return;
+              }
+
+              const file = files[0];
+              file.text().then(text => {              
+                const newAutomatonCore = AutomatonCore.fromSavedJSON(text);
+                setCoreState(new Core(newAutomatonCore));               
+              })
+            }}/>
           </div>
         </div>
       </div>
@@ -350,6 +393,7 @@ export default function EditButtons() {
           <button type="submit">Add edge</button>
         </form>
       </ReactModal>
-    </>
+      {children}
+    </CoreContext.Provider>
   );
 }

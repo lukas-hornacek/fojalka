@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { CoreContext } from "../core/CoreContext";
+import { CoreContext } from "./EditButtons";
 
 export default function ToggleWindow({ toggle }: { toggle: () => void }) {
   const coreContext = useContext(CoreContext);

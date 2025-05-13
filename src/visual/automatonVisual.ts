@@ -1,21 +1,23 @@
 import cytoscape from "cytoscape";
 import { Kind } from "../core/core";
+import { IAutomaton } from "../engine/automaton/automaton";
 
 export type NodeProps = {
-  id: string,
-  isFinal: boolean,
-  isStarting: boolean,
+  id: string;
+  isFinal: boolean;
+  isStarting: boolean;
 };
 
 export type EdgeProps = {
-  id: string,
-  from: string,
-  to: string,
-  label: string,
+  id: string;
+  from: string;
+  to: string;
+  label: string;
 };
 
 export interface IAutomatonVisual {
   kind: Kind.AUTOMATON;
+  initialJSON?: object;
 
   init: () => void;
   fit: () => void;
@@ -27,7 +29,7 @@ export interface IAutomatonVisual {
   setInitialNode: (id: string) => void;
   setIsFinalNode: (id: string, isFinal: boolean) => void;
 
-  addEdge: (id: string, from: string, to: string, label: string,) => void;
+  addEdge: (id: string, from: string, to: string, label: string) => void;
   editEdge: (id: string, label: string) => void;
   removeEdge: (id: string) => void;
   highlightElements: (ids: string[]) => void;
@@ -35,22 +37,35 @@ export interface IAutomatonVisual {
   clearHighlights: () => void;
 
   getCytoscape: () => cytoscape.Core | undefined;
-
+  redrawAutomaton: (automaton: IAutomaton) => void;
 }
 
 export class AutomatonVisual implements IAutomatonVisual {
   kind = Kind.AUTOMATON as const;
   id: string;
   cy?: cytoscape.Core;
+  initialJSON?: object;
+  initialState: string = "";
+  initialStatePosition: { x: number; y: number } = {x: 0, y: 0};
 
-  constructor(id: string) {
+  constructor(id: string, initialState: string, initialStatePosition: { x: number; y: number }) {
     this.id = id;
+    this.initialState = initialState;
+    this.initialStatePosition = initialStatePosition;
   }
 
   init() {
+    console.log("init");
+
     this.cy = cytoscape({
       container: document.getElementById(this.id),
-      elements: [],
+      elements: [
+        {
+    group: 'nodes',
+    data: { id: this.initialState },
+    position: this.initialStatePosition,
+}
+      ],
       style: [
         {
           selector: "node",
@@ -65,10 +80,11 @@ export class AutomatonVisual implements IAutomatonVisual {
           style: {
             width: 3,
             "line-color": "#999",
-            "target-arrow-color": "#aaa",
+            "target-arrow-color": "#999",
             "target-arrow-shape": "triangle",
             "curve-style": "bezier",
             label: "data(label)",
+            "arrow-scale": 2,
           },
         },
         {
@@ -77,8 +93,8 @@ export class AutomatonVisual implements IAutomatonVisual {
             "background-color": "SteelBlue",
             "line-color": "SteelBlue",
             "target-arrow-color": "SteelBlue",
-            "source-arrow-color": "SteelBlue"
-          }
+            "source-arrow-color": "SteelBlue",
+          },
         },
       ],
       layout: { name: "preset" },
@@ -86,14 +102,36 @@ export class AutomatonVisual implements IAutomatonVisual {
       selectionType: "single",
     });
 
-    // for debugging only
-    this.cy.on("tap", "node, edge", (e) => {
-      console.log(e.target.id());
-    });
+    if (this.initialJSON != undefined) {
+      this.cy.json(this.initialJSON);
+    }
   }
 
   getCytoscape() {
     return this.cy;
+  }
+
+  redrawAutomaton(automaton: IAutomaton) {
+    // todo doesn't do what I want
+
+    // remove everything
+    this.cy!.elements().remove();
+
+    // add all nodes
+    automaton.states.forEach((x, index) => {
+      this.addNode(x, { x: 50 * index, y: 0 });
+    });
+
+    // add all edges
+    for (const fromEdge in automaton.deltaFunctionMatrix) {
+      for (const toEdge in automaton.deltaFunctionMatrix[fromEdge]) {
+        automaton.deltaFunctionMatrix[fromEdge][toEdge].forEach((edge) => {
+          this.addEdge(edge.id, fromEdge, toEdge, edge.label);
+        });
+      }
+    }
+
+    console.log("redrawn");
   }
 
   fit() {
@@ -124,7 +162,12 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   addEdge(id: string, from: string, to: string, label: string) {
-    this.cy?.add({ group: "edges", data: { id, source: from, target: to, label } });
+    console.log(id, from, to, label);
+
+    this.cy?.add({
+      group: "edges",
+      data: { id, source: from, target: to, label },
+    });
   }
 
   // TODO
@@ -139,7 +182,7 @@ export class AutomatonVisual implements IAutomatonVisual {
   // TODO
   highlightElements(ids: string[]) {
     console.log(ids);
-  };
+  }
 
   // TODO
   clearHighlights() {
