@@ -67,11 +67,13 @@ export class RemoveStateCommand extends AutomatonEditCommand {
     if (index === -1) {
       return new ErrorMessage(`Cannot remove state ${this.stateId}, as it does not exist.`);
     }
+    if (this.stateId === this.automaton.initialStateId) {
+      return new ErrorMessage(`Cannot remove state ${this.stateId}, as it is the initial state.`);
+    }
+
     this.saveBackup();
 
     this.automaton.finalStateIds = this.automaton.finalStateIds.filter(id => id !== this.stateId);
-
-    // TODO check if stateId is initialStateId
 
     // remove state
     if (this.automaton.states.length > 1 && index !== this.automaton.states.length - 1) {
