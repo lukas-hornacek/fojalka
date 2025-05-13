@@ -85,13 +85,17 @@ export class AddNonterminalsCommand extends GrammarEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    if (this.nonterminals.some(symbol => this.grammar.nonTerminalSymbols.includes(symbol))) {
-      return new ErrorMessage(`Cannot add nonterminal symbols ${this.nonterminals}: some of the symbols are already present.`);
+    for (const symbol in this.nonterminals) {
+      if (this.grammar.terminalSymbols.includes(symbol)) {
+        return new ErrorMessage(`Cannot add nonterminal symbol ${symbol}: it is already present as a terminal symbol.`);
+      }
     }
 
     this.saveBackup();
     for (const symbol of this.nonterminals) {
-      this.grammar.nonTerminalSymbols.push(symbol);
+      if (!this.grammar.nonTerminalSymbols.includes(symbol)) {
+        this.grammar.nonTerminalSymbols.push(symbol);
+      }
     }
   }
 }
@@ -109,13 +113,17 @@ export class AddTerminalsCommand extends GrammarEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    if (this.terminals.some(symbol => this.grammar.terminalSymbols.includes(symbol))) {
-      return new ErrorMessage(`Cannot add terminal symbols ${this.terminals}: some of the symbols are already present.`);
+    for (const symbol in this.terminals) {
+      if (this.grammar.nonTerminalSymbols.includes(symbol)) {
+        return new ErrorMessage(`Cannot add terminal symbol ${symbol}: it is already present as a nonterminal symbol.`);
+      }
     }
 
     this.saveBackup();
     for (const symbol of this.terminals) {
-      this.grammar.terminalSymbols.push(symbol);
+      if (!this.grammar.terminalSymbols.includes(symbol)) {
+        this.grammar.terminalSymbols.push(symbol);
+      }
     }
   }
 }
@@ -162,6 +170,11 @@ export class RemoveNonterminalCommand extends GrammarEditCommand {
     if (this.nonterminal === this.grammar.initialNonTerminalSymbol) {
       return new ErrorMessage(`Cannot remove nonterminal symbol ${this.nonterminal}: it is the initial nonterminal.`);
     }
+    for (const rule of this.grammar.productionRules) {
+      if (this.nonterminal === rule.inputNonTerminal || rule.outputSymbols.includes(this.nonterminal)) {
+        return new ErrorMessage(`Cannot remove nonterminal symbol ${this.nonterminal}: it is being used in some production rules.`);
+      }
+    }
 
     this.saveBackup();
     if (this.grammar.nonTerminalSymbols.length > 1 && index !== this.grammar.nonTerminalSymbols.length - 1) {
@@ -188,6 +201,11 @@ export class RemoveTerminalCommand extends GrammarEditCommand {
     const index = this.grammar.terminalSymbols.findIndex(id => id === this.terminal);
     if (index === -1) {
       return new ErrorMessage(`Cannot remove terminal symbol ${this.terminal}: terminal is not present.`);
+    }
+    for (const rule of this.grammar.productionRules) {
+      if (rule.outputSymbols.includes(this.terminal)) {
+        return new ErrorMessage(`Cannot remove terminal symbol ${this.terminal}: it is being used in some production rules.`);
+      }
     }
 
     this.saveBackup();
