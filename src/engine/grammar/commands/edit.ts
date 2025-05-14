@@ -67,12 +67,40 @@ export class RemoveProductionRuleCommand extends GrammarEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    const newProductionRules = this.grammar.productionRules.filter(productionRule => productionRule.id === this.productionRuleId);
+    const newProductionRules = this.grammar.productionRules.filter(productionRule => productionRule.id !== this.productionRuleId);
     if (newProductionRules.length === this.grammar.productionRules.length) {
       return new ErrorMessage(`Cannot remove production rule ${this.productionRuleId}: production rule is not present.`);
     }
     this.saveBackup();
     this.grammar.productionRules = newProductionRules;
+  }
+}
+
+export class EditProductionRuleCommand extends GrammarEditCommand {
+  productionRuleId: string;
+  productionRule: ProductionRule;
+
+  constructor(grammar: Grammar, productionRuleId: string, productionRule: ProductionRule) {
+    super(grammar);
+    this.productionRuleId = productionRuleId;
+    this.productionRule = productionRule;
+  }
+
+  accept(visitor: IEditCommandVisitor): void {
+    visitor.visitEditProductionRuleCommand(this);
+  }
+
+  execute(): IErrorMessage | undefined {
+    const index = this.grammar.productionRules.findIndex(productionRule => productionRule.id === this.productionRuleId);
+    if (index === -1) {
+      return new ErrorMessage(`Cannot edit production rule ${this.productionRuleId}: production rule is not present.`);
+    }
+    if (this.grammar.productionRules.some(rule => rule.equals(this.productionRule))) {
+      return new ErrorMessage(`Cannot replace production rule ${this.productionRuleId} with rule ${this.productionRule.toString()}: it is already present.`);
+    }
+
+    this.saveBackup();
+    this.grammar.productionRules[index] = this.productionRule;
   }
 }
 
@@ -94,7 +122,7 @@ export class AddNonterminalsCommand extends GrammarEditCommand {
         return new ErrorMessage(`Cannot add nonterminal symbol ${symbol}: it is already present as a terminal symbol.`);
       }
       if (symbol === EPSILON) {
-        return new ErrorMessage(`Cannot add epsilon as nonterminal symbol.`);
+        return new ErrorMessage("Cannot add epsilon as nonterminal symbol.");
       }
     }
 
@@ -125,7 +153,7 @@ export class AddTerminalsCommand extends GrammarEditCommand {
         return new ErrorMessage(`Cannot add terminal symbol ${symbol}: it is already present as a nonterminal symbol.`);
       }
       if (symbol === EPSILON) {
-        return new ErrorMessage(`Cannot add epsilon as terminal symbol.`);
+        return new ErrorMessage("Cannot add epsilon as terminal symbol.");
       }
     }
 

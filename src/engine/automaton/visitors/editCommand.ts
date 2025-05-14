@@ -1,7 +1,7 @@
 import { Kind } from "../../../core/core";
 import { IAutomatonVisual } from "../../../visual/automatonVisual";
 import { IGrammarVisual } from "../../../visual/grammarVisual";
-import { AddNonterminalsCommand, AddProductionRuleCommand, AddTerminalsCommand, RemoveNonterminalCommand, RemoveProductionRuleCommand, RemoveTerminalCommand, SetInitialNonterminalCommand } from "../../grammar/commands/edit";
+import { AddNonterminalsCommand, AddProductionRuleCommand, AddTerminalsCommand, EditProductionRuleCommand, RemoveNonterminalCommand, RemoveProductionRuleCommand, RemoveTerminalCommand, SetInitialNonterminalCommand } from "../../grammar/commands/edit";
 import { AddEdgeCommand, AddStateCommand, EditEdgeCommand, RemoveEdgeCommand, RemoveStateCommand, RenameStateCommand, SetInitialStateCommand, SetStateFinalFlagCommand } from "../commands/edit";
 
 export interface IEditCommandVisitor {
@@ -18,6 +18,7 @@ export interface IEditCommandVisitor {
   // grammar commands
   visitAddProductionRuleCommand(command: AddProductionRuleCommand): void;
   visitRemoveProductionRuleCommand(command: RemoveProductionRuleCommand): void;
+  visitEditProductionRuleCommand(command: EditProductionRuleCommand): void;
   visitAddNonterminalsCommand(command: AddNonterminalsCommand): void;
   visitAddTerminalsCommand(command: AddTerminalsCommand): void;
   visitSetInitialNonterminalCommand(command: SetInitialNonterminalCommand): void;
@@ -99,6 +100,14 @@ export class VisualVisitor implements IEditCommandVisitor {
 
   // no point implementing this until we have actual grammar visualisation
   visitRemoveProductionRuleCommand(command: RemoveProductionRuleCommand): void {
+    if (this.visual.kind !== Kind.GRAMMAR) {
+      throw new Error("Type mismatch");
+    }
+    throw new Error(`Not implemented. ${command}`);
+  }
+
+  // no point implementing this until we have actual grammar visualisation
+  visitEditProductionRuleCommand(command: EditProductionRuleCommand): void {
     if (this.visual.kind !== Kind.GRAMMAR) {
       throw new Error("Type mismatch");
     }
