@@ -1,3 +1,4 @@
+import { EPSILON } from "../../../constants";
 import { Kind } from "../../../core/core";
 import { IEditCommandVisitor } from "../../automaton/visitors/editCommand";
 import { IErrorMessage, ErrorMessage } from "../../common";
@@ -40,7 +41,10 @@ export class AddProductionRuleCommand extends GrammarEditCommand {
 
   execute(): IErrorMessage | undefined {
     if (this.grammar.productionRules.includes(this.productionRule)) {
-      return new ErrorMessage(`Cannot add production rule: ${this.productionRule.toString()}: is already present.`);
+      return new ErrorMessage(`Cannot add production rule: ${this.productionRule.toString()}: it is already present.`);
+    }
+    if (this.grammar.productionRules.some(rule => rule.equals(this.productionRule))) {
+      return new ErrorMessage(`Cannot add production rule: ${this.productionRule.toString()}: it is already present.`);
     }
 
     this.saveBackup();
@@ -89,6 +93,9 @@ export class AddNonterminalsCommand extends GrammarEditCommand {
       if (this.grammar.terminalSymbols.includes(symbol)) {
         return new ErrorMessage(`Cannot add nonterminal symbol ${symbol}: it is already present as a terminal symbol.`);
       }
+      if (symbol === EPSILON) {
+        return new ErrorMessage(`Cannot add epsilon as nonterminal symbol.`);
+      }
     }
 
     this.saveBackup();
@@ -116,6 +123,9 @@ export class AddTerminalsCommand extends GrammarEditCommand {
     for (const symbol in this.terminals) {
       if (this.grammar.nonTerminalSymbols.includes(symbol)) {
         return new ErrorMessage(`Cannot add terminal symbol ${symbol}: it is already present as a nonterminal symbol.`);
+      }
+      if (symbol === EPSILON) {
+        return new ErrorMessage(`Cannot add epsilon as terminal symbol.`);
       }
     }
 
