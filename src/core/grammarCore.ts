@@ -125,6 +125,9 @@ export class GrammarCore implements IGrammarCore {
     if (nonTerminals.some(symbol => symbol.trim().length === 0)) {
       return new ErrorMessage("Nonterminal symbol must contain at least one non-whitespace character.");
     }
+    if (nonTerminals.some(symbol => symbol.includes(" "))) {
+      return new ErrorMessage("Nonterminal symbol must not contain spaces.");
+    }
 
     const command: GrammarEditCommand = new AddNonterminalsCommand(this.grammar, nonTerminals);
 
@@ -142,6 +145,9 @@ export class GrammarCore implements IGrammarCore {
     }
     if (terminals.some(symbol => symbol.trim().length === 0)) {
       return new ErrorMessage("Terminal symbol must contain at least one non-whitespace character.");
+    }
+    if (terminals.some(symbol => symbol.includes(" "))) {
+      return new ErrorMessage("Terminal symbol must not contain spaces.");
     }
 
     const command: GrammarEditCommand = new AddTerminalsCommand(this.grammar, terminals);

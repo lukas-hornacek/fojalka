@@ -76,6 +76,7 @@ export class RemoveProductionRuleCommand extends GrammarEditCommand {
   }
 }
 
+// production rule with productionRuleId is replaced with production rule from constructor
 export class EditProductionRuleCommand extends GrammarEditCommand {
   productionRuleId: string;
   productionRule: ProductionRule;
@@ -210,7 +211,7 @@ export class RemoveNonterminalCommand extends GrammarEditCommand {
     }
     for (const rule of this.grammar.productionRules) {
       if (this.nonterminal === rule.inputNonTerminal || rule.outputSymbols.includes(this.nonterminal)) {
-        return new ErrorMessage(`Cannot remove nonterminal symbol ${this.nonterminal}: it is being used in some production rules.`);
+        return new ErrorMessage(`Cannot remove nonterminal symbol ${this.nonterminal}: it is being used in production rule ${rule.toString()}.`);
       }
     }
 
@@ -242,7 +243,7 @@ export class RemoveTerminalCommand extends GrammarEditCommand {
     }
     for (const rule of this.grammar.productionRules) {
       if (rule.outputSymbols.includes(this.terminal)) {
-        return new ErrorMessage(`Cannot remove terminal symbol ${this.terminal}: it is being used in some production rules.`);
+        return new ErrorMessage(`Cannot remove terminal symbol ${this.terminal}: it is being used in production rule ${rule.toString()}.`);
       }
     }
 
