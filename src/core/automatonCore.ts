@@ -39,6 +39,10 @@ export interface IAutomatonCore {
   runStart: (word: string[]) => void;
   runNext: () => IErrorMessage | undefined;
   runUndo: () => IErrorMessage | undefined;
+  runEnd: () => IErrorMessage | undefined;
+
+  simulationInProgress: () => boolean;
+  algorithmInProgress: (inProgress: boolean) => void;
 
   highlight: (ids: string[]) => IErrorMessage | undefined;
 
@@ -63,6 +67,8 @@ export class AutomatonCore implements IAutomatonCore {
   // optionally hold current simulation
   // the simulation also contains configuration
   simulation?: IAutomatonSimulation;
+
+  algorithm: boolean = false;
 
   constructor(automatonType: AutomatonType, id: string, mode: ModeHolder) {
     this.automatonType = automatonType;
@@ -240,6 +246,12 @@ export class AutomatonCore implements IAutomatonCore {
     if (this.mode.mode !== Mode.VISUAL) {
       return new ErrorMessage("Operation is only permitted in visual mode.");
     }
+    if (this.algorithm) {
+      return new ErrorMessage("Cannot start new simulation when an algorithm is in progress.");
+    }
+    if (this.simulation !== undefined) {
+      return new ErrorMessage("Cannot start new simulation when a simulation is already in progress.");
+    }
 
     this.simulation = this.automaton.createRunSimulation(word);
   }
@@ -253,7 +265,6 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Run simulation does not exist. Try starting a simulation first.");
     }
 
-    // TODO update NextStepCommand to return error if simulation ends
     const nextCommand = new NextStepCommand(this.simulation);
     const error = this.simulation.executeCommand(nextCommand);
     if (error !== undefined) {
@@ -284,6 +295,18 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage(e.details);
     }
     return new ErrorMessage("Not implemented.");
+  }
+
+  runEnd() {
+    if (this.mode.mode !== Mode.VISUAL) {
+      return new ErrorMessage("Operation is only permitted in visual mode.");
+    }
+    if (this.simulation === undefined) {
+      return new ErrorMessage("Run simulation does not exist. Try starting a simulation first.");
+    }
+
+    this.visual.clearHighlights();
+    this.simulation = undefined;
   }
 
   createEdge(edgeProps: IUniversalEdgeProps) {
@@ -318,4 +341,12 @@ export class AutomatonCore implements IAutomatonCore {
       }
     }
   }
+
+  simulationInProgress() {
+    return this.simulation !== undefined;
+  }
+
+  algorithmInProgress(inProgress: boolean) {
+    this.algorithm = inProgress;
+  };
 }

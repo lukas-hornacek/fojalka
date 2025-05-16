@@ -3,7 +3,6 @@ import {
   Grammar,
   ProductionRule,
 } from "./grammar.ts";
-import { ErrorMessage } from "../common.ts";
 import { EPSILON } from "../../constants.ts";
 
 export abstract class IGrammarFactory {
@@ -39,17 +38,17 @@ export class AbstractGrammarFactory extends IGrammarFactory {
   }
   public createProductionRule(inputNonTerminal: string, outputSymbols: string[], grammar: Grammar): ProductionRule {
     if (inputNonTerminal === null) {
-      throw new ErrorMessage("Cannot add production rule: input non-terminal is empty.");
+      throw new Error("Cannot add production rule: input non-terminal is empty.");
     } else if (outputSymbols === undefined) {
-      throw new ErrorMessage("Cannot add production rule: output symbols are empty.");
+      throw new Error("Cannot add production rule: output symbols are empty.");
     } else  if (!grammar.hasNonTerminalSymbol(inputNonTerminal)) {
-      throw new ErrorMessage(`Cannot add production rule: non-terminal ${inputNonTerminal} is not present in grammar's non-terminals ${grammar.nonTerminalSymbols}`);
+      throw new Error(`Cannot add production rule: non-terminal ${inputNonTerminal} is not present in grammar's non-terminals ${grammar.nonTerminalSymbols}`);
     }
 
     for (const outputSymbol of outputSymbols) {
       if (!grammar.hasNonTerminalSymbol(outputSymbol) && !grammar.hasTerminalSymbol(outputSymbol)) {
         if (outputSymbol !== EPSILON || outputSymbols.length !== 1) {
-          throw new ErrorMessage(`Cannot add production rule: output symbol ${outputSymbol} is not present in grammar's non-terminals ${grammar.nonTerminalSymbols} or terminals ${grammar.terminalSymbols}`);
+          throw new Error(`Cannot add production rule: output symbol ${outputSymbol} is not present in grammar's non-terminals ${grammar.nonTerminalSymbols} or terminals ${grammar.terminalSymbols}`);
         }
       }
     }
@@ -79,7 +78,7 @@ export class RegularGrammarFactory extends IGrammarFactory {
     const productionRuleIsRegular = prefixOutputSymbolsIsTerminal && (lastOutputSymbolIsTerminal || lastOutputSymbolIsNonTerminal) || outputIsEpsilon;
 
     if (!productionRuleIsRegular) {
-      throw new ErrorMessage(`Cannot add production rule: production rule ${inputNonTerminal} -> ${outputSymbols.join("")} is not a regular rule.`);
+      throw new Error(`Cannot add production rule: production rule ${inputNonTerminal} -> ${outputSymbols.join("")} is not a regular rule.`);
     }
 
     return ProductionRule.createByFactory(this.nextProductionRuleString(), inputNonTerminal, outputSymbols);

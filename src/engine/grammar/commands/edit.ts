@@ -1,3 +1,4 @@
+import { EPSILON } from "../../../constants";
 import { Kind } from "../../../core/core";
 import { IEditCommandVisitor } from "../../automaton/visitors/editCommand";
 import { IErrorMessage, ErrorMessage } from "../../common";
@@ -40,7 +41,10 @@ export class AddProductionRuleCommand extends GrammarEditCommand {
 
   execute(): IErrorMessage | undefined {
     if (this.grammar.productionRules.includes(this.productionRule)) {
-      return new ErrorMessage(`Cannot add production rule: ${this.productionRule.toString()}: is already present.`);
+      return new ErrorMessage(`Cannot add production rule: ${this.productionRule.toString()}: it is already present.`);
+    }
+    if (this.grammar.productionRules.some(rule => rule.equals(this.productionRule))) {
+      return new ErrorMessage(`Cannot add production rule: ${this.productionRule.toString()}: it is already present.`);
     }
 
     this.saveBackup();
@@ -63,12 +67,41 @@ export class RemoveProductionRuleCommand extends GrammarEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    const newProductionRules = this.grammar.productionRules.filter(productionRule => productionRule.id === this.productionRuleId);
+    const newProductionRules = this.grammar.productionRules.filter(productionRule => productionRule.id !== this.productionRuleId);
     if (newProductionRules.length === this.grammar.productionRules.length) {
       return new ErrorMessage(`Cannot remove production rule ${this.productionRuleId}: production rule is not present.`);
     }
     this.saveBackup();
     this.grammar.productionRules = newProductionRules;
+  }
+}
+
+// production rule with productionRuleId is replaced with production rule from constructor
+export class EditProductionRuleCommand extends GrammarEditCommand {
+  productionRuleId: string;
+  productionRule: ProductionRule;
+
+  constructor(grammar: Grammar, productionRuleId: string, productionRule: ProductionRule) {
+    super(grammar);
+    this.productionRuleId = productionRuleId;
+    this.productionRule = productionRule;
+  }
+
+  accept(visitor: IEditCommandVisitor): void {
+    visitor.visitEditProductionRuleCommand(this);
+  }
+
+  execute(): IErrorMessage | undefined {
+    const index = this.grammar.productionRules.findIndex(productionRule => productionRule.id === this.productionRuleId);
+    if (index === -1) {
+      return new ErrorMessage(`Cannot edit production rule ${this.productionRuleId}: production rule is not present.`);
+    }
+    if (this.grammar.productionRules.some(rule => rule.equals(this.productionRule))) {
+      return new ErrorMessage(`Cannot replace production rule ${this.productionRuleId} with rule ${this.productionRule.toString()}: it is already present.`);
+    }
+
+    this.saveBackup();
+    this.grammar.productionRules[index] = this.productionRule;
   }
 }
 
@@ -85,13 +118,20 @@ export class AddNonterminalsCommand extends GrammarEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    if (this.nonterminals.some(symbol => this.grammar.nonTerminalSymbols.includes(symbol))) {
-      return new ErrorMessage(`Cannot add nonterminal symbols ${this.nonterminals}: some of the symbols are already present.`);
+    for (const symbol in this.nonterminals) {
+      if (this.grammar.terminalSymbols.includes(symbol)) {
+        return new ErrorMessage(`Cannot add nonterminal symbol ${symbol}: it is already present as a terminal symbol.`);
+      }
+      if (symbol === EPSILON) {
+        return new ErrorMessage("Cannot add epsilon as nonterminal symbol.");
+      }
     }
 
     this.saveBackup();
     for (const symbol of this.nonterminals) {
-      this.grammar.nonTerminalSymbols.push(symbol);
+      if (!this.grammar.nonTerminalSymbols.includes(symbol)) {
+        this.grammar.nonTerminalSymbols.push(symbol);
+      }
     }
   }
 }
@@ -109,13 +149,20 @@ export class AddTerminalsCommand extends GrammarEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    if (this.terminals.some(symbol => this.grammar.terminalSymbols.includes(symbol))) {
-      return new ErrorMessage(`Cannot add terminal symbols ${this.terminals}: some of the symbols are already present.`);
+    for (const symbol in this.terminals) {
+      if (this.grammar.nonTerminalSymbols.includes(symbol)) {
+        return new ErrorMessage(`Cannot add terminal symbol ${symbol}: it is already present as a nonterminal symbol.`);
+      }
+      if (symbol === EPSILON) {
+        return new ErrorMessage("Cannot add epsilon as terminal symbol.");
+      }
     }
 
     this.saveBackup();
     for (const symbol of this.terminals) {
-      this.grammar.terminalSymbols.push(symbol);
+      if (!this.grammar.terminalSymbols.includes(symbol)) {
+        this.grammar.terminalSymbols.push(symbol);
+      }
     }
   }
 }
@@ -162,6 +209,11 @@ export class RemoveNonterminalCommand extends GrammarEditCommand {
     if (this.nonterminal === this.grammar.initialNonTerminalSymbol) {
       return new ErrorMessage(`Cannot remove nonterminal symbol ${this.nonterminal}: it is the initial nonterminal.`);
     }
+    for (const rule of this.grammar.productionRules) {
+      if (this.nonterminal === rule.inputNonTerminal || rule.outputSymbols.includes(this.nonterminal)) {
+        return new ErrorMessage(`Cannot remove nonterminal symbol ${this.nonterminal}: it is being used in production rule ${rule.toString()}.`);
+      }
+    }
 
     this.saveBackup();
     if (this.grammar.nonTerminalSymbols.length > 1 && index !== this.grammar.nonTerminalSymbols.length - 1) {
@@ -188,6 +240,11 @@ export class RemoveTerminalCommand extends GrammarEditCommand {
     const index = this.grammar.terminalSymbols.findIndex(id => id === this.terminal);
     if (index === -1) {
       return new ErrorMessage(`Cannot remove terminal symbol ${this.terminal}: terminal is not present.`);
+    }
+    for (const rule of this.grammar.productionRules) {
+      if (rule.outputSymbols.includes(this.terminal)) {
+        return new ErrorMessage(`Cannot remove terminal symbol ${this.terminal}: it is being used in production rule ${rule.toString()}.`);
+      }
     }
 
     this.saveBackup();
