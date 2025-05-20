@@ -1,8 +1,8 @@
-import { INITIAL_STACK_SYMBOL } from "../../constants.ts";
+import { EPSILON, INITIAL_STACK_SYMBOL } from "../../constants.ts";
 import { ErrorMessage, IErrorMessage } from "../common.ts";
 import { AutomatonEditCommand } from "./commands/edit.ts";
 import { FiniteConfiguration, PDAConfiguration } from "./configuration.ts";
-import { IEdge } from "./edge.ts";
+import { IEdge, PDAEdge } from "./edge.ts";
 import { IAutomatonSimulation, AutomatonSimulation } from "./simulation.ts";
 import { cloneDeep } from "lodash";
 
@@ -91,6 +91,52 @@ export class Automaton implements IAutomaton {
     this.automatonType = memento.automatonType;
     this.initialStateId = memento.initialStateId;
     this.finalStateIds = memento.finalStateIds;
+  }
+
+  private isDeterministic(): boolean {
+    const alphabet = new Set<string> ([]);
+    const stackAlphabet: string [] = [];
+
+    if (this.automatonType == AutomatonType.PDA) {
+      stackAlphabet.push(INITIAL_STACK_SYMBOL);
+    }
+
+    // goes through the entire deltaFunctionMatrix and add all the alphabet symbol to the alphabet (same for stack symbols)
+    for (const leftSymbol in this.deltaFunctionMatrix) {
+      for (const rightSymbol in this.deltaFunctionMatrix[leftSymbol]) {
+        const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
+        for (const edge of edges) {
+          alphabet.add(edge.inputChar);
+          if (this.automatonType == AutomatonType.PDA && edge instanceof PDAEdge) {
+            stackAlphabet.push(edge.readStackChar);
+          }
+        }
+      }
+    }
+
+    if (alphabet.has(EPSILON)) {
+      return false;
+    }
+    // now, for each node we go through the deltaMatrix a second time and for each edge we check
+    // if all the symbols are present and if the number of edges
+    // equals this number, therefore we check if each edge is used only once
+    for (const leftSymbol in this.deltaFunctionMatrix) {
+      const found = new Set<string> ([]);
+      let edgeNum = 0;
+
+      for (const rightSymbol in this.deltaFunctionMatrix[leftSymbol]) {
+        const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
+        for (const edge of edges) {
+          found.add(edge.inputChar);
+          edgeNum++;
+        }
+      }
+      if (edgeNum != found.size || found.size != alphabet.size) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   createRunSimulation(word: string[]): IAutomatonSimulation {
