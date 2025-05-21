@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { Automaton, AutomatonType } from "../src/engine/automaton/automaton";
-import { FiniteAutomatonEdge } from "../src/engine/automaton/edge";
-import { EPSILON } from "../src/constants";
+import { FiniteAutomatonEdge, PDAEdge } from "../src/engine/automaton/edge";
+import { EPSILON, INITIAL_STACK_SYMBOL } from "../src/constants";
 
 test("Finite isDeterministic Test", () =>{
   const a1 = new Automaton({
@@ -90,4 +90,45 @@ test("Finite isDeterministic Test", () =>{
 
   const res6 = a6.isDeterministic();
   expect(res6).toBe(false);
+});
+
+test("PDA isDeterministic Test", () =>{
+  const a1 = new Automaton({
+    states: ["q0", "q1"],
+    deltaFunctionMatrix: {
+      "q0":{ "q1":[new PDAEdge("1", "a", "a", ["a"])], "q0":[new PDAEdge("2", "a", INITIAL_STACK_SYMBOL, ["a"])] },
+      "q1":{ "q1":[new PDAEdge("3", "a", "a", ["a"]), new PDAEdge("4", "a", INITIAL_STACK_SYMBOL, ["a"])] }
+    },
+    automatonType: AutomatonType.PDA,
+    initialStateId: "q0",
+    finalStateIds: ["q1"]
+  });
+  const res1 = a1.isDeterministic();
+  expect(res1).toBe(true);
+
+  const a2 = new Automaton({
+    states: ["q0", "q1"],
+    deltaFunctionMatrix: {
+      "q0":{ "q1":[new PDAEdge("1", "a", "a", ["a"])], "q0":[new PDAEdge("2", "a", INITIAL_STACK_SYMBOL, ["a"])] },
+      "q1":{ "q1":[new PDAEdge("3", "a", "a", ["a"]), new PDAEdge("4", "a", "a", ["a"])] }
+    },
+    automatonType: AutomatonType.PDA,
+    initialStateId: "q0",
+    finalStateIds: ["q1"]
+  });
+  const res2 = a2.isDeterministic();
+  expect(res2).toBe(false);
+
+  const a3 = new Automaton({
+    states: ["q0", "q1"],
+    deltaFunctionMatrix: {
+      "q0":{ "q1":[new PDAEdge("1", "a", "a", ["a"])], "q0":[new PDAEdge("2", "a", INITIAL_STACK_SYMBOL, ["a"])] },
+      "q1":{ "q1":[new PDAEdge("3", "a", "a", ["a"]), new PDAEdge("4", "a", INITIAL_STACK_SYMBOL, ["b"])] }
+    },
+    automatonType: AutomatonType.PDA,
+    initialStateId: "q0",
+    finalStateIds: ["q1"]
+  });
+  const res3 = a3.isDeterministic();
+  expect(res3).toBe(false);
 });

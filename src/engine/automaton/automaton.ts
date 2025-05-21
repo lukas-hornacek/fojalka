@@ -109,6 +109,9 @@ export class Automaton implements IAutomaton {
           alphabet.add(edge.inputChar);
           if (this.automatonType == AutomatonType.PDA && edge instanceof PDAEdge) {
             stackAlphabet.add(edge.readStackChar);
+            for (const symbol of edge.writeStackWord) {
+              stackAlphabet.add(symbol);
+            }
           }
         }
       }
@@ -158,14 +161,14 @@ export class Automaton implements IAutomaton {
         for (const leftSymbol in this.deltaFunctionMatrix) {
           const found: Record<string, Set<string>> = {};
           let edgeNum = 0;
-          for (const s in alphabet) {
-            found[s] = new Set<string> ([]);
-          }
 
           for (const rightSymbol in this.deltaFunctionMatrix[leftSymbol]) {
             const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
             for (const edge of edges) {
               if (edge instanceof PDAEdge) {
+                if (found[edge.inputChar] === undefined) {
+                  found[edge.inputChar] = new Set<string> ([]);
+                }
                 found[edge.inputChar].add(edge.readStackChar);
                 edgeNum++;
               }
