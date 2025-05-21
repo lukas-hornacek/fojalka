@@ -95,10 +95,10 @@ export class Automaton implements IAutomaton {
 
   private isDeterministic(): boolean {
     const alphabet = new Set<string> ([]);
-    const stackAlphabet: string [] = [];
+    const stackAlphabet = new Set<string> ([]);
 
     if (this.automatonType == AutomatonType.PDA) {
-      stackAlphabet.push(INITIAL_STACK_SYMBOL);
+      stackAlphabet.add(INITIAL_STACK_SYMBOL);
     }
 
     // goes through the entire deltaFunctionMatrix and add all the alphabet symbol to the alphabet (same for stack symbols)
@@ -108,35 +108,75 @@ export class Automaton implements IAutomaton {
         for (const edge of edges) {
           alphabet.add(edge.inputChar);
           if (this.automatonType == AutomatonType.PDA && edge instanceof PDAEdge) {
-            stackAlphabet.push(edge.readStackChar);
+            stackAlphabet.add(edge.readStackChar);
           }
         }
       }
     }
 
-    if (alphabet.has(EPSILON)) {
-      return false;
-    }
-    // now, for each node we go through the deltaMatrix a second time and for each edge we check
-    // if all the symbols are present and if the number of edges
-    // equals this number, therefore we check if each edge is used only once
-    for (const leftSymbol in this.deltaFunctionMatrix) {
-      const found = new Set<string> ([]);
-      let edgeNum = 0;
-
-      for (const rightSymbol in this.deltaFunctionMatrix[leftSymbol]) {
-        const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
-        for (const edge of edges) {
-          found.add(edge.inputChar);
-          edgeNum++;
+    switch (this.automatonType) {
+      case AutomatonType.FINITE:
+        if (alphabet.has(EPSILON)) {
+          return false;
         }
-      }
-      if (edgeNum != found.size || found.size != alphabet.size) {
-        return false;
-      }
-    }
+        // now, for each node we go through the deltaMatrix a second time and for each edge we check
+        // if all the symbols are present and if the number of edges
+        // equals this number, therefore we check if each edge is used only once
+        for (const leftSymbol in this.deltaFunctionMatrix) {
+          const found = new Set<string> ([]);
+          let edgeNum = 0;
 
-    return true;
+          for (const rightSymbol in this.deltaFunctionMatrix[leftSymbol]) {
+            const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
+            for (const edge of edges) {
+              found.add(edge.inputChar);
+              edgeNum++;
+            }
+          }
+          if (edgeNum != found.size || found.size != alphabet.size) {
+            return false;
+          }
+        }
+        return true;
+
+      case AutomatonType.PDA:
+        if (alphabet.has(EPSILON)) {
+          return false;
+        }
+        // Same as before only now we compare the number of unique alpha-stack combinations and actual edges
+        // and number of actual edges to all combinations (alphabet.size x stackAlphabet.size)
+        for (const leftSymbol in this.deltaFunctionMatrix) {
+          const found: Record<string, Set<string>> = {};
+          let edgeNum = 0;
+          for (const s in alphabet) {
+            found[s] = new Set<string> ([]);
+          }
+
+          for (const rightSymbol in this.deltaFunctionMatrix[leftSymbol]) {
+            const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
+            for (const edge of edges) {
+              if (edge instanceof PDAEdge) {
+                found[edge.inputChar].add(edge.readStackChar);
+                edgeNum++;
+              }
+              else {
+                return false;
+              }
+            }
+          }
+          let uniqueEdges = 0;
+          for (const s in found) {
+            uniqueEdges = uniqueEdges + found[s].size;
+          }
+
+          if (edgeNum != uniqueEdges || edgeNum != alphabet.size * stackAlphabet.size) {
+            return false;
+          }
+        }
+
+        return true;
+    }
+    return false;
   }
 
   createRunSimulation(word: string[]): IAutomatonSimulation {
