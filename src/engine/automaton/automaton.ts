@@ -93,7 +93,7 @@ export class Automaton implements IAutomaton {
     this.finalStateIds = memento.finalStateIds;
   }
 
-  private isDeterministic(): boolean {
+  isDeterministic(): boolean {
     const alphabet = new Set<string> ([]);
     const stackAlphabet = new Set<string> ([]);
 
@@ -116,7 +116,12 @@ export class Automaton implements IAutomaton {
 
     switch (this.automatonType) {
       case AutomatonType.FINITE:
+        // if there is Epsilon it is non-deterministic
         if (alphabet.has(EPSILON)) {
+          return false;
+        }
+        // if any state has no edges in deltafunction, automaton is non-deterministic
+        if (this.states.length != Object.keys(this.deltaFunctionMatrix).length) {
           return false;
         }
         // now, for each node we go through the deltaMatrix a second time and for each edge we check
@@ -133,14 +138,19 @@ export class Automaton implements IAutomaton {
               edgeNum++;
             }
           }
-          if (edgeNum != found.size || found.size != alphabet.size) {
+          if (edgeNum != found.size || edgeNum != alphabet.size) {
             return false;
           }
         }
         return true;
 
       case AutomatonType.PDA:
+        // if there is Epsilon it is non-deterministic
         if (alphabet.has(EPSILON)) {
+          return false;
+        }
+        // if any state has no edges in deltafunction, automaton is non-deterministic
+        if (this.states.length != Object.keys(this.deltaFunctionMatrix).length) {
           return false;
         }
         // Same as before only now we compare the number of unique alpha-stack combinations and actual edges
