@@ -49,6 +49,7 @@ export class GrammarCore implements IGrammarCore {
     this.grammar = this.factory.createGrammar([INITIAL_NONTERMINAL], [], INITIAL_NONTERMINAL);
 
     this.visual = new GrammarVisual();
+    this.visual.setGrammar(this.grammar);
     this.visitor = new VisualVisitor(this.visual);
     this.mode = mode;
   }

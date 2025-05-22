@@ -9,12 +9,12 @@ interface ProductionRule {
 }
 
 export const GrammarWindow: React.FC = () => {
-  const grammarCore = React.useRef(new GrammarCore(GrammarType.CONTEXT_FREE, new ModeHolder())).current;
+  const grammarCoreRef = React.useRef(new GrammarCore(GrammarType.CONTEXT_FREE, new ModeHolder()));
   const [nonTerminals, setNonTerminals] = useState("");
   const [terminals, setTerminals] = useState("");
   const [rules, setRules] = useState<ProductionRule[]>([]);
 
-  // const [grammarString, setGrammarString] = useState("()");
+  const [grammarRepr, setGrammarRepr] = useState("");
 
   const addRule = () => {
     setRules([...rules, { input: "", output: [""] }]);
@@ -28,31 +28,31 @@ export const GrammarWindow: React.FC = () => {
       updatedRules[index].output = (value as string).split(" ").filter(Boolean);
     }
     setRules(updatedRules);
-    // grammarCore.addProductionRule(updatedRules[index]);
-    // setGrammarString(grammarCore.display());
+    // grammarCoreRef.current.addProductionRule(updatedRules[index]);
+    // setGrammarString(grammarCoreRef.current.display());
+
   };
 
   const submitGrammar = () => {
-    const nts = nonTerminals.split(",").map(nt => nt.trim()).filter(Boolean);
-    const ts = terminals.split(",").map(t => t.trim()).filter(Boolean);
-
-    grammarCore.addNonterminals(nts);
-    grammarCore.addTerminals(ts);
-
-    rules.forEach(rule => {
-      grammarCore.addProductionRule(rule.input.trim(), rule.output.map(sym => sym.trim()));
-    });
-
-    alert("Grammar created!");
+    // const nts = nonTerminals.split(",").map(nt => nt.trim()).filter(Boolean);
+    // const ts = terminals.split(",").map(t => t.trim()).filter(Boolean);
+    //
+    // grammarCoreRef.current.addNonterminals(nts);
+    // grammarCoreRef.current.addTerminals(ts);
+    //
+    // rules.forEach(rule => {
+    //   grammarCoreRef.current.addProductionRule(rule.input.trim(), rule.output.map(sym => sym.trim()));
+    // });
+    grammarCoreRef.current.addTerminals(["a", "b"]);
+    grammarCoreRef.current.addNonterminals(["A", "B"]);
+    grammarCoreRef.current.addProductionRule("A", ["a", "b"]);
+    const newRepr = grammarCoreRef.current.visual.display();
+    setGrammarRepr(newRepr);
   };
 
   return (
     <div>
       <h2>GRAMATIKA</h2>
-
-      {/*<div>*/}
-      {/*  {grammarString}*/}
-      {/*</div>*/}
 
       <div>
         <label>Non-Terminals: </label>
@@ -85,6 +85,13 @@ export const GrammarWindow: React.FC = () => {
       <div style={{ marginTop: "1rem" }}>
         <button onClick={submitGrammar}>Create Grammar</button>
       </div>
+
+      {grammarRepr !== "" && <div>
+        REPRESENTATION:
+        <div>
+          {grammarRepr}
+        </div>
+      </div>}
     </div>
   );
 };

@@ -90,12 +90,15 @@ export class VisualVisitor implements IEditCommandVisitor {
     this.visual.editEdge(command.edgeId, command.edge.label);
   }
 
-  // no point implementing this until we have actual grammar visualisation
-  visitAddProductionRuleCommand(command: AddProductionRuleCommand): void {
+  // TODO Use the command argument to highlight the change
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitAddProductionRuleCommand(_command: AddProductionRuleCommand): void {
     if (this.visual.kind !== Kind.GRAMMAR) {
       throw new Error("Type mismatch");
     }
-    throw new Error(`Not implemented. ${command}`);
+    // throw new Error(`Not implemented. ${command}`);
+    // this.visual.setRepresentation(command.grammar.toString());
+    this.visual.refresh();
   }
 
   // no point implementing this until we have actual grammar visualisation
@@ -114,20 +117,23 @@ export class VisualVisitor implements IEditCommandVisitor {
     throw new Error(`Not implemented. ${command}`);
   }
 
-  // no point implementing this until we have actual grammar visualisation
-  visitAddNonterminalsCommand(command: AddNonterminalsCommand): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitAddNonterminalsCommand(_command: AddNonterminalsCommand): void {
     if (this.visual.kind !== Kind.GRAMMAR) {
       throw new Error("Type mismatch");
     }
-    throw new Error(`Not implemented. ${command}`);
+    // throw new Error(`Not implemented. ${command}`);
+    this.visual.refresh();
+
   }
 
-  // no point implementing this until we have actual grammar visualisation
-  visitAddTerminalsCommand(command: AddTerminalsCommand): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitAddTerminalsCommand(_command: AddTerminalsCommand): void {
     if (this.visual.kind !== Kind.GRAMMAR) {
       throw new Error("Type mismatch");
     }
-    throw new Error(`Not implemented. ${command}`);
+    // throw new Error(`Not implemented. ${command}`);
+    this.visual.refresh();
   }
 
   // no point implementing this until we have actual grammar visualisation
