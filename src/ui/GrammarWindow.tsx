@@ -10,44 +10,95 @@ interface ProductionRule {
 
 export const GrammarWindow: React.FC = () => {
   const grammarCoreRef = React.useRef(new GrammarCore(GrammarType.CONTEXT_FREE, new ModeHolder()));
-  const [nonTerminals, setNonTerminals] = useState("");
-  const [terminals, setTerminals] = useState("");
+  const [nonTerminals, setNonTerminals] = useState<string[]>([]);
+  const [terminals, setTerminals] = useState<string[]>([]);
   const [rules, setRules] = useState<ProductionRule[]>([]);
+  const [newRule, setNewRule] = useState({ input: "", output: "" });
+  const [newNonTerminal, setNewNonTerminal] = useState("");
+  const [newTerminal, setNewTerminal] = useState("");
 
   const [grammarRepr, setGrammarRepr] = useState("");
 
-  const addRule = () => {
-    setRules([...rules, { input: "", output: [""] }]);
-  };
-
-  const updateRule = (index: number, field: "input" | "output", value: string | string[]) => {
-    const updatedRules = [...rules];
-    if (field === "input") {
-      updatedRules[index].input = value as string;
-    } else {
-      updatedRules[index].output = (value as string).split(" ").filter(Boolean);
-    }
-    setRules(updatedRules);
-    // grammarCoreRef.current.addProductionRule(updatedRules[index]);
-    // setGrammarString(grammarCoreRef.current.display());
-
-  };
-
-  const submitGrammar = () => {
-    // const nts = nonTerminals.split(",").map(nt => nt.trim()).filter(Boolean);
-    // const ts = terminals.split(",").map(t => t.trim()).filter(Boolean);
-    //
-    // grammarCoreRef.current.addNonterminals(nts);
-    // grammarCoreRef.current.addTerminals(ts);
-    //
-    // rules.forEach(rule => {
-    //   grammarCoreRef.current.addProductionRule(rule.input.trim(), rule.output.map(sym => sym.trim()));
-    // });
-    grammarCoreRef.current.addTerminals(["a", "b"]);
-    grammarCoreRef.current.addNonterminals(["A", "B"]);
-    grammarCoreRef.current.addProductionRule("A", ["a", "b"]);
+  const refreshRepr = () => {
     const newRepr = grammarCoreRef.current.visual.display();
     setGrammarRepr(newRepr);
+  };
+
+  const handleAddNonTerminal = () => {
+    const maybeError = grammarCoreRef.current.addNonterminals([newNonTerminal]);
+    if (maybeError) {
+      alert(maybeError.details);
+      return;
+    }
+    setNonTerminals(prev => [...prev, newNonTerminal]);
+    setNewNonTerminal("");
+    refreshRepr();
+  };
+
+  const handleDeleteNonTerminal = (index: number) => {
+    const nonTerminal = nonTerminals[index];
+    const maybeError = grammarCoreRef.current.removeNonterminal(nonTerminal);
+    if (maybeError) {
+      alert(maybeError.details);
+      return;
+    }
+    setNonTerminals(prev => [...prev.slice(0, index), ...prev.slice(index + 1)]);
+    refreshRepr();
+  };
+
+  const handleAddTerminal = () => {
+    const maybeError = grammarCoreRef.current.addTerminals([newTerminal]);
+    if (maybeError) {
+      alert(maybeError.details);
+      return;
+    }
+    setTerminals(prev => [...prev, newTerminal]);
+    setNewTerminal("");
+    refreshRepr();
+  };
+
+  const handleDeleteTerminal = (index: number) => {
+    const terminal = terminals[index];
+    const maybeError = grammarCoreRef.current.removeTerminal(terminal);
+    if (maybeError) {
+      alert(maybeError.details);
+      return;
+    }
+    setTerminals(prev => [...prev.slice(0, index), ...prev.slice(index + 1)]);
+    refreshRepr();
+  };
+
+  const handleAddRule = () => {
+    const input = newRule.input.trim();
+    const outputArr = newRule.output.trim().split(" ").filter(Boolean);
+    if (!input || outputArr.length === 0) {
+      alert("Please enter both LHS and RHS.");
+      return;
+    }
+
+    const maybeError = grammarCoreRef.current.addProductionRule(input, outputArr);
+    if (maybeError) {
+      alert(maybeError.details);
+      return;
+    }
+    const rule = { input, output: outputArr };
+    setRules([...rules, rule]);
+    refreshRepr();
+    setNewRule({ input: "", output: "" });
+  };
+
+  const handleDeleteRule = (index: number) => {
+    const ruleId = grammarCoreRef.current.visual.getRuleIdByIndex(index);
+    if (ruleId === undefined) {
+      alert("Trying to remove non-existent rule");
+    }
+    const maybeError = grammarCoreRef.current.removeProductionRule(ruleId as string);
+    if (maybeError) {
+      alert(maybeError.details);
+      return;
+    }
+    setRules(prev => [...prev.slice(0, index), ...prev.slice(index + 1)]);
+    refreshRepr();
   };
 
   return (
@@ -55,35 +106,65 @@ export const GrammarWindow: React.FC = () => {
       <h2>GRAMATIKA</h2>
 
       <div>
-        <label>Non-Terminals: </label>
-        <input value={nonTerminals} onChange={e => setNonTerminals(e.target.value)} placeholder="E.g. S,A,B" />
+        <h3>Non-Terminals:</h3>
+        {nonTerminals.map((nonTerminal, index) =>
+          <div key={index}>
+            <span>{nonTerminal}</span>
+            <button onClick={() => handleDeleteNonTerminal(index)}>
+              Delete
+            </button>
+          </div>
+        )}
+        <div>
+          <input
+            value={newNonTerminal}
+            onChange={e => setNewNonTerminal(e.target.value)}
+            placeholder="Non-Terminal (e.g. A)"
+          />
+          <button onClick={handleAddNonTerminal}>Add Non-Terminal</button>
+        </div>
       </div>
 
       <div>
-        <label>Terminals: </label>
-        <input value={terminals} onChange={e => setTerminals(e.target.value)} placeholder="E.g. a,b,c" />
+        <h3>Terminals:</h3>
+        {terminals.map((terminal, index) =>
+          <div key={index}>
+            <span>{terminal}</span>
+            <button onClick={() => handleDeleteTerminal(index)}>
+              Delete
+            </button>
+          </div>
+        )}
+        <div>
+          <input
+            value={newTerminal}
+            onChange={e => setNewTerminal(e.target.value)}
+            placeholder="Terminal (e.g. a)"
+          />
+          <button onClick={handleAddTerminal}>Add Terminal</button>
+        </div>
       </div>
 
       <h3>Rules:</h3>
       {rules.map((rule, index) =>
         <div key={index}>
-          <input
-            value={rule.input}
-            onChange={e => updateRule(index, "input", e.target.value)}
-            placeholder="LHS (e.g. S)"
-          />
-          →
-          <input
-            value={rule.output.join(" ")}
-            onChange={e => updateRule(index, "output", e.target.value)}
-            placeholder="RHS (e.g. a A)"
-          />
+          <span>{rule.input} → {rule.output.join(" ")}</span>
+          <button onClick={() => handleDeleteRule(index)}>Delete</button>
         </div>
       )}
-      <button onClick={addRule}>+ Add Rule</button>
-
-      <div style={{ marginTop: "1rem" }}>
-        <button onClick={submitGrammar}>Create Grammar</button>
+      <div>
+        <input
+          value={newRule.input}
+          onChange={e => setNewRule({ ...newRule, input: e.target.value })}
+          placeholder="LHS (e.g. S)"
+        />
+        →
+        <input
+          value={newRule.output}
+          onChange={e => setNewRule({ ...newRule, output: e.target.value })}
+          placeholder="RHS (e.g. a A)"
+        />
+        <button onClick={handleAddRule}>Add Rule</button>
       </div>
 
       {grammarRepr !== "" && <div>

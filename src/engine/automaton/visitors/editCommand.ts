@@ -91,13 +91,13 @@ export class VisualVisitor implements IEditCommandVisitor {
   }
 
   // TODO Use the command argument to highlight the change
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  visitAddProductionRuleCommand(_command: AddProductionRuleCommand): void {
+  visitAddProductionRuleCommand(command: AddProductionRuleCommand): void {
     if (this.visual.kind !== Kind.GRAMMAR) {
       throw new Error("Type mismatch");
     }
     // throw new Error(`Not implemented. ${command}`);
     // this.visual.setRepresentation(command.grammar.toString());
+    this.visual.storeRuleId(command.productionRule.id);
     this.visual.refresh();
   }
 
@@ -106,7 +106,8 @@ export class VisualVisitor implements IEditCommandVisitor {
     if (this.visual.kind !== Kind.GRAMMAR) {
       throw new Error("Type mismatch");
     }
-    throw new Error(`Not implemented. ${command}`);
+    this.visual.removeRuleId(command.productionRuleId);
+    this.visual.refresh();
   }
 
   // no point implementing this until we have actual grammar visualisation
@@ -145,18 +146,20 @@ export class VisualVisitor implements IEditCommandVisitor {
   }
 
   // no point implementing this until we have actual grammar visualisation
-  visitRemoveNonterminalCommand(command: RemoveNonterminalCommand): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitRemoveNonterminalCommand(_command: RemoveNonterminalCommand): void {
     if (this.visual.kind !== Kind.GRAMMAR) {
       throw new Error("Type mismatch");
     }
-    throw new Error(`Not implemented. ${command}`);
+    this.visual.refresh();
   }
 
   // no point implementing this until we have actual grammar visualisation
-  visitRemoveTerminalCommand(command: RemoveTerminalCommand): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitRemoveTerminalCommand(_command: RemoveTerminalCommand): void {
     if (this.visual.kind !== Kind.GRAMMAR) {
       throw new Error("Type mismatch");
     }
-    throw new Error(`Not implemented. ${command}`);
+    this.visual.refresh();
   }
 }

@@ -7,6 +7,9 @@ export interface IGrammarVisual {
   kind: Kind.GRAMMAR
   setGrammar: (grammar: Grammar) => void;
   display: () => string;
+  storeRuleId: (id: string) => void;
+  removeRuleId: (id: string) => void;
+  getRuleIdByIndex: (index: number) => string | undefined;
   refresh: () => void;
 }
 
@@ -14,6 +17,7 @@ export class GrammarVisual implements IGrammarVisual {
   kind = Kind.GRAMMAR as const;
   grammar?: Grammar;
   representation: string = "";
+  existingRuleIds: string[] = [];
 
   setGrammar(grammar: Grammar) {
     this.grammar = grammar;
@@ -21,6 +25,18 @@ export class GrammarVisual implements IGrammarVisual {
 
   display(): string {
     return this.representation;
+  }
+
+  storeRuleId(id: string) {
+    this.existingRuleIds.push(id);
+  }
+
+  removeRuleId(id: string) {
+    this.existingRuleIds = this.existingRuleIds.filter(existingId => existingId !== id);
+  }
+
+  getRuleIdByIndex(index: number) {
+    return this.existingRuleIds?.[index];
   }
 
   // refresh representation according to grammar
