@@ -2,7 +2,7 @@ import { EPSILON, INITIAL_STACK_SYMBOL } from "../../constants.ts";
 import { ErrorMessage, IErrorMessage } from "../common.ts";
 import { AutomatonEditCommand } from "./commands/edit.ts";
 import { FiniteConfiguration, PDAConfiguration } from "./configuration.ts";
-import { IEdge, PDAEdge } from "./edge.ts";
+import { FiniteAutomatonEdge, IEdge, PDAEdge } from "./edge.ts";
 import { IAutomatonSimulation, AutomatonSimulation } from "./simulation.ts";
 import { cloneDeep } from "lodash";
 
@@ -137,7 +137,7 @@ export class Automaton implements IAutomaton {
             const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
             edgeNum += edges.length;
             for (const edge of edges) {
-              if (edge instanceof PDAEdge) {
+              if (edge instanceof FiniteAutomatonEdge) {
                 found.add(edge.inputChar);
               }
               else {
