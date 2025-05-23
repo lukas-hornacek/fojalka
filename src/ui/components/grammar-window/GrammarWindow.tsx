@@ -15,6 +15,7 @@ interface GrammarWindowProps {
 }
 
 export const GrammarWindow: React.FC<GrammarWindowProps> = ({ grammarType }) => {
+  // TODO Do not take grammarType from props, but from the Context instead
   const grammarCoreRef = React.useRef(new GrammarCore(grammarType, new ModeHolder()));
   const [nonTerminals, setNonTerminals] = useState<string[]>(["σ"]);
   const [terminals, setTerminals] = useState<string[]>([]);
@@ -25,6 +26,7 @@ export const GrammarWindow: React.FC<GrammarWindowProps> = ({ grammarType }) => 
 
   const [grammarRepr, setGrammarRepr] = useState("");
 
+  // This method has to be called everytime a change is made to the grammar (to obtain the updated string repr.)
   const refreshRepr = () => {
     const newRepr = grammarCoreRef.current.visual.display();
     setGrammarRepr(newRepr);
