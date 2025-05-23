@@ -116,17 +116,16 @@ export class Automaton implements IAutomaton {
         }
       }
     }
-
+    // if there is Epsilon it is non-deterministic
+    if (alphabet.has(EPSILON)) {
+      return false;
+    }
+    // if any state has no edges in deltafunction, automaton is non-deterministic
+    if (this.states.length != Object.keys(this.deltaFunctionMatrix).length) {
+      return false;
+    }
     switch (this.automatonType) {
       case AutomatonType.FINITE:
-        // if there is Epsilon it is non-deterministic
-        if (alphabet.has(EPSILON)) {
-          return false;
-        }
-        // if any state has no edges in deltafunction, automaton is non-deterministic
-        if (this.states.length != Object.keys(this.deltaFunctionMatrix).length) {
-          return false;
-        }
         // now, for each node we go through the deltaMatrix a second time and for each edge we check
         // if all the symbols are present and if the number of edges
         // equals this number, therefore we check if each edge is used only once
@@ -136,26 +135,23 @@ export class Automaton implements IAutomaton {
 
           for (const rightSymbol in this.deltaFunctionMatrix[leftSymbol]) {
             const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
+            edgeNum += edges.length;
             for (const edge of edges) {
-              found.add(edge.inputChar);
-              edgeNum++;
+              if (edge instanceof PDAEdge) {
+                found.add(edge.inputChar);
+              }
             }
           }
           if (edgeNum != found.size || edgeNum != alphabet.size) {
             return false;
           }
+          else {
+            throw new Error("Finite automaton has non-finite edge");
+          }
         }
         return true;
 
       case AutomatonType.PDA:
-        // if there is Epsilon it is non-deterministic
-        if (alphabet.has(EPSILON)) {
-          return false;
-        }
-        // if any state has no edges in deltafunction, automaton is non-deterministic
-        if (this.states.length != Object.keys(this.deltaFunctionMatrix).length) {
-          return false;
-        }
         // Same as before only now we compare the number of unique alpha-stack combinations and actual edges
         // and number of actual edges to all combinations (alphabet.size x stackAlphabet.size)
         for (const leftSymbol in this.deltaFunctionMatrix) {
@@ -164,16 +160,16 @@ export class Automaton implements IAutomaton {
 
           for (const rightSymbol in this.deltaFunctionMatrix[leftSymbol]) {
             const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
+            edgeNum += edges.length;
             for (const edge of edges) {
               if (edge instanceof PDAEdge) {
                 if (found[edge.inputChar] === undefined) {
                   found[edge.inputChar] = new Set<string> ([]);
                 }
                 found[edge.inputChar].add(edge.readStackChar);
-                edgeNum++;
               }
               else {
-                return false;
+                throw new Error("PDA has non-PDA edge");
               }
             }
           }
