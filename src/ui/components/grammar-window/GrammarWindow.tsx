@@ -1,16 +1,22 @@
 import React, { useState } from "react";
-import { GrammarCore } from "../core/grammarCore";
-import { GrammarType } from "../engine/grammar/grammar.ts";
-import { ModeHolder } from "../core/core.ts";
+import { GrammarCore } from "../../../core/grammarCore.ts";
+import { GrammarType } from "../../../engine/grammar/grammar.ts";
+import { ModeHolder } from "../../../core/core.ts";
+import GrammarRepresentation from "./GrammarRepresentation";
+import "./styles.css";
 
 interface ProductionRule {
   input: string;
   output: string[];
 }
 
-export const GrammarWindow: React.FC = () => {
-  const grammarCoreRef = React.useRef(new GrammarCore(GrammarType.CONTEXT_FREE, new ModeHolder()));
-  const [nonTerminals, setNonTerminals] = useState<string[]>([]);
+interface GrammarWindowProps {
+  grammarType: GrammarType;
+}
+
+export const GrammarWindow: React.FC<GrammarWindowProps> = ({ grammarType }) => {
+  const grammarCoreRef = React.useRef(new GrammarCore(grammarType, new ModeHolder()));
+  const [nonTerminals, setNonTerminals] = useState<string[]>(["σ"]);
   const [terminals, setTerminals] = useState<string[]>([]);
   const [rules, setRules] = useState<ProductionRule[]>([]);
   const [newRule, setNewRule] = useState({ input: "", output: "" });
@@ -102,77 +108,77 @@ export const GrammarWindow: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>GRAMATIKA</h2>
+    <div className="grammar-container">
+      <h2 className="grammar-header">Gramatika</h2>
 
-      <div>
-        <h3>Non-Terminals:</h3>
-        {nonTerminals.map((nonTerminal, index) =>
-          <div key={index}>
-            <span>{nonTerminal}</span>
-            <button onClick={() => handleDeleteNonTerminal(index)}>
-              Delete
-            </button>
-          </div>
-        )}
-        <div>
+      <div className="section">
+        <h3>Non-Terminals</h3>
+        <div className="list">
+          {nonTerminals.map((nt, i) =>
+            <div key={i} className="list-item">
+              <span>{nt}</span>
+              <button onClick={() => handleDeleteNonTerminal(i)} className="delete-btn">✕</button>
+            </div>
+          )}
+        </div>
+        <div className="input-row">
           <input
             value={newNonTerminal}
             onChange={e => setNewNonTerminal(e.target.value)}
-            placeholder="Non-Terminal (e.g. A)"
+            placeholder="Non-terminal (e.g. A)"
           />
-          <button onClick={handleAddNonTerminal}>Add Non-Terminal</button>
+          <button onClick={handleAddNonTerminal}>Add</button>
         </div>
       </div>
 
-      <div>
-        <h3>Terminals:</h3>
-        {terminals.map((terminal, index) =>
-          <div key={index}>
-            <span>{terminal}</span>
-            <button onClick={() => handleDeleteTerminal(index)}>
-              Delete
-            </button>
-          </div>
-        )}
-        <div>
+      <div className="section">
+        <h3>Terminals</h3>
+        <div className="list">
+          {terminals.map((t, i) =>
+            <div key={i} className="list-item">
+              <span>{t}</span>
+              <button onClick={() => handleDeleteTerminal(i)} className="delete-btn">✕</button>
+            </div>
+          )}
+        </div>
+        <div className="input-row">
           <input
             value={newTerminal}
             onChange={e => setNewTerminal(e.target.value)}
             placeholder="Terminal (e.g. a)"
           />
-          <button onClick={handleAddTerminal}>Add Terminal</button>
+          <button onClick={handleAddTerminal}>Add</button>
         </div>
       </div>
 
-      <h3>Rules:</h3>
-      {rules.map((rule, index) =>
-        <div key={index}>
-          <span>{rule.input} → {rule.output.join(" ")}</span>
-          <button onClick={() => handleDeleteRule(index)}>Delete</button>
+      <div className="section">
+        <h3>Production Rules</h3>
+        <div className="list">
+          {rules.map((r, i) =>
+            <div key={i} className="list-item">
+              <span>{r.input} → {r.output.join(" ")}</span>
+              <button onClick={() => handleDeleteRule(i)} className="delete-btn">✕</button>
+            </div>
+          )}
         </div>
-      )}
-      <div>
-        <input
-          value={newRule.input}
-          onChange={e => setNewRule({ ...newRule, input: e.target.value })}
-          placeholder="LHS (e.g. S)"
-        />
-        →
-        <input
-          value={newRule.output}
-          onChange={e => setNewRule({ ...newRule, output: e.target.value })}
-          placeholder="RHS (e.g. a A)"
-        />
-        <button onClick={handleAddRule}>Add Rule</button>
+        <div className="input-row rule-input-row">
+          <input
+            value={newRule.input}
+            onChange={e => setNewRule({ ...newRule, input: e.target.value })}
+            placeholder="LHS (e.g. S)"
+          />
+          <span>→</span>
+          <input
+            value={newRule.output}
+            onChange={e => setNewRule({ ...newRule, output: e.target.value })}
+            placeholder="RHS (e.g. a A)"
+          />
+          <button onClick={handleAddRule}>Add Rule</button>
+        </div>
       </div>
 
-      {grammarRepr !== "" && <div>
-        REPRESENTATION:
-        <div>
-          {grammarRepr}
-        </div>
-      </div>}
+      <GrammarRepresentation grammarRepr={grammarRepr} />
+
     </div>
   );
 };

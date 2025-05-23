@@ -50,7 +50,7 @@ export class GrammarVisual implements IGrammarVisual {
     const ts = this.grammar.terminalSymbols.join(", ");
     const start = this.grammar.initialNonTerminalSymbol;
     const rules = this.grammar.productionRules
-      .map(rule => `${rule.inputNonTerminal} → ${rule.outputSymbols.join(", ")}`)
+      .map(rule => `${rule.inputNonTerminal} → ${rule.outputSymbols.join(" ")}`)
       .join("\n");
 
     this.representation =
