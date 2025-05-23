@@ -49,6 +49,7 @@ export class GrammarCore implements IGrammarCore {
     this.grammar = this.factory.createGrammar([INITIAL_NONTERMINAL], [], INITIAL_NONTERMINAL);
 
     this.visual = new GrammarVisual();
+    this.visual.setGrammar(this.grammar);
     this.visitor = new VisualVisitor(this.visual);
     this.mode = mode;
   }
@@ -205,13 +206,13 @@ export class GrammarCore implements IGrammarCore {
     command.accept(this.visitor);
   }
 
-  // TODO - reflect changes in visual
   undo() {
     if (this.mode.mode !== Mode.EDIT) {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
-
-    return this.grammar.undo();
+    const maybeError = this.grammar.undo();
+    this.visual.refresh();
+    return maybeError;
   }
 
   highlight(ids: string[]) {
