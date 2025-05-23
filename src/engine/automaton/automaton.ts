@@ -140,13 +140,13 @@ export class Automaton implements IAutomaton {
               if (edge instanceof PDAEdge) {
                 found.add(edge.inputChar);
               }
+              else {
+                throw new Error("Finite automaton has non-finite edge");
+              }
             }
           }
           if (edgeNum != found.size || edgeNum != alphabet.size) {
             return false;
-          }
-          else {
-            throw new Error("Finite automaton has non-finite edge");
           }
         }
         return true;
