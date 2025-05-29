@@ -234,8 +234,8 @@ export class AutomatonCore implements IAutomatonCore {
     if (this.mode.mode !== Mode.VISUAL) {
       return new ErrorMessage("Operation is only permitted in visual mode.");
     }
-
-    return new ErrorMessage(`Not implemented ${ids}`);
+    this.visual.clearHighlights();
+    this.visual.highlightElements(ids);
   }
 
   containsWord(word: string[]) {
