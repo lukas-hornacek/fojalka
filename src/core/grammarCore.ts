@@ -123,11 +123,20 @@ export class GrammarCore implements IGrammarCore {
     if (this.mode.mode !== Mode.EDIT) {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
-    if (nonTerminals.some(symbol => symbol.trim().length === 0)) {
-      return new ErrorMessage("Nonterminal symbol must contain at least one non-whitespace character.");
-    }
-    if (nonTerminals.some(symbol => symbol.includes(" "))) {
-      return new ErrorMessage("Nonterminal symbol must not contain spaces.");
+    for (const symbol of nonTerminals) {
+      const trimmed = symbol.trim();
+
+      if (trimmed.length === 0) {
+        return new ErrorMessage("Nonterminal symbol must contain at least one non-whitespace character.");
+      }
+
+      if (trimmed.charAt(0) === "_") {
+        return new ErrorMessage("Nonterminal symbol cannot start with an underscore.");
+      }
+
+      if (trimmed.includes(" ")) {
+        return new ErrorMessage("Nonterminal symbol must not contain spaces.");
+      }
     }
 
     const command: GrammarEditCommand = new AddNonterminalsCommand(this.grammar, nonTerminals);
@@ -144,11 +153,20 @@ export class GrammarCore implements IGrammarCore {
     if (this.mode.mode !== Mode.EDIT) {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
-    if (terminals.some(symbol => symbol.trim().length === 0)) {
-      return new ErrorMessage("Terminal symbol must contain at least one non-whitespace character.");
-    }
-    if (terminals.some(symbol => symbol.includes(" "))) {
-      return new ErrorMessage("Terminal symbol must not contain spaces.");
+    for (const symbol of terminals) {
+      const trimmed = symbol.trim();
+
+      if (trimmed.length === 0) {
+        return new ErrorMessage("Terminal symbol must contain at least one non-whitespace character.");
+      }
+
+      if (trimmed.charAt(0) === "_") {
+        return new ErrorMessage("Terminal symbol cannot start with an underscore.");
+      }
+
+      if (trimmed.includes(" ")) {
+        return new ErrorMessage("Terminal symbol must not contain spaces.");
+      }
     }
 
     const command: GrammarEditCommand = new AddTerminalsCommand(this.grammar, terminals);

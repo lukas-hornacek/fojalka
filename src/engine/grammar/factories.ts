@@ -11,7 +11,7 @@ export abstract class IGrammarFactory {
 
   private production_rule_id_increment: number = 0;
   protected nextProductionRuleString(): string {
-    return `production_rule_${this.production_rule_id_increment++}`;
+    return `_production_rule_${this.production_rule_id_increment++}`;
   }
 }
 
