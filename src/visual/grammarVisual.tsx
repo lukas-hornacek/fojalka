@@ -12,7 +12,7 @@ export interface IGrammarVisual {
   removeRuleId: (id: string) => void;
   getRuleIdByIndex: (index: number) => string | undefined;
   refresh: () => void;
-  highlightRule: (ids: string[]) => void;
+  highlight: (ids: string[]) => void;
   clearHighlights: () => void;
 }
 
@@ -22,6 +22,7 @@ export class GrammarVisual implements IGrammarVisual {
   representation: JSX.Element = <></>;
   existingRuleIds: string[] = [];
   highlightedRuleIds: Set<string> = new Set();
+  highlightedSymbols: Set<string> = new Set();
 
   setGrammar(grammar: Grammar) {
     this.grammar = grammar;
@@ -32,9 +33,7 @@ export class GrammarVisual implements IGrammarVisual {
   }
 
   storeRuleId(id: string) {
-    this.clearHighlights();
     this.existingRuleIds.push(id);
-    this.highlightRule([id]);
   }
 
   removeRuleId(id: string) {
@@ -45,14 +44,21 @@ export class GrammarVisual implements IGrammarVisual {
     return this.existingRuleIds?.[index];
   }
 
-  highlightRule(ids: string[]) {
+  highlight(ids: string[]) {
     for (const id of ids) {
-      this.highlightedRuleIds.add(id);
+      if (id.charAt(0) === "_") {
+        // grammar rule
+        this.highlightedRuleIds.add(id);
+      } else {
+        // terminal or non-terminal
+        this.highlightedSymbols.add(id);
+      }
     }
   }
 
   clearHighlights() {
     this.highlightedRuleIds.clear();
+    this.highlightedSymbols.clear();
   }
 
   // refresh representation according to grammar
@@ -61,9 +67,26 @@ export class GrammarVisual implements IGrammarVisual {
       this.representation = <>No grammar set.</>;
       return;
     }
-
-    const nts = this.grammar.nonTerminalSymbols.join(", ");
-    const ts = this.grammar.terminalSymbols.join(", ");
+    const nts =
+        <span>
+          {this.grammar.nonTerminalSymbols.map((symbol, idx, arr) =>
+            <span key={`nt-${symbol}`} className={this.highlightedSymbols.has(symbol) ? "highlight" : ""}>
+              {symbol}
+              {idx < arr.length - 1 ? ", " : ""}
+            </span>
+          )}
+        </span>
+    ;
+    const ts =
+        <span>
+          {this.grammar.terminalSymbols.map((symbol, idx, arr) =>
+            <span key={`t-${symbol}`} className={this.highlightedSymbols.has(symbol) ? "highlight" : ""}>
+              {symbol}
+              {idx < arr.length - 1 ? ", " : ""}
+            </span>
+          )}
+        </span>
+    ;
     const start = this.grammar.initialNonTerminalSymbol;
 
     const ruleElements = this.grammar.productionRules.map((rule) => {

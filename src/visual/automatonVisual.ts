@@ -82,9 +82,7 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   addNode(id: string, position: { x: number; y: number }) {
-    this.clearHighlights();
     this.cy?.add({ group: "nodes", data: { id }, position });
-    this.highlightElements([id]);
   }
 
   removeNode(id: string) {
@@ -107,9 +105,7 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   addEdge(id: string, from: string, to: string, label: string) {
-    this.clearHighlights();
     this.cy?.add({ group: "edges", data: { id, source: from, target: to, label } });
-    this.highlightElements([id]);
   }
 
   // TODO

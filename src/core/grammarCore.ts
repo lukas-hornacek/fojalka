@@ -72,6 +72,10 @@ export class GrammarCore implements IGrammarCore {
         return error;
       }
 
+      // highlighting newly added rules
+      this.visual.clearHighlights();
+      this.visual.highlight([rule.id]);
+
       command.accept(this.visitor);
 
     } catch (e: unknown) {
@@ -146,6 +150,9 @@ export class GrammarCore implements IGrammarCore {
       return error;
     }
 
+    // highlighting newly added non-terminals
+    this.visual.clearHighlights();
+    this.visual.highlight(nonTerminals);
     command.accept(this.visitor);
   }
 
@@ -176,6 +183,9 @@ export class GrammarCore implements IGrammarCore {
       return error;
     }
 
+    // highlighting newly added terminals
+    this.visual.clearHighlights();
+    this.visual.highlight(terminals);
     command.accept(this.visitor);
   }
 
@@ -239,7 +249,7 @@ export class GrammarCore implements IGrammarCore {
     }
 
     this.visual.clearHighlights();
-    this.visual.highlightRule(ids);
+    this.visual.highlight(ids);
   }
 
   simulateParsing(word: string[]) {
