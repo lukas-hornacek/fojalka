@@ -62,14 +62,12 @@ export class Grammar {
     return this.terminalSymbols.some(terminal => terminal === findTerminal);
   }
 
-  executeCommand(command: GrammarEditCommand): void {
-    const res = command.execute();
-    if (res === undefined) {
+  executeCommand(command: GrammarEditCommand): IErrorMessage | undefined {
+    const maybeErrorMessage = command.execute();
+    if (maybeErrorMessage === undefined) {
       this.commandHistory.push(command);
-    } else {
-      throw res;
     }
-
+    return maybeErrorMessage;
   }
   undo(): IErrorMessage | undefined {
     const command = this.commandHistory.pop();
