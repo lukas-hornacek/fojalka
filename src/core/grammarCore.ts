@@ -73,8 +73,8 @@ export class GrammarCore implements IGrammarCore {
       }
 
       // highlighting newly added rules
-      this.visual.clearHighlights();
-      this.visual.highlight([rule.id]);
+      // this.visual.clearHighlights();
+      // this.visual.highlight([rule.id]);
 
       command.accept(this.visitor);
 
@@ -151,8 +151,8 @@ export class GrammarCore implements IGrammarCore {
     }
 
     // highlighting newly added non-terminals
-    this.visual.clearHighlights();
-    this.visual.highlight(nonTerminals);
+    // this.visual.clearHighlights();
+    // this.visual.highlight(nonTerminals);
     command.accept(this.visitor);
   }
 
@@ -184,8 +184,8 @@ export class GrammarCore implements IGrammarCore {
     }
 
     // highlighting newly added terminals
-    this.visual.clearHighlights();
-    this.visual.highlight(terminals);
+    // this.visual.clearHighlights();
+    // this.visual.highlight(terminals);
     command.accept(this.visitor);
   }
 
