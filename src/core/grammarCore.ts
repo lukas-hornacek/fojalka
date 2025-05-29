@@ -13,7 +13,7 @@ export interface IGrammarCore {
   mode: ModeHolder;
   grammar: Grammar;
 
-  display: () => string;
+  display: () => React.ReactNode;
 
   addProductionRule: (inputNonTerminal: string, outputSymbols: string[]) => IErrorMessage | undefined
   editProductionRule: (id: string, inputNonTerminal: string, outputSymbols: string[]) => IErrorMessage | undefined;
@@ -220,7 +220,8 @@ export class GrammarCore implements IGrammarCore {
       return new ErrorMessage("Operation is only permitted in visual mode.");
     }
 
-    return new ErrorMessage(`Not implemented ${ids}`);
+    this.visual.clearHighlights();
+    this.visual.highlightRule(ids);
   }
 
   simulateParsing(word: string[]) {

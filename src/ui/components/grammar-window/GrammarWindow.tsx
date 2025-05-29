@@ -24,7 +24,7 @@ export const GrammarWindow: React.FC<GrammarWindowProps> = ({ grammarType }) => 
   const [newNonTerminal, setNewNonTerminal] = useState("");
   const [newTerminal, setNewTerminal] = useState("");
 
-  const [grammarRepr, setGrammarRepr] = useState("");
+  const [grammarRepr, setGrammarRepr] = useState<React.ReactNode>();
 
   // This method has to be called everytime a change is made to the grammar (to obtain the updated string repr.)
   const refreshRepr = () => {
