@@ -66,12 +66,12 @@ export class GrammarVisual implements IGrammarVisual {
     const ts = this.grammar.terminalSymbols.join(", ");
     const start = this.grammar.initialNonTerminalSymbol;
 
-    const ruleElements = this.grammar.productionRules.map((rule, index) => {
+    const ruleElements = this.grammar.productionRules.map((rule) => {
       const ruleStr = `${rule.inputNonTerminal} → ${rule.outputSymbols.join(" ")}`;
       const isHighlighted = this.highlightedRuleIds.has(rule.id); // or based on index
 
       return (
-        <div key={index} className={isHighlighted ? "highlight" : ""}>
+        <div key={`g-rule-visual-${rule.id}`} className={isHighlighted ? "highlight" : ""}>
           {ruleStr}
         </div>
       );
