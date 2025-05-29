@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { AbstractGrammarFactory } from "../src/engine/grammar/factories.ts";
 import { AddProductionRuleCommand } from "../src/engine/grammar/commands/edit.ts";
 import { GrammarType } from "../src/engine/grammar/grammar.ts";
+import { ErrorMessage } from "../src/engine/common.ts";
 
 test("Regular grammar test", () => {
   const agf = new AbstractGrammarFactory(GrammarType.REGULAR);
@@ -18,7 +19,9 @@ test("Regular grammar test", () => {
   console.log(grammar);
 
   // series of wrong operations
-  expect(() => grammar.executeCommand(new AddProductionRuleCommand(grammar, addProductionRuleTwo))).toThrow();
+  const result = grammar.executeCommand(new AddProductionRuleCommand(grammar, addProductionRuleTwo));
+  expect(result).toBeInstanceOf(ErrorMessage);
+  expect(result.details).toBe("Cannot add production rule: S -> abaS: it is already present.");
   const addNonCFProductionRule = () => {
     grammar.executeCommand(new AddProductionRuleCommand(grammar, agf.createProductionRule("S", ["a", "S", "a"], grammar)));
   };
