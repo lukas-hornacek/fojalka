@@ -122,6 +122,9 @@ export class AddNonterminalsCommand extends GrammarEditCommand {
       if (this.grammar.terminalSymbols.includes(symbol)) {
         return new ErrorMessage(`Cannot add nonterminal symbol ${symbol}: it is already present as a terminal symbol.`);
       }
+      if (this.grammar.nonTerminalSymbols.includes(symbol)) {
+        return new ErrorMessage(`Cannot add nonterminal symbol ${symbol}: it is already present.`);
+      }
       if (symbol === EPSILON) {
         return new ErrorMessage("Cannot add epsilon as nonterminal symbol.");
       }
@@ -152,6 +155,9 @@ export class AddTerminalsCommand extends GrammarEditCommand {
     for (const symbol of this.terminals) {
       if (this.grammar.nonTerminalSymbols.includes(symbol)) {
         return new ErrorMessage(`Cannot add terminal symbol ${symbol}: it is already present as a nonterminal symbol.`);
+      }
+      if (this.grammar.terminalSymbols.includes(symbol)) {
+        return new ErrorMessage(`Cannot add terminal symbol ${symbol}: it is already present.`);
       }
       if (symbol === EPSILON) {
         return new ErrorMessage("Cannot add epsilon as terminal symbol.");
