@@ -81,7 +81,7 @@ export class AutomatonCore implements IAutomatonCore {
 
   init(): undefined {
     this.visual.init();
-    this.visual.addNode(INITIAL_STATE,{x: 0, y:0})
+    this.visual.addNode(INITIAL_STATE, { x: 0, y:0 });
   }
 
   undo() {
