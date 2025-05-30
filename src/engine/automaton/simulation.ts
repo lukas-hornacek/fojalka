@@ -1,7 +1,7 @@
 import { AutomatonRunCommand, NextStepCommand } from "./commands/run";
 import { IAutomaton } from "./automaton";
 import { IAutomatonConfiguration } from "./configuration";
-import { ErrorMessage, IErrorMessage } from "../common";
+import { ErrorMessage, IErrorMessage, RunStoppedErrorMessage } from "../common";
 
 export interface IAutomatonSimulation {
   automaton: IAutomaton;
@@ -10,7 +10,7 @@ export interface IAutomatonSimulation {
 
   executeCommand(command: AutomatonRunCommand<unknown>): IErrorMessage | undefined; // if (command.execute()) { commandHistory.push(command); }
   undo(): IErrorMessage | undefined;
-  run(): boolean;
+  run(): IErrorMessage | boolean;
 }
 
 export class AutomatonSimulation implements IAutomatonSimulation {
@@ -42,12 +42,18 @@ export class AutomatonSimulation implements IAutomatonSimulation {
 
   // simulates the entire run on the word in configuration (or the remaining word) and returns true if the
   // last state is accepting and false if it isn't
-  run(): boolean {
+  run(): IErrorMessage | boolean {
     while (this.configuration.remainingInput.length > 0) {
       const nextCommand = new NextStepCommand(this);
       const error = nextCommand.execute();
       if (error !== undefined) {
-        throw new Error(error.details);
+        // if run stopped, that means no possible steps from given configuration without reading the full input we reject the word
+        if (error instanceof RunStoppedErrorMessage) {
+          return false;
+        }
+        else {
+          return error;
+        }
       }
       else {
         this.commandHistory.push(nextCommand);

@@ -1,10 +1,11 @@
 import { IEdge, PDAEdge } from "../edge.ts";
 import { AutomatonType, IAutomaton } from "../automaton.ts";
-import { FiniteConfiguration, PDAConfiguration } from "../configuration.ts";
+import { FiniteConfiguration, NFAConfiguration, PDAConfiguration } from "../configuration.ts";
 
 export interface IConfigurationVisitor {
   visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
   visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration;
+  visitNFAConfiguration(configuration: NFAConfiguration): NFAConfiguration;
 }
 
 export class NextStepVisitor implements IConfigurationVisitor {
@@ -89,4 +90,11 @@ export class NextStepVisitor implements IConfigurationVisitor {
       return new PDAConfiguration(nextState, configuration.remainingInput.slice(1), newStack);
     }
   };
+
+  visitNFAConfiguration(configuration: FiniteConfiguration): NFAConfiguration {
+    // this to be simmilair to deterministic finite, only go through all of delta function for given symbol,
+    // put correct steps in a list, then add some probilistic generator that picks the next Step
+    // if the list is empty, we just throw
+    return configuration;
+  }
 }

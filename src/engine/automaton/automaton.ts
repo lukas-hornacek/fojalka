@@ -189,6 +189,9 @@ export class Automaton implements IAutomaton {
   }
 
   createRunSimulation(word: string[]): IAutomatonSimulation {
+    // TODO
+    // const det = this.isDeterministic();
+    // if (det) {
     switch (this.automatonType) {
       case AutomatonType.FINITE:
         return new AutomatonSimulation(this, new FiniteConfiguration(this.initialStateId, word));
@@ -198,6 +201,10 @@ export class Automaton implements IAutomaton {
         // TODO
         throw new Error("Not implemented.");
     }
+    // }
+    // else {
+    //  as above, but with nonDeterministic configurations
+    //}
   }
 }
 
