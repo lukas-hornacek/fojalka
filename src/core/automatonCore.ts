@@ -81,6 +81,7 @@ export class AutomatonCore implements IAutomatonCore {
 
   init(): undefined {
     this.visual.init();
+    this.visual.addNode(INITIAL_STATE,{x: 0, y:0})
   }
 
   undo() {
@@ -300,7 +301,6 @@ export class AutomatonCore implements IAutomatonCore {
     if (e !== undefined) {
       return new ErrorMessage(e.details);
     }
-    return new ErrorMessage("Not implemented.");
   }
 
   runEnd() {
