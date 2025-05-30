@@ -2,7 +2,7 @@ import React from "react";
 import "./styles.css";
 
 interface GrammarRepresentationProps {
-  grammarRepr: string;
+  grammarRepr: React.ReactNode;
 }
 
 const GrammarRepresentation: React.FC<GrammarRepresentationProps> = ({ grammarRepr }) => {

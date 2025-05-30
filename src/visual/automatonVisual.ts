@@ -117,13 +117,37 @@ export class AutomatonVisual implements IAutomatonVisual {
     this.cy?.remove(`edge#${id}`);
   }
 
-  // TODO
   highlightElements(ids: string[]) {
-    console.log(ids);
-  };
+    for (const id of ids) {
+      const element = this.cy?.getElementById(id);
+      if (element && element.nonempty()) {
+        if (id.startsWith("_")) {
+          // It's an edge
+          element.style({
+            "line-color": "salmon",
+            "target-arrow-color": "salmon",
+          });
+        } else {
+          // It's a node
+          element.style({
+            "background-color": "salmon",
+          });
+        }
+      } else {
+        console.warn(`Element with id "${id}" not found.`);
+      }
+    }
+  }
 
-  // TODO
   clearHighlights() {
-    return;
+    this.cy?.nodes().forEach(node => {
+      node.style({ "background-color": "#666" }); // your default node color
+    });
+    this.cy?.edges().forEach(edge => {
+      edge.style({
+        "line-color": "#ccc",
+        "target-arrow-color": "#ccc",
+      });
+    });
   }
 }

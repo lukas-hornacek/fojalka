@@ -111,6 +111,9 @@ export class AutomatonCore implements IAutomatonCore {
 
     // this does not use visitor (at least not yet) because the visitor does not accept position
     this.visual.addNode(id, position);
+    // highlighting newly added node
+    // this.visual.clearHighlights();
+    // this.visual.highlightElements([id]);
   }
 
   removeState(id: string) {
@@ -192,6 +195,9 @@ export class AutomatonCore implements IAutomatonCore {
     }
 
     command.accept(this.visitor);
+    // highlighting newly added edge
+    // this.visual.clearHighlights();
+    // this.visual.highlightElements([edge.id]);
   }
 
   removeEdge(from: string, to: string, id: string) {
@@ -234,8 +240,8 @@ export class AutomatonCore implements IAutomatonCore {
     if (this.mode.mode !== Mode.VISUAL) {
       return new ErrorMessage("Operation is only permitted in visual mode.");
     }
-
-    return new ErrorMessage(`Not implemented ${ids}`);
+    this.visual.clearHighlights();
+    this.visual.highlightElements(ids);
   }
 
   containsWord(word: string[]) {
