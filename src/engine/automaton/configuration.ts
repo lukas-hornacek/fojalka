@@ -58,6 +58,29 @@ export class PDAConfiguration implements IAutomatonConfiguration {
   }
 }
 
+export class NFAConfiguration implements IAutomatonConfiguration {
+  stateId: string;
+  remainingInput: string[];
+
+  constructor(_stateId: string, _remainingInput: string[]) {
+    this.stateId = _stateId;
+    this.remainingInput = _remainingInput;
+  }
+
+  accept(visitor: IConfigurationVisitor): NFAConfiguration {
+    return visitor.visitNFAConfiguration(this);
+  }
+
+  save(): FiniteConfigurationMemento {
+    return new FiniteConfigurationMemento(this.stateId, this.remainingInput);
+  }
+
+  restore(memento: FiniteConfigurationMemento): void {
+    this.stateId = memento.stateId;
+    this.remainingInput = memento.remainingInput;
+  }
+}
+
 export interface IConfigurationMemento {
   stateId: string;
 }
