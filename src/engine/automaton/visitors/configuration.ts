@@ -1,6 +1,7 @@
 import { IEdge, PDAEdge } from "../edge.ts";
 import { AutomatonType, IAutomaton } from "../automaton.ts";
 import { FiniteConfiguration, NFAConfiguration, PDAConfiguration } from "../configuration.ts";
+import { EPSILON } from "../../../constants.ts";
 
 export interface IConfigurationVisitor {
   visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
@@ -27,11 +28,11 @@ export class NextStepVisitor implements IConfigurationVisitor {
 
     let nextState: string | undefined;
     const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
-    for (const fromState in delta) {
-      const edges = delta[fromState];
+    for (const toState in delta) {
+      const edges = delta[toState];
       for (let i = 0; i < edges.length; i++) {
         if (edges[i].inputChar === nextSymbol) {
-          nextState = fromState;
+          nextState = toState;
           this.result = edges[i];
         }
       }
@@ -74,9 +75,6 @@ export class NextStepVisitor implements IConfigurationVisitor {
           }
         }
         else {
-          // Not sure, maybe we can just skip edges in delta function that are not of correct type
-          // the way I implemented it now, will throw if there is a single edge of incorrect type, even if it isn't
-          // the one we are looking for
           throw new Error("AutomatonType is pushDown but one of its edges isn't");
         }
       }
@@ -91,10 +89,51 @@ export class NextStepVisitor implements IConfigurationVisitor {
     }
   };
 
+  // this to be simmilair to deterministic finite, only go through all of delta function for given symbol,
+  // put correct steps in a list, then add some probilistic generator that picks the next Step
+  // if the list is empty, we just throw
   visitNFAConfiguration(configuration: FiniteConfiguration): NFAConfiguration {
-    // this to be simmilair to deterministic finite, only go through all of delta function for given symbol,
-    // put correct steps in a list, then add some probilistic generator that picks the next Step
-    // if the list is empty, we just throw
-    return configuration;
+    if (configuration.remainingInput.length === 0) {
+      throw new Error("Input end reached");
+    }
+
+    if (this.automaton.automatonType != AutomatonType.FINITE) {
+      throw new Error("Wrong automaton type");
+    }
+    const nextSymbol = configuration.remainingInput[0];
+
+    type EdgeStatePair = {
+      first: IEdge;
+      second: string;
+    };
+    const nextEdgeList: EdgeStatePair[] = [];
+
+    const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
+    for (const toState in delta) {
+      const edges = delta[toState];
+      for (let i = 0; i < edges.length; i++) {
+        if (edges[i].inputChar === nextSymbol || edges[i].inputChar === EPSILON) {
+          const pair: EdgeStatePair = {
+            first: edges[i],
+            second: toState,
+          };
+          nextEdgeList.push(pair);
+        }
+      }
+    }
+    if (nextEdgeList.length === 0) {
+      throw new Error("No posible next step from this state and input symbol.");
+    }
+    else {
+      const m = Math.floor(Math.random() * nextEdgeList.length);
+      const edgeUSed = nextEdgeList[m];
+      this.result = edgeUSed.first;
+      if (edgeUSed.first.inputChar === EPSILON) {
+        return new FiniteConfiguration(edgeUSed.second, configuration.remainingInput);
+      }
+      else {
+        return new FiniteConfiguration(edgeUSed.second, configuration.remainingInput.slice(1));
+      }
+    }
   }
 }
