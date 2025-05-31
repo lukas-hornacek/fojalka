@@ -64,13 +64,13 @@ export class NextStepVisitor implements IConfigurationVisitor {
     let stackWrite: string[] | undefined;
     const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
     findEdge:
-    for (const fromState in delta) {
-      const edges = delta[fromState];
+    for (const toState in delta) {
+      const edges = delta[toState];
       for (let i = 0; i < edges.length; i++) {
         const pdaEdge = edges[i];
         if (pdaEdge instanceof PDAEdge) {
           if (pdaEdge.inputChar === nextSymbol && pdaEdge.readStackChar === stackSymbol) {
-            nextState = fromState;
+            nextState = toState;
             stackWrite = pdaEdge.writeStackWord;
             this.result = edges[i];
             break findEdge;
