@@ -28,11 +28,11 @@ export default function VisualWindows() {
         audioRef.current.currentTime = 0;
       }
       const e = core.runStart(word);
-      if(e !== undefined) {
+      if (e !== undefined) {
         alert(e.details);
         return;
       }
-      
+
       setAutomatonCore(core);
       setWordRemaining(word);
       setWordRead([]);
@@ -45,7 +45,7 @@ export default function VisualWindows() {
     const core = coreContext.primary;
     if (core.kind === Kind.AUTOMATON) {
       const e = core.runEnd();
-      if(e !== undefined) {
+      if (e !== undefined) {
         alert(e.details);
         return;
       }
