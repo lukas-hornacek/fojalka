@@ -1,7 +1,7 @@
 import { EPSILON, INITIAL_STACK_SYMBOL } from "../../constants.ts";
 import { ErrorMessage, IErrorMessage } from "../common.ts";
 import { AutomatonEditCommand } from "./commands/edit.ts";
-import { FiniteConfiguration, NFAConfiguration, PDAConfiguration } from "./configuration.ts";
+import { FiniteConfiguration, NFAConfiguration, NPDAConfiguration, PDAConfiguration } from "./configuration.ts";
 import { FiniteAutomatonEdge, IEdge, PDAEdge } from "./edge.ts";
 import { IAutomatonSimulation, AutomatonSimulation } from "./simulation.ts";
 import { cloneDeep } from "lodash";
@@ -205,8 +205,7 @@ export class Automaton implements IAutomaton {
         case AutomatonType.FINITE:
           return new AutomatonSimulation(this, new NFAConfiguration(this.initialStateId, word));
         case AutomatonType.PDA:
-          // TODO
-          throw new Error("Not implemented.");
+          return new AutomatonSimulation(this, new NPDAConfiguration(this.initialStateId, word, [INITIAL_STACK_SYMBOL]));
         case AutomatonType.TURING:
           throw new Error("Not implemented.");
       }
