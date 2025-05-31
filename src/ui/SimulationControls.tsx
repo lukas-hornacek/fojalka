@@ -13,6 +13,7 @@ export default function VisualWindows() {
   const [wordRemaining, setWordRemaining] = useState<string[]>([]);
   const [steppping, setStepping] = useState(false);
   const [stepInterval, setStepInterval] = useState<number>(1.0);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const startSimulation = () => {
     if (coreContext == undefined) {
@@ -23,6 +24,9 @@ export default function VisualWindows() {
 
     const core = coreContext.primary;
     if (core.kind == Kind.AUTOMATON) {
+      if(audioRef.current) {
+        audioRef.current.currentTime = 0;
+      }
       core.runStart(word);
       setAutomatonCore(core);
       setWordRemaining(word);
@@ -81,6 +85,7 @@ export default function VisualWindows() {
   const intervalRef = useRef<number | null>(null);
   const startTimer = () => {
     setStepping(true);
+    audioRef?.current?.play();
     if (intervalRef.current === null) { // prevent multiple intervals
       intervalRef.current = window.setInterval(() => {
         if (!nextStep()) {
@@ -91,6 +96,7 @@ export default function VisualWindows() {
   };
   const stopTimer = () => {
     setStepping(false);
+    audioRef?.current?.pause();
     if (intervalRef.current !== null) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -102,11 +108,18 @@ export default function VisualWindows() {
       clearInterval(intervalRef.current);
     }
   }, []);
+  
+  const changePlaybackRate = (rate: number) => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = rate;
+    }
+  };
 
   return (
     <>
       <hr/>
       <h2>Simulacia</h2>
+      <audio ref={audioRef} src="/fojalka/simulation-music.aac" hidden loop></audio>
       <div hidden={coreContext?.mode.mode != Mode.VISUAL && false}>
         <div hidden={automatonCore !== null}>
           vstupné slovo: <input
@@ -127,7 +140,7 @@ export default function VisualWindows() {
           <button onClick={nextStep}>dalsi krok</button> <br />
           autoplay
           <div hidden={steppping}>
-            <button onClick={startTimer}>&#x23F5;</button> | rýchlosť<input type="number" min={0.1} max={2.0} step={0.1} value={stepInterval} onChange={v => setStepInterval(Number(v.target.value))}/>
+            <button onClick={startTimer}>&#x23F5;</button> | rýchlosť<input type="number" min={0.1} max={2.0} step={0.1} value={stepInterval} onChange={v => {setStepInterval(Number(v.target.value)); changePlaybackRate(Number(v.target.value))}}/>
           </div>
           <button onClick={stopTimer} hidden={!steppping}>&#x23F8;</button>
         </div>
