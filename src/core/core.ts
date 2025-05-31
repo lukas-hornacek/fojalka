@@ -33,7 +33,7 @@ export interface ICore {
   switchToVisualMode: () => IErrorMessage | undefined;
 
   // applies all remaining steps of the algorithm at once and shows the final result
-  transform: (algorithm: IAlgorithm) => IErrorMessage | undefined;
+  transform: () => IErrorMessage | undefined;
 
   // takes algorithm object or enum that is then pushed into factory
   // creates simulation object, that can be used to call next() and undo()
