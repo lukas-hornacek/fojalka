@@ -1,11 +1,11 @@
 import { useContext, useState } from "react";
-import { Mode, ObjectType } from "../core/core";
+import { ICoreType, Kind, Mode, ObjectType } from "../core/core";
 import { CoreContext } from "../core/CoreContext";
 import AutomatonEditButtons from "./AutomatonEditButtons";
 import { Button, Form, Modal, ToggleButton, ToggleButtonGroup } from "react-bootstrap";
 import SimulationControls from "./SimulationControls";
 
-export default function Buttons({ mode, primaryType }: { mode: Mode, primaryType: ObjectType }) {
+export default function Buttons({ mode, primaryType }: { mode: Mode, primaryType: ICoreType }) {
   const core = useContext(CoreContext);
 
   if (!core) {
@@ -17,14 +17,14 @@ export default function Buttons({ mode, primaryType }: { mode: Mode, primaryType
     return (
       <div>
         <GlobalButtons mode={mode} />
-        {primaryType === ObjectType.AUTOMATON_FINITE ? <AutomatonEditButtons /> : null}
+        {primaryType.kind === Kind.AUTOMATON ? <AutomatonEditButtons /> : null}
       </div>
     );
   } else {
     return (
       <div>
         <GlobalButtons mode={mode} />
-        {primaryType === ObjectType.AUTOMATON_FINITE ? <AutomatonVisualButtons /> : <GrammarVisualButtons />}
+        {primaryType.kind === Kind.AUTOMATON ? <AutomatonVisualButtons /> : <GrammarVisualButtons />}
       </div>
     );
   }

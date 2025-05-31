@@ -12,6 +12,7 @@ export interface IGrammarCore {
   kind: Kind.GRAMMAR;
   mode: ModeHolder;
   grammar: Grammar;
+  visual: IGrammarVisual;
 
   display: () => React.ReactNode;
 
