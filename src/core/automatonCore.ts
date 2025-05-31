@@ -285,7 +285,7 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Command result is empty.");
     }
     this.visual.clearHighlights();
-    this.visual.highlightElements([result.id]);
+    this.visual.highlightElements([result.id, this.simulation.configuration.stateId]);
   }
 
   // TODO update visual
