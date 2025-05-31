@@ -1,6 +1,6 @@
-import { IEdge, PDAEdge } from "../edge.ts";
+import { FiniteAutomatonEdge, IEdge, PDAEdge } from "../edge.ts";
 import { AutomatonType, IAutomaton } from "../automaton.ts";
-import { FiniteConfiguration, NFAConfiguration, PDAConfiguration } from "../configuration.ts";
+import { FiniteConfiguration, NFAConfiguration, NPDAConfiguration, PDAConfiguration } from "../configuration.ts";
 import { EPSILON } from "../../../constants.ts";
 import { RunStoppedError } from "../../common.ts";
 
@@ -8,6 +8,7 @@ export interface IConfigurationVisitor {
   visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
   visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration;
   visitNFAConfiguration(configuration: NFAConfiguration): NFAConfiguration;
+  visitNPDAConfiguration(configuration: NPDAConfiguration): NPDAConfiguration;
 }
 
 export class NextStepVisitor implements IConfigurationVisitor {
@@ -104,8 +105,8 @@ export class NextStepVisitor implements IConfigurationVisitor {
     const nextSymbol = configuration.remainingInput[0];
 
     type EdgeStatePair = {
-      first: IEdge;
-      second: string;
+      edge: FiniteAutomatonEdge;
+      state: string;
     };
     const nextEdgeList: EdgeStatePair[] = [];
 
@@ -115,8 +116,8 @@ export class NextStepVisitor implements IConfigurationVisitor {
       for (let i = 0; i < edges.length; i++) {
         if (edges[i].inputChar === nextSymbol || edges[i].inputChar === EPSILON) {
           const pair: EdgeStatePair = {
-            first: edges[i],
-            second: toState,
+            edge: edges[i],
+            state: toState,
           };
           nextEdgeList.push(pair);
         }
@@ -134,13 +135,74 @@ export class NextStepVisitor implements IConfigurationVisitor {
         m = Math.floor(Math.random() * nextEdgeList.length);
       }
       const edgeUSed = nextEdgeList[m];
-      this.result = edgeUSed.first;
-      if (edgeUSed.first.inputChar === EPSILON) {
-        return new NFAConfiguration(edgeUSed.second, configuration.remainingInput);
+      this.result = edgeUSed.edge;
+      if (edgeUSed.edge.inputChar === EPSILON) {
+        return new NFAConfiguration(edgeUSed.state, configuration.remainingInput);
       }
       else {
-        return new NFAConfiguration(edgeUSed.second, configuration.remainingInput.slice(1));
+        return new NFAConfiguration(edgeUSed.state, configuration.remainingInput.slice(1));
       }
     }
   }
+
+  visitNPDAConfiguration(configuration: NPDAConfiguration): NPDAConfiguration {
+    if (configuration.remainingInput.length === 0) {
+      throw new Error("Input end reached");
+    }
+
+    if (this.automaton.automatonType != AutomatonType.PDA) {
+      throw new Error("Wrong automaton type");
+    }
+
+    const nextSymbol = configuration.remainingInput[0];
+    const stackSymbol = configuration.stack[configuration.stack.length - 1];
+
+    type EdgeStatePair = {
+      edge: PDAEdge;
+      state: string;
+    };
+    const nextEdgeList: EdgeStatePair[] = [];
+
+    const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
+    for (const toState in delta) {
+      const edges = delta[toState];
+      for (let i = 0; i < edges.length; i++) {
+        const pdaEdge = edges[i];
+        if (pdaEdge instanceof PDAEdge) {
+          if ((pdaEdge.inputChar === nextSymbol || pdaEdge.inputChar === EPSILON) && pdaEdge.readStackChar === stackSymbol) {
+            const pair: EdgeStatePair = {
+              edge: pdaEdge,
+              state: toState,
+            };
+            nextEdgeList.push(pair);
+          }
+        }
+        else {
+          throw new Error("AutomatonType is pushDown but one of its edges isn't");
+        }
+      }
+    }
+
+    if (nextEdgeList.length === 0) {
+      throw new RunStoppedError("No posible next step from this state and input symbol.");
+    }
+    else {
+      let m: number;
+      if (nextEdgeList.length === 1) {
+        m = 0;
+      }
+      else {
+        m = Math.floor(Math.random() * nextEdgeList.length);
+      }
+      const edgeUSed = nextEdgeList[m];
+      this.result = edgeUSed.edge;
+      const newStack: string [] = configuration.stack.slice(0, -1).concat(edgeUSed.edge.writeStackWord);
+      if (edgeUSed.edge.inputChar === EPSILON) {
+        return new NPDAConfiguration (edgeUSed.state, configuration.remainingInput, newStack);
+      }
+      else {
+        return new NPDAConfiguration(edgeUSed.state, configuration.remainingInput.slice(1), newStack);
+      }
+    }
+  };
 }
