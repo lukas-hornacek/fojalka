@@ -30,6 +30,7 @@ export default function AlgorithmButtons() {
     }
   }
 
+  //TODO - tu treba doplnit zatvorenie okien a vymenu buttonov pre algoritmus za buttony na editovanie
   function algorithmClose(keepSecondary: boolean) {
     const e = coreContext!.algorithmDelete(keepSecondary);
     if (e !== undefined) {
@@ -45,7 +46,7 @@ export default function AlgorithmButtons() {
             <button className="btn btn-primary" onClick={algorithmNext}>Next step</button>
             <button className="btn btn-primary" onClick={algorithmUndo}>Undo step</button>
             <button className="btn btn-primary" onClick={algorithmTransform}>Skip to the end</button>
-            
+
             <DropdownButton id="dropdown-algorithm-button" title="Close algorithm">
               <Dropdown.Item onClick={() => algorithmClose(false)}>Keep first window</Dropdown.Item>
               <Dropdown.Item onClick={() => algorithmClose(true)}>Keep second window</Dropdown.Item>
