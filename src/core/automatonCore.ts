@@ -36,7 +36,7 @@ export interface IAutomatonCore {
 
   // run functions
   containsWord: (word: string[]) => boolean;
-  runStart: (word: string[]) => void;
+  runStart: (word: string[]) => IErrorMessage | undefined;
   runNext: () => IErrorMessage | undefined;
   runUndo: () => IErrorMessage | undefined;
   runEnd: () => IErrorMessage | undefined;
@@ -81,6 +81,8 @@ export class AutomatonCore implements IAutomatonCore {
 
   init(): undefined {
     this.visual.init();
+    this.visual.addNode(INITIAL_STATE, { x: 0, y:0 });
+    this.visual.fit();
   }
 
   undo() {
@@ -283,7 +285,7 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Command result is empty.");
     }
     this.visual.clearHighlights();
-    this.visual.highlightElements([result.id]);
+    this.visual.highlightElements([result.id, this.simulation.configuration.stateId]);
   }
 
   // TODO update visual
@@ -300,7 +302,6 @@ export class AutomatonCore implements IAutomatonCore {
     if (e !== undefined) {
       return new ErrorMessage(e.details);
     }
-    return new ErrorMessage("Not implemented.");
   }
 
   runEnd() {
