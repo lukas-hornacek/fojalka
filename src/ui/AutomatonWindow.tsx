@@ -4,7 +4,7 @@ import { Kind } from "../core/core";
 import { TestingAlgorithm } from "../engine/algorithm/algorithm";
 import { PRIMARY_CYTOSCAPE_ID, SECONDARY_CYTOSCAPE_ID } from "../constants";
 
-export default function AutomatonWindow({ primary, cols }: { primary: boolean, cols: number }) {
+export default function AutomatonWindow({ primary }: { primary: boolean }) {
   const coreContext = useContext(CoreContext);
 
   if (!coreContext) {
@@ -24,9 +24,5 @@ export default function AutomatonWindow({ primary, cols }: { primary: boolean, c
     }
   }, [primary, coreContext]);
 
-  return (
-    <div className={`col-${cols}`}>
-      <div id={primary ? PRIMARY_CYTOSCAPE_ID : SECONDARY_CYTOSCAPE_ID}></div>
-    </div>
-  );
+  return <div id={primary ? PRIMARY_CYTOSCAPE_ID : SECONDARY_CYTOSCAPE_ID}></div>;
 }

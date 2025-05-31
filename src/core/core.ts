@@ -1,7 +1,10 @@
+import { PRIMARY_CYTOSCAPE_ID } from "../constants";
 import { AlgorithmResult, IAlgorithm } from "../engine/algorithm/algorithm";
+import { AutomatonType } from "../engine/automaton/automaton";
 import { ErrorMessage, IErrorMessage } from "../engine/common";
-import { IAutomatonCore } from "./automatonCore";
-import { IGrammarCore } from "./grammarCore";
+import { GrammarType } from "../engine/grammar/grammar";
+import { AutomatonCore, IAutomatonCore } from "./automatonCore";
+import { GrammarCore, IGrammarCore } from "./grammarCore";
 
 export enum Mode {
   EDIT,
@@ -11,6 +14,13 @@ export enum Mode {
 export enum Kind {
   GRAMMAR,
   AUTOMATON,
+}
+
+// I got tired of having two different enums
+export enum ObjectType {
+  AUTOMATON_FINITE,
+  GRAMMAR_REGULAR,
+  GRAMMAR_PHRASAL,
 }
 
 // workaround to give IAutomatonCore | IGrammarCore access to mode reference
@@ -43,6 +53,13 @@ export interface ICore {
   algorithmUndo: () => IErrorMessage | undefined;
   // deletes algorithm (and secondary window) without switching to edit mode
   algorithmDelete: (keepSecondary: boolean) => IErrorMessage | undefined;
+
+  newWindow: (type: ObjectType) => void;
+
+  // these are set once and then used only internally to trigger changes in UI
+  setMode?: React.Dispatch<React.SetStateAction<Mode>>
+  setPrimaryType?: React.Dispatch<React.SetStateAction<ObjectType>>
+  setSecondaryType?: React.Dispatch<React.SetStateAction<ObjectType | undefined>>;
 }
 
 // component that holds global state and Grammar/Automaton cores
@@ -55,19 +72,47 @@ export class Core implements ICore {
 
   algorithm?: IAlgorithm;
 
-  // this constructor might be changed depending on UI (e.g. if user starts with empty screen or with some default window)
-  constructor(primary: ICoreType) {
-    this.primary = primary;
-    this.primary.mode = this.mode;
+  setMode?: React.Dispatch<React.SetStateAction<Mode>>;
+  setPrimaryType?: React.Dispatch<React.SetStateAction<ObjectType>>;
+  setSecondaryType?: React.Dispatch<React.SetStateAction<ObjectType | undefined>>;
+
+  constructor() {
+    this.mode = new ModeHolder();
+    this.primary = new AutomatonCore(AutomatonType.FINITE, PRIMARY_CYTOSCAPE_ID, this.mode);
   }
 
+  newWindow(type: ObjectType) {
+    if (type === ObjectType.AUTOMATON_FINITE) {
+      const reinitialize = this.primary.kind === Kind.AUTOMATON;
+      this.primary = new AutomatonCore(AutomatonType.FINITE, PRIMARY_CYTOSCAPE_ID, this.mode);
+      if (reinitialize) {
+        this.primary.init();
+      }
+    } else {
+      this.primary = new GrammarCore(type === ObjectType.GRAMMAR_REGULAR ? GrammarType.REGULAR : GrammarType.CONTEXT_FREE, this.mode);
+    }
+    this.setPrimaryType?.(type);
+
+    // TODO correctly stop any running algorithm/simulation
+    if (this.mode.mode === Mode.VISUAL) {
+      this.switchToEditMode(false);
+    }
+  };
+
+  // TODO this needs to stop any running algorith/simulation
   switchToEditMode(keepSecondary: boolean) {
     if (this.mode.mode === Mode.EDIT) {
       return new ErrorMessage("Cannot switch to edit mode when already in edit mode.");
     }
 
+    // end simulation if there is any running
+    if (this.primary.kind === Kind.AUTOMATON) {
+      this.primary.runEnd();
+    }
+
     this.algorithmDelete(keepSecondary);
     this.mode.mode = Mode.EDIT;
+    this.setMode?.(this.mode.mode);
   }
 
   switchToVisualMode() {
@@ -76,6 +121,7 @@ export class Core implements ICore {
     }
 
     this.mode.mode = Mode.VISUAL;
+    this.setMode?.(this.mode.mode);
   }
 
   transform() {
@@ -175,6 +221,12 @@ export class Core implements ICore {
     }
     this.secondary = undefined;
     this.algorithm = undefined;
+    if (this.primary.kind === Kind.AUTOMATON) {
+      this.setPrimaryType?.(ObjectType.AUTOMATON_FINITE);
+    } else {
+      this.setPrimaryType?.(this.primary.grammar.grammarType === GrammarType.REGULAR ? ObjectType.GRAMMAR_REGULAR : ObjectType.GRAMMAR_PHRASAL);
+    }
+    this.setSecondaryType?.(undefined);
   }
 
   //large part of the code for next and transform is the same, so I put it in this function
