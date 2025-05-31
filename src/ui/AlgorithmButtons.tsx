@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import { CoreContext } from "../core/CoreContext";
+import { Dropdown, DropdownButton, Stack } from "react-bootstrap";
 
 export default function AlgorithmButtons() {
   const coreContext = useContext(CoreContext);
@@ -11,28 +12,28 @@ export default function AlgorithmButtons() {
   function algorithmNext() {
     const e = coreContext!.algorithmNext();
     if (e !== undefined) {
-        alert(e.details);
+      alert(e.details);
     }
   }
 
   function algorithmUndo() {
     const e = coreContext!.algorithmUndo();
     if (e !== undefined) {
-        alert(e.details);
+      alert(e.details);
     }
   }
 
   function algorithmTransform() {
     const e = coreContext!.transform();
     if (e !== undefined) {
-        alert(e.details);
+      alert(e.details);
     }
   }
 
-  function algorithmEnd() {
-    const e = coreContext!.algorithmDelete(true);
+  function algorithmClose(keepSecondary: boolean) {
+    const e = coreContext!.algorithmDelete(keepSecondary);
     if (e !== undefined) {
-        alert(e.details);
+      alert(e.details);
     }
   }
 
@@ -40,13 +41,16 @@ export default function AlgorithmButtons() {
     <>
       <div className="row">
         <div className="col">
-          <div className="stack gap">
+          <Stack direction="horizontal" gap={3}>
             <button className="btn btn-primary" onClick={algorithmNext}>Next step</button>
             <button className="btn btn-primary" onClick={algorithmUndo}>Undo step</button>
-
             <button className="btn btn-primary" onClick={algorithmTransform}>Skip to the end</button>
-            <button className="btn btn-primary" onClick={algorithmEnd}>End algorithm</button>
-          </div>
+            
+            <DropdownButton id="dropdown-algorithm-button" title="Close algorithm">
+              <Dropdown.Item onClick={() => algorithmClose(false)}>Keep first window</Dropdown.Item>
+              <Dropdown.Item onClick={() => algorithmClose(true)}>Keep second window</Dropdown.Item>
+            </DropdownButton>
+          </Stack>
         </div>
       </div>
     </>
