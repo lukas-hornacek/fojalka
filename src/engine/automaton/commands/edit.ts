@@ -40,8 +40,10 @@ export class AddStateCommand extends AutomatonEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    if (this.automaton.states.some(id => id === this.stateId)) {
-      return new ErrorMessage(`Cannot add state ${this.stateId}, as it has already been added before.`);
+    if (this.automaton.states.some((id) => id === this.stateId)) {
+      return new ErrorMessage(
+        `Cannot add state ${this.stateId}, as it has already been added before.`
+      );
     }
 
     this.saveBackup();
@@ -62,16 +64,26 @@ export class RemoveStateCommand extends AutomatonEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    const index = this.automaton.states.findIndex(id => id === this.stateId);
+    const index = this.automaton.states.findIndex((id) => id === this.stateId);
     if (index === -1) {
-      return new ErrorMessage(`Cannot remove state ${this.stateId}, as it does not exist.`);
+      return new ErrorMessage(
+        `Cannot remove state ${this.stateId}, as it does not exist.`
+      );
     }
     this.saveBackup();
 
     // TODO check if stateId is initialStateId or in finalStateIds
+    if (this.automaton.initialStateId === this.stateId) {
+      return new ErrorMessage(
+        `Cannot remove the initial state ${this.stateId}.`
+      );
+    }
 
     // remove state
-    if (this.automaton.states.length > 1 && index !== this.automaton.states.length - 1) {
+    if (
+      this.automaton.states.length > 1 &&
+      index !== this.automaton.states.length - 1
+    ) {
       this.automaton.states[index] = this.automaton.states.pop()!;
     } else {
       this.automaton.states.pop();
@@ -106,17 +118,23 @@ export class RenameStateCommand extends AutomatonEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    if (this.automaton.states.every(id => id !== this.stateId)) {
-      return new ErrorMessage(`Cannot edit state ${this.stateId}, as it does not exist.`);
+    if (this.automaton.states.every((id) => id !== this.stateId)) {
+      return new ErrorMessage(
+        `Cannot edit state ${this.stateId}, as it does not exist.`
+      );
     }
 
     this.saveBackup();
 
-    this.automaton.states = this.automaton.states.map(state => state === this.stateId ? this.newStateId : state);
+    this.automaton.states = this.automaton.states.map((state) =>
+      state === this.stateId ? this.newStateId : state
+    );
     if (this.automaton.initialStateId === this.stateId) {
       this.automaton.initialStateId = this.newStateId;
     }
-    this.automaton.finalStateIds = this.automaton.finalStateIds.map(state => state === this.stateId ? this.newStateId : state);
+    this.automaton.finalStateIds = this.automaton.finalStateIds.map((state) =>
+      state === this.stateId ? this.newStateId : state
+    );
 
     // TODO also rename state in delta function
   }
@@ -126,7 +144,11 @@ export class SetStateFinalFlagCommand extends AutomatonEditCommand {
   stateId: string;
   shouldBeFinal: boolean;
 
-  constructor(_automaton: IAutomaton, _stateId: string, _shouldBeFinal: boolean) {
+  constructor(
+    _automaton: IAutomaton,
+    _stateId: string,
+    _shouldBeFinal: boolean
+  ) {
     super(_automaton);
     this.stateId = _stateId;
     this.shouldBeFinal = _shouldBeFinal;
@@ -137,11 +159,15 @@ export class SetStateFinalFlagCommand extends AutomatonEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    if (this.automaton.states.every(id => id !== this.stateId)) {
-      return new ErrorMessage(`Cannot edit state ${this.stateId}, as it does not exist.`);
+    if (this.automaton.states.every((id) => id !== this.stateId)) {
+      return new ErrorMessage(
+        `Cannot edit state ${this.stateId}, as it does not exist.`
+      );
     }
 
-    const isFinalAlready = this.automaton.finalStateIds.some(id => id === this.stateId);
+    const isFinalAlready = this.automaton.finalStateIds.some(
+      (id) => id === this.stateId
+    );
     if (isFinalAlready && this.shouldBeFinal) {
       return;
     }
@@ -154,7 +180,9 @@ export class SetStateFinalFlagCommand extends AutomatonEditCommand {
     if (this.shouldBeFinal) {
       this.automaton.finalStateIds.push(this.stateId);
     } else {
-      this.automaton.finalStateIds = this.automaton.finalStateIds.filter(id => id !== this.stateId);
+      this.automaton.finalStateIds = this.automaton.finalStateIds.filter(
+        (id) => id !== this.stateId
+      );
     }
   }
 }
@@ -172,8 +200,10 @@ export class SetInitialStateCommand extends AutomatonEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    if (this.automaton.states.every(id => id !== this.stateId)) {
-      return new ErrorMessage(`Cannot edit state ${this.stateId}, as it does not exist.`);
+    if (this.automaton.states.every((id) => id !== this.stateId)) {
+      return new ErrorMessage(
+        `Cannot edit state ${this.stateId}, as it does not exist.`
+      );
     }
 
     this.saveBackup();
@@ -186,7 +216,12 @@ export class AddEdgeCommand extends AutomatonEditCommand {
   toStateId: string;
   edge: IEdge;
 
-  constructor(_automaton: IAutomaton, _fromStateId: string, _toStateId: string, _edge: IEdge) {
+  constructor(
+    _automaton: IAutomaton,
+    _fromStateId: string,
+    _toStateId: string,
+    _edge: IEdge
+  ) {
     super(_automaton);
     this.fromStateId = _fromStateId;
     this.toStateId = _toStateId;
@@ -200,8 +235,12 @@ export class AddEdgeCommand extends AutomatonEditCommand {
   execute(): IErrorMessage | undefined {
     this.saveBackup();
 
-    const fromStateExists = this.automaton.states.some(id => id === this.fromStateId);
-    const toStateExists = this.automaton.states.some(id => id === this.toStateId);
+    const fromStateExists = this.automaton.states.some(
+      (id) => id === this.fromStateId
+    );
+    const toStateExists = this.automaton.states.some(
+      (id) => id === this.toStateId
+    );
     if (!fromStateExists || !toStateExists) {
       return new ErrorMessage(
         `Cannot add edge. Both ${this.fromStateId} and ${this.toStateId} state IDs have to exist.`
@@ -212,19 +251,24 @@ export class AddEdgeCommand extends AutomatonEditCommand {
       this.automaton.deltaFunctionMatrix[this.fromStateId] = {};
     }
 
-    if (this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId] === undefined) {
+    if (
+      this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId] ===
+      undefined
+    ) {
       this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId] = [];
     }
 
-    if (this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].some(
-      edge => edge.equals(this.edge))
+    if (
+      this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].some(
+        (edge) => edge.equals(this.edge)
+      )
     ) {
-      return new ErrorMessage(
-        "Cannot add edge, as it already exists."
-      );
+      return new ErrorMessage("Cannot add edge, as it already exists.");
     }
 
-    this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].push(this.edge);
+    this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].push(
+      this.edge
+    );
   }
 }
 
@@ -236,7 +280,12 @@ export class RemoveEdgeCommand extends AutomatonEditCommand {
   // TODO fromStateId and toStateId are not strictly necessary to remove edge and are here only for simpler and faster implementation
   // EditCommand on the other hand has only edgeId
   // we can decide based on how it is called from UI which version is preferable
-  constructor(_automaton: IAutomaton, _fromStateId: string, _toStateId: string, _edgeId: string) {
+  constructor(
+    _automaton: IAutomaton,
+    _fromStateId: string,
+    _toStateId: string,
+    _edgeId: string
+  ) {
     super(_automaton);
     this.edgeId = _edgeId;
     this.fromStateId = _fromStateId;
@@ -248,26 +297,45 @@ export class RemoveEdgeCommand extends AutomatonEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    const index = this.automaton.deltaFunctionMatrix[this.fromStateId]?.[this.toStateId]?.findIndex(edge => edge.id === this.edgeId);
+    const index = this.automaton.deltaFunctionMatrix[this.fromStateId]?.[
+      this.toStateId
+    ]?.findIndex((edge) => edge.id === this.edgeId);
     if (index === undefined) {
-      return new ErrorMessage(`Cannot remove edge ${this.edgeId} because one of its states does not exist.`);
+      return new ErrorMessage(
+        `Cannot remove edge ${this.edgeId} because one of its states does not exist.`
+      );
     }
     if (index === -1) {
-      return new ErrorMessage(`Cannot remove edge ${this.edgeId}, as it does not exist on states ${this.fromStateId}, ${this.toStateId}.`);
+      return new ErrorMessage(
+        `Cannot remove edge ${this.edgeId}, as it does not exist on states ${this.fromStateId}, ${this.toStateId}.`
+      );
     }
 
     this.saveBackup();
 
-    if (this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].length > 1
-      && index !== this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].length - 1
+    if (
+      this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId]
+        .length > 1 &&
+      index !==
+        this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId]
+          .length -
+          1
     ) {
-      this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId][index] =
-        this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].pop()!;
+      this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId][
+        index
+      ] =
+        this.automaton.deltaFunctionMatrix[this.fromStateId][
+          this.toStateId
+        ].pop()!;
     } else {
-      this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].pop();
+      this.automaton.deltaFunctionMatrix[this.fromStateId][
+        this.toStateId
+      ].pop();
     }
 
-    console.log(this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId]);
+    console.log(
+      this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId]
+    );
   }
 }
 

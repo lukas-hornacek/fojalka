@@ -191,8 +191,8 @@ export class AutomatonVisual implements IAutomatonVisual {
     });
   }
 
-  // TODO
   editEdge(id: string, label: string) {
+    this.cy?.getElementById(`edges#${id}`).data("label", label);
     console.log(id, label);
   }
 
