@@ -127,7 +127,10 @@ export class AutomatonCore implements IAutomatonCore {
     }
   }
 
-  static fromSavedJSON(savedAutomatonString: string): AutomatonCore {
+  static fromSavedJSON(
+    savedAutomatonString: string,
+    afterInit?: (automatonCore: AutomatonCore) => void
+  ): AutomatonCore {
     const imported: SavedAutomaton = JSON.parse(savedAutomatonString);
 
     console.log("Parsed text: ");
@@ -165,14 +168,18 @@ export class AutomatonCore implements IAutomatonCore {
             ]) {
               automatonCore.addEdge(from, to, {
                 id: "",
-                inputChar: imported.automaton.deltaFunctionMatrix[from][
-                  to
-                ][edge].inputChar,
+                inputChar:
+                  imported.automaton.deltaFunctionMatrix[from][to][edge]
+                    .inputChar,
               });
 
               console.log(`from: ${from}, to: ${to}, edge: ${edge}`);
             }
           }
+        }
+
+        if (afterInit != null) {
+          afterInit(automatonCore);
         }
 
         // fit it to the screen

@@ -90,12 +90,14 @@ export default function EditButtons({ children }: Props) {
   // handlers
   const clickNodeHandler = (e: cytoscape.EventObject) => {
     setSelectedNodeId(e.target.id());
+    setSelectedEdgeId("");
     console.log("node edit click:", e.target.id());
   };
 
   const clickEdgeHandler = (e: cytoscape.EventObject) => {
     setSelectedEdgeId(e.target.data().id);
     setSelectedEdgeChar(e.target.data().label);
+    setSelectedNodeId("");
     console.log("edge edit click:", e.target.data());
   };
 
@@ -305,7 +307,8 @@ export default function EditButtons({ children }: Props) {
 
     switch (core.kind) {
       case Kind.AUTOMATON: {
-        const e = core.renameState(selectedNodeId,
+        const e = core.renameState(
+          selectedNodeId,
           formData.get("state-name")?.toString() || selectedNodeId
         );
 
@@ -362,7 +365,7 @@ export default function EditButtons({ children }: Props) {
 
         const e = core.editEdge(selectedEdgeId, {
           id: selectedEdgeId,
-          inputChar: char
+          inputChar: char,
         });
         if (e !== undefined) {
           console.error(e.details);
@@ -447,18 +450,38 @@ export default function EditButtons({ children }: Props) {
 
                 const file = files[0];
                 file.text().then((text) => {
-                  const newAutomatonCore = AutomatonCore.fromSavedJSON(text);
+                  const newAutomatonCore = AutomatonCore.fromSavedJSON(
+                    text,
+                    (automatonCore) => {
+                      automatonCore
+                        .getCytoscape()!
+                        .on("tap", "node", clickNodeHandler);
+                      automatonCore
+                        .getCytoscape()!
+                        .on("tap", "edge", clickEdgeHandler);
+                      automatonCore
+                        .getCytoscape()!
+                        .on("tap", clickElsewhereHandler);
+                    }
+                  );
                   setCoreState(new Core(newAutomatonCore));
                 });
               }}
             />
           </div>
-          { selectedNodeId !== "" && <div>
-            <NodeEditables id={selectedNodeId} formAction={formEditState} />
-          </div> }
-          { selectedEdgeId !== "" && <div>
-            <EdgeEditables char={selectedEdgeChar} formAction={formEditEdge} />
-          </div> }
+          {selectedNodeId !== "" &&
+            <div>
+              <NodeEditables id={selectedNodeId} formAction={formEditState} />
+            </div>
+          }
+          {selectedEdgeId !== "" &&
+            <div>
+              <EdgeEditables
+                char={selectedEdgeChar}
+                formAction={formEditEdge}
+              />
+            </div>
+          }
         </div>
       </div>
 
