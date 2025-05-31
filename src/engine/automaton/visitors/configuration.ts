@@ -26,6 +26,9 @@ export class NextStepVisitor implements IConfigurationVisitor {
     if (configuration.remainingInput.length === 0) {
       throw new Error("Input end reached");
     }
+    if (this.automaton.automatonType != AutomatonType.FINITE) {
+      throw new Error("Wrong automaton type");
+    }
     const nextSymbol = configuration.remainingInput[0];
 
     let nextState: string | undefined;
