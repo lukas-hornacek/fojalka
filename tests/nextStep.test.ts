@@ -1,11 +1,13 @@
 import { expect, test } from "vitest";
 import { NextStepCommand } from "../src/engine/automaton/commands/run";
 import { AddEdgeCommand, AddStateCommand } from "../src/engine/automaton/commands/edit";
-import { AutomatonType } from "../src/engine/automaton/automaton.ts";
+import { Automaton, AutomatonType } from "../src/engine/automaton/automaton.ts";
 import { FiniteAutomatonEdge, PDAEdge } from "../src/engine/automaton/edge.ts";
-import { FiniteConfiguration, PDAConfiguration } from "../src/engine/automaton/configuration.ts";
+import { FiniteConfiguration, NFAConfiguration, NPDAConfiguration, PDAConfiguration } from "../src/engine/automaton/configuration.ts";
 import { AutomatonSimulation } from "../src/engine/automaton/simulation.ts";
 import { AbstractAutomatonFactory } from "../src/engine/automaton/factories";
+import { EPSILON, INITIAL_STACK_SYMBOL } from "../src/constants.ts";
+import { RunStoppedErrorMessage } from "../src/engine/common.ts";
 
 test("nextStepCommand Visitor test", () =>{
   const factory = new AbstractAutomatonFactory(AutomatonType.FINITE);
@@ -98,3 +100,89 @@ test("next step on PDA test", () =>{
   expect (error3_2).not.toBeUndefined();
 });
 
+test("non-deterministic finite nextStep test", () => {
+  const a1 = new Automaton({
+    states: ["q0", "q1"],
+    deltaFunctionMatrix: {
+      "q0":{ "q1":[new FiniteAutomatonEdge("1", "a")], "q0":[new FiniteAutomatonEdge("2", "b"), new FiniteAutomatonEdge("3", EPSILON)] },
+      "q1":{ "q1":[new FiniteAutomatonEdge("4", "a"), new FiniteAutomatonEdge("5", "b")] },
+    },
+    automatonType: AutomatonType.FINITE,
+    initialStateId: "q0",
+    finalStateIds: ["q1"]
+  });
+
+  const simulation1 = a1.createRunSimulation(["a"]);
+  const configuration1 = simulation1.configuration;
+
+  expect (configuration1).toBeInstanceOf(NFAConfiguration);
+
+  const nextStep1 = new NextStepCommand(simulation1);
+  const error1 = simulation1.executeCommand(nextStep1);
+  expect (error1).toBeUndefined();
+
+  const edgeUsed1 = nextStep1.result;
+  expect (edgeUsed1).not.toBeUndefined();
+  console.log(edgeUsed1);
+  expect (edgeUsed1?.inputChar).toBeOneOf([EPSILON, "a"]);
+
+  const a2 = new Automaton({
+    states: ["q0", "q1"],
+    deltaFunctionMatrix: {
+      "q0":{ "q1":[new FiniteAutomatonEdge("1", "a")] },
+      "q1":{},
+    },
+    automatonType: AutomatonType.FINITE,
+    initialStateId: "q0",
+    finalStateIds: ["q1"]
+  });
+
+  const simulation2 = a2.createRunSimulation(["a", "b"]);
+  const configuration2 = simulation2.configuration;
+
+  expect (configuration2).toBeInstanceOf(NFAConfiguration);
+  const nextStep2_1 = new NextStepCommand(simulation2);
+  const error2_1 = simulation2.executeCommand(nextStep2_1);
+  expect (error2_1).toBeUndefined();
+
+  const edgeUsed2_1 = nextStep2_1.result;
+  expect (edgeUsed2_1).not.toBeUndefined();
+  console.log(edgeUsed2_1);
+  expect (edgeUsed2_1?.inputChar).toBe("a");
+
+  const nextStep2_2 = new NextStepCommand(simulation2);
+  const error2_2 = simulation2.executeCommand(nextStep2_2);
+  expect (error2_2).not.toBeUndefined();
+  expect (error2_2).toBeInstanceOf(RunStoppedErrorMessage);
+});
+
+test ("non-deterministic PDA nextStep test", () => {
+  const a1 = new Automaton({
+    states: ["q0", "q1"],
+    deltaFunctionMatrix: {
+      "q0":{ "q1":[new PDAEdge("1", "a", INITIAL_STACK_SYMBOL, ["a"]), new PDAEdge("2", EPSILON, INITIAL_STACK_SYMBOL,
+        [INITIAL_STACK_SYMBOL, "a"])], "q0":[new PDAEdge("3", "a", "a", ["a"])] },
+      "q1":{}
+    },
+    automatonType: AutomatonType.PDA,
+    initialStateId: "q0",
+    finalStateIds: ["q1"]
+  });
+
+  const simulation1 = a1.createRunSimulation(["a", "a"]);
+  const configuration1 = simulation1.configuration;
+
+  expect (configuration1).toBeInstanceOf(NPDAConfiguration);
+  const nextStep1 = new NextStepCommand(simulation1);
+  const error1 = simulation1.executeCommand(nextStep1);
+  expect (error1).toBeUndefined();
+  const edgeUsed1 = nextStep1.result;
+  expect (edgeUsed1).not.toBeUndefined();
+  console.log(edgeUsed1);
+  expect (edgeUsed1?.inputChar).toBeOneOf([EPSILON, "a"]);
+
+  const nextStep2 = new NextStepCommand(simulation1);
+  const error2 = simulation1.executeCommand(nextStep2);
+  expect (error2).not.toBeUndefined();
+  expect (error2).toBeInstanceOf(RunStoppedErrorMessage);
+});

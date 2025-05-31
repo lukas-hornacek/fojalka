@@ -35,7 +35,7 @@ export interface IAutomatonCore {
   undo: () => IErrorMessage | undefined;
 
   // run functions
-  containsWord: (word: string[]) => boolean;
+  containsWord: (word: string[]) => IErrorMessage | boolean;
   runStart: (word: string[]) => IErrorMessage | undefined;
   runNext: () => IErrorMessage | undefined;
   runUndo: () => IErrorMessage | undefined;

@@ -1,4 +1,4 @@
-import { ErrorMessage, IErrorMessage } from "../../common.ts";
+import { ErrorMessage, IErrorMessage, RunStoppedError, RunStoppedErrorMessage } from "../../common.ts";
 import { NextStepVisitor } from "../visitors/configuration.ts";
 import { IEdge } from "../edge.ts";
 import { IAutomatonSimulation } from "../simulation.ts";
@@ -46,6 +46,9 @@ export class NextStepCommand extends AutomatonRunCommand<IEdge> {
       this.result = nextStepVisitor.result;
     } catch (error) {
       if (error instanceof Error) {
+        if (error instanceof RunStoppedError) {
+          return new RunStoppedErrorMessage (error.message);
+        }
         return new ErrorMessage(error.message);
       }
     }

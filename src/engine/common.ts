@@ -9,3 +9,9 @@ export class ErrorMessage implements IErrorMessage {
     this.details = _details;
   }
 }
+
+export class RunStoppedErrorMessage extends ErrorMessage {
+}
+
+export class RunStoppedError extends Error {
+}
