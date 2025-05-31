@@ -12,3 +12,6 @@ export class ErrorMessage implements IErrorMessage {
 
 export class RunStoppedErrorMessage extends ErrorMessage {
 }
+
+export class RunStoppedError extends Error {
+}

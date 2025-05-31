@@ -2,6 +2,7 @@ import { IEdge, PDAEdge } from "../edge.ts";
 import { AutomatonType, IAutomaton } from "../automaton.ts";
 import { FiniteConfiguration, NFAConfiguration, PDAConfiguration } from "../configuration.ts";
 import { EPSILON } from "../../../constants.ts";
+import { RunStoppedError } from "../../common.ts";
 
 export interface IConfigurationVisitor {
   visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
@@ -92,7 +93,7 @@ export class NextStepVisitor implements IConfigurationVisitor {
   // this to be simmilair to deterministic finite, only go through all of delta function for given symbol,
   // put correct steps in a list, then add some probilistic generator that picks the next Step
   // if the list is empty, we just throw
-  visitNFAConfiguration(configuration: FiniteConfiguration): NFAConfiguration {
+  visitNFAConfiguration(configuration: NFAConfiguration): NFAConfiguration {
     if (configuration.remainingInput.length === 0) {
       throw new Error("Input end reached");
     }
@@ -122,17 +123,23 @@ export class NextStepVisitor implements IConfigurationVisitor {
       }
     }
     if (nextEdgeList.length === 0) {
-      throw new Error("No posible next step from this state and input symbol.");
+      throw new RunStoppedError("No posible next step from this state and input symbol.");
     }
     else {
-      const m = Math.floor(Math.random() * nextEdgeList.length);
+      let m: number;
+      if (nextEdgeList.length === 1) {
+        m = 0;
+      }
+      else {
+        m = Math.floor(Math.random() * nextEdgeList.length);
+      }
       const edgeUSed = nextEdgeList[m];
       this.result = edgeUSed.first;
       if (edgeUSed.first.inputChar === EPSILON) {
-        return new FiniteConfiguration(edgeUSed.second, configuration.remainingInput);
+        return new NFAConfiguration(edgeUSed.second, configuration.remainingInput);
       }
       else {
-        return new FiniteConfiguration(edgeUSed.second, configuration.remainingInput.slice(1));
+        return new NFAConfiguration(edgeUSed.second, configuration.remainingInput.slice(1));
       }
     }
   }
