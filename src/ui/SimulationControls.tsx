@@ -24,7 +24,7 @@ export default function VisualWindows() {
 
     const core = coreContext.primary;
     if (core.kind == Kind.AUTOMATON) {
-      if(audioRef.current) {
+      if (audioRef.current) {
         audioRef.current.currentTime = 0;
       }
       core.runStart(word);
@@ -108,7 +108,7 @@ export default function VisualWindows() {
       clearInterval(intervalRef.current);
     }
   }, []);
-  
+
   const changePlaybackRate = (rate: number) => {
     if (audioRef.current) {
       audioRef.current.playbackRate = rate;
@@ -140,7 +140,7 @@ export default function VisualWindows() {
           <button onClick={nextStep}>dalsi krok</button> <br />
           autoplay
           <div hidden={steppping}>
-            <button onClick={startTimer}>&#x23F5;</button> | rýchlosť<input type="number" min={0.1} max={2.0} step={0.1} value={stepInterval} onChange={v => {setStepInterval(Number(v.target.value)); changePlaybackRate(Number(v.target.value))}}/>
+            <button onClick={startTimer}>&#x23F5;</button> | rýchlosť<input type="number" min={0.1} max={2.0} step={0.1} value={stepInterval} onChange={v => { setStepInterval(Number(v.target.value)); changePlaybackRate(Number(v.target.value)); }}/>
           </div>
           <button onClick={stopTimer} hidden={!steppping}>&#x23F8;</button>
         </div>
