@@ -16,30 +16,40 @@ export default function VisualWindows() {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const startSimulation = () => {
-    if (coreContext == undefined) {
+    if (coreContext === undefined) {
       return;
     }
 
     const word = simulationWord.split("");
 
     const core = coreContext.primary;
-    if (core.kind == Kind.AUTOMATON) {
+    if (core.kind === Kind.AUTOMATON) {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
       }
-      core.runStart(word);
+      const e = core.runStart(word);
+      if(e !== undefined) {
+        alert(e.details);
+        return;
+      }
+      
       setAutomatonCore(core);
       setWordRemaining(word);
       setWordRead([]);
     }
   };
   const stopSimulation = () => {
-    if (coreContext == undefined) {
+    if (coreContext === undefined) {
       return;
     }
     const core = coreContext.primary;
-    if (core.kind == Kind.AUTOMATON) {
-      core.runEnd();
+    if (core.kind === Kind.AUTOMATON) {
+      const e = core.runEnd();
+      if(e !== undefined) {
+        alert(e.details);
+        return;
+      }
+
       setAutomatonCore(null);
       setWordRemaining([]);
       setWordRead([]);
@@ -49,7 +59,7 @@ export default function VisualWindows() {
 
   // returns wether succeded
   function nextStep(): boolean {
-    if (automatonCore == null) {
+    if (automatonCore === null) {
       return false;
     }
 
@@ -66,7 +76,7 @@ export default function VisualWindows() {
   }
 
   function prevStep() {
-    if (automatonCore == null) {
+    if (automatonCore === null) {
       return false;
     }
 
@@ -120,7 +130,7 @@ export default function VisualWindows() {
       <hr/>
       <h2>Simulacia</h2>
       <audio ref={audioRef} src="/fojalka/simulation-music.aac" hidden loop></audio>
-      <div hidden={coreContext?.mode.mode != Mode.VISUAL && false}>
+      <div hidden={coreContext?.mode.mode !== Mode.VISUAL && false}>
         <div hidden={automatonCore !== null}>
           vstupné slovo: <input
             type="text"
@@ -135,7 +145,7 @@ export default function VisualWindows() {
           čítané slovo:
           <input type="text" size={wordRead.length + 1} value={wordRead.join("")} readOnly/>
           <input type="text" size={wordRemaining.length + 1} value={"→" + wordRemaining.join("")} readOnly/>
-          <button onClick={() => stopSimulation()} hidden={automatonCore == null}>stopni simulaciu</button> <br/>
+          <button onClick={() => stopSimulation()} hidden={automatonCore === null}>stopni simulaciu</button> <br/>
           <button onClick={prevStep}>predchadzajuci krok</button>
           <button onClick={nextStep}>dalsi krok</button> <br />
           autoplay

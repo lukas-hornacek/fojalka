@@ -36,7 +36,7 @@ export interface IAutomatonCore {
 
   // run functions
   containsWord: (word: string[]) => boolean;
-  runStart: (word: string[]) => void;
+  runStart: (word: string[]) => IErrorMessage | undefined;
   runNext: () => IErrorMessage | undefined;
   runUndo: () => IErrorMessage | undefined;
   runEnd: () => IErrorMessage | undefined;
