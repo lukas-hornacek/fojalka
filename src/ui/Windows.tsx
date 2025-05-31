@@ -1,12 +1,11 @@
 import { useContext } from "react";
-import { Kind, ObjectType } from "../core/core";
+import { ICoreType, Kind } from "../core/core";
 import { CoreContext } from "../core/CoreContext";
 import AutomatonWindow from "./AutomatonWindow";
 import GrammarRepresentation from "./components/grammar-window/GrammarRepresentation";
 import GrammarWindow from "./components/grammar-window/GrammarWindow";
-import { GrammarType } from "../engine/grammar/grammar";
 
-export default function Windows({ primaryType, secondaryType }: { primaryType: ObjectType, secondaryType: ObjectType | undefined }) {
+export default function Windows({ primaryType, secondaryType }: { primaryType: ICoreType, secondaryType: ICoreType | undefined }) {
   const core = useContext(CoreContext);
 
   if (!core) {
@@ -17,8 +16,7 @@ export default function Windows({ primaryType, secondaryType }: { primaryType: O
     return (
       <div id="cy-window" className="d-flex flex-row">
         <div className="col-12">
-          {primaryType === ObjectType.AUTOMATON_FINITE ? <AutomatonWindow primary={true} /> :
-            <GrammarWindow grammarType={secondaryType === ObjectType.GRAMMAR_REGULAR ? GrammarType.REGULAR : GrammarType.CONTEXT_FREE} />}
+          {primaryType.kind === Kind.AUTOMATON ? <AutomatonWindow primary={true} /> : <GrammarWindow />}
         </div>
       </div>
     );
@@ -26,11 +24,11 @@ export default function Windows({ primaryType, secondaryType }: { primaryType: O
     return (
       <div id="cy-window" className="d-flex flex-row">
         <div className="col-6">
-          {primaryType === ObjectType.AUTOMATON_FINITE ? <AutomatonWindow primary={true} /> :
-            <GrammarWindow grammarType={secondaryType === ObjectType.GRAMMAR_REGULAR ? GrammarType.REGULAR : GrammarType.CONTEXT_FREE} />}
+          {primaryType.kind === Kind.AUTOMATON ? <AutomatonWindow primary={true} /> :
+            <GrammarWindow />}
         </div>
         <div className="col-6">
-          {secondaryType === ObjectType.AUTOMATON_FINITE ? <AutomatonWindow primary={true} /> :
+          {secondaryType.kind === Kind.AUTOMATON ? <AutomatonWindow primary={true} /> :
             <GrammarRepresentation grammarRepr={core.secondary?.kind === Kind.GRAMMAR ? core.secondary.display() : ""} />}
         </div>
       </div>

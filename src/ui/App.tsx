@@ -3,7 +3,7 @@ import { CoreContext } from "../core/CoreContext";
 import Buttons from "./Buttons.tsx";
 import Windows from "./Windows.tsx";
 import { useContext, useState } from "react";
-import { Mode, ObjectType } from "../core/core.ts";
+import { ICoreType, Mode } from "../core/core.ts";
 
 export default function App() {
   const core = useContext(CoreContext);
@@ -12,9 +12,9 @@ export default function App() {
     throw new Error("SwitchModeButtons must be used within a CoreProvider");
   }
 
-  const [mode, setMode] = useState<Mode>(Mode.EDIT);
-  const [primaryType, setPrimaryType] = useState<ObjectType>(ObjectType.AUTOMATON_FINITE);
-  const [secondaryType, setSecondaryType] = useState<ObjectType | undefined>(undefined);
+  const [mode, setMode] = useState<Mode>(core.mode.mode);
+  const [primaryType, setPrimaryType] = useState<ICoreType>(core.primary);
+  const [secondaryType, setSecondaryType] = useState<ICoreType | undefined>(core.secondary);
 
   core.setMode = setMode;
   core.setPrimaryType = setPrimaryType;

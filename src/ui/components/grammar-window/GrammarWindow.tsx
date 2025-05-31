@@ -1,78 +1,93 @@
-import React, { useState } from "react";
-import { GrammarCore } from "../../../core/grammarCore.ts";
-import { GrammarType } from "../../../engine/grammar/grammar.ts";
-import { ModeHolder } from "../../../core/core.ts";
+import React, { useContext, useEffect, useState } from "react";
+import { Kind } from "../../../core/core.ts";
 import GrammarRepresentation from "./GrammarRepresentation";
 import "./styles.css";
+import { CoreContext } from "../../../core/CoreContext.tsx";
 
 interface ProductionRule {
   input: string;
   output: string[];
 }
 
-interface GrammarWindowProps {
-  grammarType: GrammarType;
-}
+export const GrammarWindow: React.FC<object> = () => {
+  const core = useContext(CoreContext);
 
-export const GrammarWindow: React.FC<GrammarWindowProps> = ({ grammarType }) => {
-  // TODO Do not take grammarType from props, but from the Context instead
-  const grammarCoreRef = React.useRef(new GrammarCore(grammarType, new ModeHolder()));
-  const [nonTerminals, setNonTerminals] = useState<string[]>(["σ"]);
-  const [terminals, setTerminals] = useState<string[]>([]);
-  const [rules, setRules] = useState<ProductionRule[]>([]);
+  if (core === undefined) {
+    throw new Error("GrammarWindow must be used within a CoreProvider");
+  }
+
+  const grammar = core.primary;
+
+  if (grammar.kind !== Kind.GRAMMAR) {
+    throw new Error("GrammarWindow must be used with GrammarCore");
+  }
+
+  const [nonTerminals, setNonTerminals] = useState<string[]>(grammar.grammar.nonTerminalSymbols);
+  const [terminals, setTerminals] = useState<string[]>(grammar.grammar.terminalSymbols);
+  const [rules, setRules] = useState<ProductionRule[]>(grammar.grammar.productionRules.map(rule => ({ input: rule.inputNonTerminal, output: rule.outputSymbols })));
   const [newRule, setNewRule] = useState({ input: "", output: "" });
   const [newNonTerminal, setNewNonTerminal] = useState("");
   const [newTerminal, setNewTerminal] = useState("");
 
-  const [grammarRepr, setGrammarRepr] = useState<React.ReactNode>();
+  const [grammarRepr, setGrammarRepr] = useState<React.ReactNode>(grammar.display());
+
+  useEffect(() => {
+    setNonTerminals(grammar.grammar.nonTerminalSymbols);
+    setTerminals(grammar.grammar.terminalSymbols);
+    setRules(grammar.grammar.productionRules.map(rule => ({ input: rule.inputNonTerminal, output: rule.outputSymbols })));
+    setNewRule({ input: "", output: "" });
+    setNewNonTerminal("");
+    setNewTerminal("");
+    setGrammarRepr(grammar.display());
+  }, [grammar]);
 
   // This method has to be called everytime a change is made to the grammar (to obtain the updated string repr.)
   const refreshRepr = () => {
-    const newRepr = grammarCoreRef.current.visual.display();
+    const newRepr = grammar.display();
     setGrammarRepr(newRepr);
   };
 
   const handleAddNonTerminal = () => {
-    const maybeError = grammarCoreRef.current.addNonterminals([newNonTerminal]);
+    const maybeError = grammar.addNonterminals([newNonTerminal]);
     if (maybeError) {
       alert(maybeError.details);
       return;
     }
-    setNonTerminals(prev => [...prev, newNonTerminal]);
+    setNonTerminals(grammar.grammar.nonTerminalSymbols);
     setNewNonTerminal("");
     refreshRepr();
   };
 
   const handleDeleteNonTerminal = (index: number) => {
     const nonTerminal = nonTerminals[index];
-    const maybeError = grammarCoreRef.current.removeNonterminal(nonTerminal);
+    const maybeError = grammar.removeNonterminal(nonTerminal);
     if (maybeError) {
       alert(maybeError.details);
       return;
     }
-    setNonTerminals(prev => [...prev.slice(0, index), ...prev.slice(index + 1)]);
+    setNonTerminals(grammar.grammar.nonTerminalSymbols);
     refreshRepr();
   };
 
   const handleAddTerminal = () => {
-    const maybeError = grammarCoreRef.current.addTerminals([newTerminal]);
+    const maybeError = grammar.addTerminals([newTerminal]);
     if (maybeError) {
       alert(maybeError.details);
       return;
     }
-    setTerminals(prev => [...prev, newTerminal]);
+    setTerminals(grammar.grammar.terminalSymbols);
     setNewTerminal("");
     refreshRepr();
   };
 
   const handleDeleteTerminal = (index: number) => {
     const terminal = terminals[index];
-    const maybeError = grammarCoreRef.current.removeTerminal(terminal);
+    const maybeError = grammar.removeTerminal(terminal);
     if (maybeError) {
       alert(maybeError.details);
       return;
     }
-    setTerminals(prev => [...prev.slice(0, index), ...prev.slice(index + 1)]);
+    setTerminals(grammar.grammar.terminalSymbols);
     refreshRepr();
   };
 
@@ -84,28 +99,27 @@ export const GrammarWindow: React.FC<GrammarWindowProps> = ({ grammarType }) => 
       return;
     }
 
-    const maybeError = grammarCoreRef.current.addProductionRule(input, outputArr);
+    const maybeError = grammar.addProductionRule(input, outputArr);
     if (maybeError) {
       alert(maybeError.details);
       return;
     }
-    const rule = { input, output: outputArr };
-    setRules([...rules, rule]);
+    setRules(grammar.grammar.productionRules.map(rule => ({ input: rule.inputNonTerminal, output: rule.outputSymbols })));
     refreshRepr();
     setNewRule({ input: "", output: "" });
   };
 
   const handleDeleteRule = (index: number) => {
-    const ruleId = grammarCoreRef.current.visual.getRuleIdByIndex(index);
+    const ruleId = grammar.visual.getRuleIdByIndex(index);
     if (ruleId === undefined) {
       alert("Trying to remove non-existent rule");
     }
-    const maybeError = grammarCoreRef.current.removeProductionRule(ruleId as string);
+    const maybeError = grammar.removeProductionRule(ruleId as string);
     if (maybeError) {
       alert(maybeError.details);
       return;
     }
-    setRules(prev => [...prev.slice(0, index), ...prev.slice(index + 1)]);
+    setRules(grammar.grammar.productionRules.map(rule => ({ input: rule.inputNonTerminal, output: rule.outputSymbols })));
     refreshRepr();
   };
 

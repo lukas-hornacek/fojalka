@@ -58,8 +58,8 @@ export interface ICore {
 
   // these are set once and then used only internally to trigger changes in UI
   setMode?: React.Dispatch<React.SetStateAction<Mode>>
-  setPrimaryType?: React.Dispatch<React.SetStateAction<ObjectType>>
-  setSecondaryType?: React.Dispatch<React.SetStateAction<ObjectType | undefined>>;
+  setPrimaryType?: React.Dispatch<React.SetStateAction<ICoreType>>
+  setSecondaryType?: React.Dispatch<React.SetStateAction<ICoreType | undefined>>;
 }
 
 // component that holds global state and Grammar/Automaton cores
@@ -73,8 +73,8 @@ export class Core implements ICore {
   algorithm?: IAlgorithm;
 
   setMode?: React.Dispatch<React.SetStateAction<Mode>>;
-  setPrimaryType?: React.Dispatch<React.SetStateAction<ObjectType>>;
-  setSecondaryType?: React.Dispatch<React.SetStateAction<ObjectType | undefined>>;
+  setPrimaryType?: React.Dispatch<React.SetStateAction<ICoreType>>;
+  setSecondaryType?: React.Dispatch<React.SetStateAction<ICoreType | undefined>>;
 
   constructor() {
     this.mode = new ModeHolder();
@@ -90,16 +90,16 @@ export class Core implements ICore {
       }
     } else {
       this.primary = new GrammarCore(type === ObjectType.GRAMMAR_REGULAR ? GrammarType.REGULAR : GrammarType.CONTEXT_FREE, this.mode);
-    }
-    this.setPrimaryType?.(type);
 
-    // TODO correctly stop any running algorithm/simulation
+    }
+    this.setPrimaryType?.(this.primary);
+
     if (this.mode.mode === Mode.VISUAL) {
       this.switchToEditMode(false);
     }
   };
 
-  // TODO this needs to stop any running algorith/simulation
+  // TODO test if this correctly stops any running algorith/simulation
   switchToEditMode(keepSecondary: boolean) {
     if (this.mode.mode === Mode.EDIT) {
       return new ErrorMessage("Cannot switch to edit mode when already in edit mode.");
@@ -221,11 +221,7 @@ export class Core implements ICore {
     }
     this.secondary = undefined;
     this.algorithm = undefined;
-    if (this.primary.kind === Kind.AUTOMATON) {
-      this.setPrimaryType?.(ObjectType.AUTOMATON_FINITE);
-    } else {
-      this.setPrimaryType?.(this.primary.grammar.grammarType === GrammarType.REGULAR ? ObjectType.GRAMMAR_REGULAR : ObjectType.GRAMMAR_PHRASAL);
-    }
+    this.setPrimaryType?.(this.primary);
     this.setSecondaryType?.(undefined);
   }
 
