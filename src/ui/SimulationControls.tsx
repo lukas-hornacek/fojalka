@@ -2,13 +2,14 @@ import { useContext, useState, useRef, useEffect } from "react";
 import { CoreContext } from "../core/CoreContext";
 import { IAutomatonCore } from "../core/automatonCore";
 import { Kind, Mode } from "../core/core";
+import { EPSILON } from "../constants";
 
 export default function VisualWindows() {
   const coreContext = useContext(CoreContext);
   // used temporary as for state change signalization
   const [automatonCore, setAutomatonCore] = useState<IAutomatonCore | null>(null);
 
-  const [simulationWord, setSimulationWord] = useState("aabc");
+  const [simulationWord, setSimulationWord] = useState("");
   const [wordRead, setWordRead] = useState<string[]>([]);
   const [wordRemaining, setWordRemaining] = useState<string[]>([]);
   const [steppping, setStepping] = useState(false);
@@ -146,7 +147,7 @@ export default function VisualWindows() {
             type="text"
             value={simulationWord}
             onChange={w => setSimulationWord(w.target.value)}
-            placeholder="ababba"
+            placeholder={EPSILON}
             disabled={automatonCore !== null}
           />
           <button onClick={startSimulation}>Simuluj slovo</button> <br />
