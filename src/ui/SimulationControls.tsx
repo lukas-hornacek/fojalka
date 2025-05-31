@@ -8,21 +8,19 @@ export default function VisualWindows() {
   // used temporary as for state change signalization
   const [automatonCore, setAutomatonCore] = useState<IAutomatonCore | null>(null);
 
-  const [simulationWord, setSimulationWord] = useState("aa");
+  const [simulationWord, setSimulationWord] = useState("aabc");
   const [simulationWordPos, setSimulationWordPos] = useState(0);
   const [wordRead, setWordRead] = useState<string[]>([]);
   const [wordRemaining, setWordRemaining] = useState<string[]>([]);
+  const [steppping, setStepping] = useState(false);
+  const [stepInterval, setStepInterval] = useState<number>(1.0);
 
-  const [errorMessage, setErrorMessage] = useState<IErrorMessage | undefined>(undefined);
-
-  function clearAll() {
-    setErrorMessage(undefined);
-  }
-
-  const startSimulation = (word: string[]) => {
+  const startSimulation = () => {
     if (coreContext == undefined) {
       return;
     }
+
+    const word = simulationWord.split("");
 
     const core = coreContext.primary;
     if (core.kind == Kind.AUTOMATON) {
@@ -44,45 +42,74 @@ export default function VisualWindows() {
       setSimulationWordPos(0);
       setWordRemaining([]);
       setWordRead([]);
+      stopTimer();
     }
   };
 
-  function nextStep() {
+  // returns wether succeded
+  function nextStep(): boolean {
     if (automatonCore == null) {
-      return;
+      return false;
     }
 
-    setErrorMessage(undefined);
     const error = automatonCore.runNext();
     if (error) {
       if (error.details === "Input end reached") {
         alert("Si na konci slova!");
+      } else {
+        console.log(error);
       }
-      return;
+      return false;
     }
 
     setWordRead(Array.prototype.concat(wordRead, wordRemaining[0]));
     setWordRemaining(wordRemaining.slice(1));
     setSimulationWordPos(simulationWordPos + 1);
+
+    console.log(Array.prototype.concat(wordRead, wordRemaining[0]), wordRemaining.slice(1));
+
+    return true;
   }
+
   function prevStep() {
     if (automatonCore == null) {
-      return;
+      return false;
     }
 
-    setErrorMessage(undefined);
     const error = automatonCore.runUndo();
     if (error) {
       if (error.details === "Cannot undo because command history is empty.") {
         alert("Si na začiatku slova!");
+      } else {
+        console.log(error);
       }
-      return;
+      return false;
     }
 
-    setWordRemaining(Array.prototype.concat(wordRemaining, wordRead[0]));
+    setWordRemaining(Array.prototype.concat(wordRead[0], wordRemaining));
     setWordRead(wordRead.slice(1));
     setSimulationWordPos(simulationWordPos - 1);
+
+    return true;
   }
+
+  const [timeInterval, setTimeInterval] = useState<number | undefined>(undefined);
+
+  // Function to start the timer
+  const startTimer = () => {
+    setStepping(true);
+    setTimeInterval(setInterval(() => {
+      if (!nextStep()) {
+        stopTimer();
+      }
+    }, stepInterval * 1000));
+  };
+
+  // Function to pause the timer
+  const stopTimer = () => {
+    setStepping(false);
+    clearInterval(timeInterval);
+  };
 
   return (
     <>
@@ -97,18 +124,20 @@ export default function VisualWindows() {
             placeholder="ababba"
             disabled={automatonCore !== null}
           />
-          <button onClick={() => { startSimulation(simulationWord.split("")); clearAll(); }}>Simuluj slovo</button> <br />
+          <button onClick={startSimulation}>Simuluj slovo</button> <br />
         </div>
         <div hidden={automatonCore === null}>
           čítané slovo:
           <input type="text" size={wordRead.length + 1} value={wordRead.join("")} readOnly/>
           <input type="text" size={wordRemaining.length + 1} value={"→" + wordRemaining.join("")} readOnly/>
-          <button onClick={() => { stopSimulation(); setErrorMessage(undefined); }} hidden={automatonCore == null}>stopni simulaciu</button> <br/>
+          <button onClick={() => stopSimulation()} hidden={automatonCore == null}>stopni simulaciu</button> <br/>
           <button onClick={prevStep}>predchadzajuci krok</button>
           <button onClick={nextStep}>dalsi krok</button> <br />
-          <div hidden={errorMessage === undefined}>
-            {errorMessage?.details}
+          autoplay
+          <div hidden={steppping}>
+            <button onClick={startTimer}>&#x23F5;</button> | rýchlosť<input type="number" min={0.1} max={2.0} step={0.1} value={stepInterval} onChange={v => setStepInterval(Number(v.target.value))}/>
           </div>
+          <button onClick={stopTimer} hidden={!steppping}>&#x23F8;</button>
         </div>
       </div>
     </>
