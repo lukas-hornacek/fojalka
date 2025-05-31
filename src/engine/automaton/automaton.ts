@@ -1,7 +1,7 @@
 import { EPSILON, INITIAL_STACK_SYMBOL } from "../../constants.ts";
 import { ErrorMessage, IErrorMessage } from "../common.ts";
 import { AutomatonEditCommand } from "./commands/edit.ts";
-import { FiniteConfiguration, PDAConfiguration } from "./configuration.ts";
+import { FiniteConfiguration, NFAConfiguration, PDAConfiguration } from "./configuration.ts";
 import { FiniteAutomatonEdge, IEdge, PDAEdge } from "./edge.ts";
 import { IAutomatonSimulation, AutomatonSimulation } from "./simulation.ts";
 import { cloneDeep } from "lodash";
@@ -189,22 +189,28 @@ export class Automaton implements IAutomaton {
   }
 
   createRunSimulation(word: string[]): IAutomatonSimulation {
-    // TODO
-    // const det = this.isDeterministic();
-    // if (det) {
-    switch (this.automatonType) {
-      case AutomatonType.FINITE:
-        return new AutomatonSimulation(this, new FiniteConfiguration(this.initialStateId, word));
-      case AutomatonType.PDA:
-        return new AutomatonSimulation(this, new PDAConfiguration(this.initialStateId, word, [INITIAL_STACK_SYMBOL]));
-      case AutomatonType.TURING:
-        // TODO
-        throw new Error("Not implemented.");
+    const det = this.isDeterministic();
+    if (det) {
+      switch (this.automatonType) {
+        case AutomatonType.FINITE:
+          return new AutomatonSimulation(this, new FiniteConfiguration(this.initialStateId, word));
+        case AutomatonType.PDA:
+          return new AutomatonSimulation(this, new PDAConfiguration(this.initialStateId, word, [INITIAL_STACK_SYMBOL]));
+        case AutomatonType.TURING:
+          throw new Error("Not implemented.");
+      }
     }
-    // }
-    // else {
-    //  as above, but with nonDeterministic configurations
-    //}
+    else {
+      switch (this.automatonType) {
+        case AutomatonType.FINITE:
+          return new AutomatonSimulation(this, new NFAConfiguration(this.initialStateId, word));
+        case AutomatonType.PDA:
+          // TODO
+          throw new Error("Not implemented.");
+        case AutomatonType.TURING:
+          throw new Error("Not implemented.");
+      }
+    }
   }
 }
 
