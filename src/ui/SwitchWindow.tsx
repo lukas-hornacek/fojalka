@@ -4,6 +4,8 @@ import { Kind, Mode } from "../core/core";
 
 export default function ToggleWindow() {
   const coreContext = useContext(CoreContext);
+
+  // this method contains temporary automaton creation, which helps testing by reducing time needed to recreate automata
   const switchMode = () => {
     if (coreContext == undefined) {
       return;

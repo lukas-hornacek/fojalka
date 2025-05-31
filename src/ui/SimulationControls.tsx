@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useRef, useEffect } from "react";
 import { CoreContext } from "../core/CoreContext";
 import { IAutomatonCore } from "../core/automatonCore";
 import { Kind, Mode } from "../core/core";
@@ -9,7 +9,6 @@ export default function VisualWindows() {
   const [automatonCore, setAutomatonCore] = useState<IAutomatonCore | null>(null);
 
   const [simulationWord, setSimulationWord] = useState("aabc");
-  const [simulationWordPos, setSimulationWordPos] = useState(0);
   const [wordRead, setWordRead] = useState<string[]>([]);
   const [wordRemaining, setWordRemaining] = useState<string[]>([]);
   const [steppping, setStepping] = useState(false);
@@ -26,7 +25,6 @@ export default function VisualWindows() {
     if (core.kind == Kind.AUTOMATON) {
       core.runStart(word);
       setAutomatonCore(core);
-      setSimulationWordPos(0);
       setWordRemaining(word);
       setWordRead([]);
     }
@@ -39,7 +37,6 @@ export default function VisualWindows() {
     if (core.kind == Kind.AUTOMATON) {
       core.runEnd();
       setAutomatonCore(null);
-      setSimulationWordPos(0);
       setWordRemaining([]);
       setWordRead([]);
       stopTimer();
@@ -54,19 +51,12 @@ export default function VisualWindows() {
 
     const error = automatonCore.runNext();
     if (error) {
-      if (error.details === "Input end reached") {
-        alert("Si na konci slova!");
-      } else {
-        console.log(error);
-      }
+      alert(error.details);
       return false;
     }
 
-    setWordRead(Array.prototype.concat(wordRead, wordRemaining[0]));
-    setWordRemaining(wordRemaining.slice(1));
-    setSimulationWordPos(simulationWordPos + 1);
-
-    console.log(Array.prototype.concat(wordRead, wordRemaining[0]), wordRemaining.slice(1));
+    setWordRead(prev => [...prev, wordRemaining[0]]);
+    setWordRemaining(prev => prev.slice(1));
 
     return true;
   }
@@ -78,38 +68,40 @@ export default function VisualWindows() {
 
     const error = automatonCore.runUndo();
     if (error) {
-      if (error.details === "Cannot undo because command history is empty.") {
-        alert("Si na začiatku slova!");
-      } else {
-        console.log(error);
-      }
+      alert(error.details);
       return false;
     }
 
-    setWordRemaining(Array.prototype.concat(wordRead[0], wordRemaining));
-    setWordRead(wordRead.slice(1));
-    setSimulationWordPos(simulationWordPos - 1);
+    setWordRemaining(prev => [wordRead[0], ...prev]);
+    setWordRead(prev => prev.slice(1));
 
     return true;
   }
 
-  const [timeInterval, setTimeInterval] = useState<number | undefined>(undefined);
-
-  // Function to start the timer
+  const intervalRef = useRef<number | null>(null);
   const startTimer = () => {
     setStepping(true);
-    setTimeInterval(setInterval(() => {
-      if (!nextStep()) {
-        stopTimer();
-      }
-    }, stepInterval * 1000));
+    if (intervalRef.current === null) { // prevent multiple intervals
+      intervalRef.current = window.setInterval(() => {
+        if (!nextStep()) {
+          stopTimer();
+        }
+      }, stepInterval * 1000);
+    }
   };
-
-  // Function to pause the timer
   const stopTimer = () => {
     setStepping(false);
-    clearInterval(timeInterval);
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   };
+  // Cleanup timer on unmount to avoid dangling timers
+  useEffect(() => () => {
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+    }
+  }, []);
 
   return (
     <>
