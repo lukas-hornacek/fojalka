@@ -46,9 +46,13 @@ export class AutomatonVisual implements IAutomatonVisual {
   cy?: cytoscape.Core;
   initialJSON?: object;
   initialState: string = "";
-  initialStatePosition: { x: number; y: number } = {x: 0, y: 0};
+  initialStatePosition: { x: number; y: number } = { x: 0, y: 0 };
 
-  constructor(id: string, initialState: string, initialStatePosition: { x: number; y: number }) {
+  constructor(
+    id: string,
+    initialState: string,
+    initialStatePosition: { x: number; y: number }
+  ) {
     this.id = id;
     this.initialState = initialState;
     this.initialStatePosition = initialStatePosition;
@@ -61,10 +65,10 @@ export class AutomatonVisual implements IAutomatonVisual {
       container: document.getElementById(this.id),
       elements: [
         {
-    group: 'nodes',
-    data: { id: this.initialState },
-    position: this.initialStatePosition,
-}
+          group: "nodes",
+          data: { id: this.initialState },
+          position: this.initialStatePosition,
+        },
       ],
       style: [
         {
@@ -146,9 +150,26 @@ export class AutomatonVisual implements IAutomatonVisual {
     this.cy?.remove(`node#${id}`);
   }
 
-  // TODO
   renameNode(id: string, newId: string) {
-    console.log(id, newId);
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
+
+    // cytoscape sent me to go frick myself when I attempted to change ID
+    // so I'll just yoink the json of the elements, manually change the ID everywhere and put it back in
+    // just fuckin' brute-force the shit out of it
+    const newJSON: any = this.cy?.json();
+
+    newJSON!.elements.nodes = newJSON!.elements.nodes?.map((n: any) =>
+      n.data.id === id ? { ...n, data: { ...n.data, id: newId } } : n
+    );
+    newJSON!.elements.edges = newJSON!.elements.edges?.map((e: any) =>
+      e.data.source === id ? { ...e, data: { ...e.data, source: newId } } : e
+    ) ?? undefined;
+    newJSON!.elements.edges = newJSON!.elements.edges?.map((e: any) =>
+      e.data.target === id ? { ...e, data: { ...e.data, target: newId } } : e
+    ) ?? undefined;
+
+    this.cy?.remove("*");
+    this.cy?.json(newJSON);
   }
 
   // TODO

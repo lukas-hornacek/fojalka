@@ -130,7 +130,7 @@ export class AutomatonCore implements IAutomatonCore {
   static fromSavedJSON(savedAutomatonString: string): AutomatonCore {
     const imported: SavedAutomaton = JSON.parse(savedAutomatonString);
 
-    console.log(`Parsed text: `);
+    console.log("Parsed text: ");
     console.log(imported);
 
     const newAutomatonCore = new AutomatonCore(
@@ -166,8 +166,8 @@ export class AutomatonCore implements IAutomatonCore {
               automatonCore.addEdge(from, to, {
                 id: "",
                 inputChar: imported.automaton.deltaFunctionMatrix[from][
-              to
-            ][edge].inputChar,
+                  to
+                ][edge].inputChar,
               });
 
               console.log(`from: ${from}, to: ${to}, edge: ${edge}`);

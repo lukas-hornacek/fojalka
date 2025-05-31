@@ -1,11 +1,12 @@
-import { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
+import { createContext, ReactNode, useEffect, useRef, useState } from "react";
 import { Core, ICore, Kind, ModeHolder } from "../core/core";
 import ReactModal, { Styles } from "react-modal";
 import Mousetrap from "mousetrap";
-import { exportAutomaton, SavedAutomaton } from "./importExport";
+import { exportAutomaton } from "./importExport";
 import { AutomatonCore } from "../core/automatonCore";
 import { AutomatonType } from "../engine/automaton/automaton";
-import { PRIMARY_CYTOSCAPE_ID } from "../constants";
+import { INITIAL_STATE, PRIMARY_CYTOSCAPE_ID } from "../constants";
+import NodeEditables from "./NodeEditables";
 
 ReactModal.setAppElement("#root");
 
@@ -31,17 +32,31 @@ interface Props {
   children: ReactNode;
 }
 
-// buttons for testing interaction between UI and Core
-export default function EditButtons( {children}: Props ) {
-  const [coreState, setCoreState] = useState<ICore>(new Core(new AutomatonCore(AutomatonType.FINITE, PRIMARY_CYTOSCAPE_ID, new ModeHolder())));
+export default function EditButtons({ children }: Props) {
+  // the core is here, in this little state
+  const [coreState, setCoreState] = useState<ICore>(
+    new Core(
+      new AutomatonCore(
+        AutomatonType.FINITE,
+        PRIMARY_CYTOSCAPE_ID,
+        new ModeHolder(),
+        INITIAL_STATE,
+        { x: 0, y: 0 },
+        (automatonCore) => {
+          automatonCore.getCytoscape()!.on("tap", "node", clickNodeHandler);
+          automatonCore.getCytoscape()!.on("tap", "edge", clickEdgeHandler);
+          automatonCore.getCytoscape()!.on("tap", clickElsewhereHandler);
+        }
+      )
+    )
+  );
 
   const [isVisibleModal, setIsStateModal] = useState<boolean>(false);
   const [mode, setMode] = useState<mode>("none");
+  const [selectedId, setSelectedId] = useState<string>("");
 
-  /* const id = useRef(""); */
   const from = useRef("");
   const to = useRef("");
-  /*   const char = useRef(""); */
 
   const clickPosition = useRef<cytoscape.Position>({ x: 0, y: 0 });
 
@@ -70,6 +85,15 @@ export default function EditButtons( {children}: Props ) {
   });
 
   // handlers
+  const clickNodeHandler = (e: cytoscape.EventObject) => {
+    setSelectedId(e.target.id());
+    console.log("node edit click:", e.target.id());
+  };
+
+  const clickEdgeHandler = (e: cytoscape.EventObject) => {
+    console.log("edge edit click:", e.target.data());
+  };
+
   const addNodeHandler = (e: cytoscape.EventObject) => {
     if (e.target.id == null) {
       // we don't want to create two nodes on top of each other
@@ -98,6 +122,7 @@ export default function EditButtons( {children}: Props ) {
     if (e.target.id == null) {
       console.log("clicked elsewhere");
       from.current = "";
+      setSelectedId("");
     }
   };
 
@@ -120,6 +145,9 @@ export default function EditButtons( {children}: Props ) {
       case "none":
         if (cy != null) {
           cy.removeListener("tap");
+          cy.on("tap", "node", clickNodeHandler);
+          cy.on("tap", "edge", clickEdgeHandler);
+          cy!.on("tap", clickElsewhereHandler);
         }
         return;
     }
@@ -264,6 +292,30 @@ export default function EditButtons( {children}: Props ) {
     }
   }
 
+  function formEditState(formData: FormData) {
+    const core = coreState.primary;
+
+    switch (core.kind) {
+      case Kind.AUTOMATON: {
+        const e = core.renameState(selectedId,
+          formData.get("state-name")?.toString() || selectedId
+        );
+
+        if (e !== undefined) {
+          console.error(e.details);
+          alert(`Error: ${e.details}`);
+        } else {
+          console.log("state renamed successfuly");
+          closeModal();
+        }
+        break;
+      }
+      case Kind.GRAMMAR:
+        console.error("Cannot edit state in grammar.");
+        break;
+    }
+  }
+
   function formAddEdge(formData: FormData) {
     const core = coreState.primary;
 
@@ -337,27 +389,39 @@ export default function EditButtons( {children}: Props ) {
               Export
             </button>
 
-            <button type="button" id="import-button" onClick={() => {
-              // open file select dialog
-              document.getElementById("file-input")?.click();
-            }}>
+            <button
+              type="button"
+              id="import-button"
+              onClick={() => {
+                // open file select dialog
+                document.getElementById("file-input")?.click();
+              }}
+            >
               Import
             </button>
-            <input type="file" id="file-input" style={{display: "none"}} onChange={(e) => {
-              console.log("file changed")
-              const files = e.target.files;
-              if (files?.length !== 1) {
-                alert("Select exactly one input file");
-                return;
-              }
+            <input
+              type="file"
+              id="file-input"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                console.log("file changed");
+                const files = e.target.files;
+                if (files?.length !== 1) {
+                  alert("Select exactly one input file");
+                  return;
+                }
 
-              const file = files[0];
-              file.text().then(text => {              
-                const newAutomatonCore = AutomatonCore.fromSavedJSON(text);
-                setCoreState(new Core(newAutomatonCore));               
-              })
-            }}/>
+                const file = files[0];
+                file.text().then((text) => {
+                  const newAutomatonCore = AutomatonCore.fromSavedJSON(text);
+                  setCoreState(new Core(newAutomatonCore));
+                });
+              }}
+            />
           </div>
+          { selectedId !== "" && <div>
+            <NodeEditables id={selectedId} formAction={formEditState} />
+          </div> }
         </div>
       </div>
 
