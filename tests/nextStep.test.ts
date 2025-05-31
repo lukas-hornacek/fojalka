@@ -160,8 +160,8 @@ test ("non-deterministic PDA nextStep test", () => {
   const a1 = new Automaton({
     states: ["q0", "q1"],
     deltaFunctionMatrix: {
-      "q0":{ "q1":[new PDAEdge("1", "a", "a", ["a"]), new PDAEdge("2", EPSILON, INITIAL_STACK_SYMBOL,
-        [INITIAL_STACK_SYMBOL, "a"])], "q0":[new PDAEdge("3", "a", INITIAL_STACK_SYMBOL, ["a"])] },
+      "q0":{ "q1":[new PDAEdge("1", "a", INITIAL_STACK_SYMBOL, ["a"]), new PDAEdge("2", EPSILON, INITIAL_STACK_SYMBOL,
+        [INITIAL_STACK_SYMBOL, "a"])], "q0":[new PDAEdge("3", "a", "a", ["a"])] },
       "q1":{}
     },
     automatonType: AutomatonType.PDA,
