@@ -18,6 +18,7 @@ export default function SimulationButton({ buttonSet, setButtonSet }: { buttonSe
   const [simulationWord, setSimulationWord] = useState("");
   const [wordRead, setWordRead] = useState<string[]>([]);
   const [wordRemaining, setWordRemaining] = useState<string[]>([]);
+  const [originalWord, setOriginalWord] = useState<string[]>([]);
   const [steppping, setStepping] = useState(false);
   const [stepInterval, setStepInterval] = useState<number>(1.0);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -70,7 +71,7 @@ export default function SimulationButton({ buttonSet, setButtonSet }: { buttonSe
     }
 
     setButtonSet(Running.SIMULATION);
-    // TODO getRemainingInput()
+    setOriginalWord(word);
     setWordRemaining(word);
     setWordRead([]);
   };
@@ -88,7 +89,6 @@ export default function SimulationButton({ buttonSet, setButtonSet }: { buttonSe
     stopTimer();
   };
 
-  // returns wether succeded
   function nextStep(): boolean {
     if (core.kind !== Kind.AUTOMATON) {
       return false;
@@ -105,15 +105,15 @@ export default function SimulationButton({ buttonSet, setButtonSet }: { buttonSe
       return false;
     }
 
-    if (wordRemaining.length != newRemaining.length) {
-      setWordRead(prev => [...prev, wordRemaining[0]]);
-      setWordRemaining(prev => prev.slice(1));
-    }
+    const readCount = originalWord.length - newRemaining.length;
+    const newRead = originalWord.slice(0, readCount);
+    setWordRead(newRead);
+    setWordRemaining(newRemaining);
 
     return true;
   }
 
-  function prevStep() {
+  function prevStep(): boolean {
     if (core.kind !== Kind.AUTOMATON) {
       return false;
     }
@@ -127,10 +127,10 @@ export default function SimulationButton({ buttonSet, setButtonSet }: { buttonSe
     const newRemaining = core.getRemainingInput();
     if (!newRemaining) { return false; }
 
-    if (wordRemaining.length != newRemaining.length) {
-      setWordRemaining(prev => [wordRead[0], ...prev]);
-      setWordRead(prev => prev.slice(1));
-    }
+    const readCount = originalWord.length - newRemaining.length;
+    const newRead = originalWord.slice(0, readCount);
+    setWordRead(newRead);
+    setWordRemaining(newRemaining);
 
     return true;
   }
