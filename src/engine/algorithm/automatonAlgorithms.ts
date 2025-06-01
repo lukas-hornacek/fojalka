@@ -25,9 +25,6 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
     if (this.inputCore.automaton.automatonType !== this.inputType.AutomatonType) {
       throw new Error("Cannot use algorithm, as it only works with finite automata.");
     }
-    if (this.hasEpsilonTransitions()) {
-      throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions.");
-    }
 
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
     this.precomputeResults();
@@ -134,20 +131,6 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
 
     return state1.every(id => state2.includes(id));
   }
-
-  hasEpsilonTransitions(): boolean {
-    const delta = this.inputCore.automaton.deltaFunctionMatrix;
-    for (const fromState in delta) {
-      for (const toState in delta[fromState]) {
-        if (delta[fromState][toState].some(edge => edge.inputChar === EPSILON)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
 }
 
 export class RemoveEpsilonAlgorithm extends Algorithm {
@@ -337,11 +320,28 @@ export class AutomatonToGrammarAlgorithm extends Algorithm {
       throw new Error("Cannot use algorithm, as it only works with finite automata.");
     }
 
+    if (this.hasEpsilonTransitions()) {
+      throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions.");
+    }
+
     this.outputCore = new GrammarCore(GrammarType.REGULAR, mode);
 
     this.precomputeResults();
 
     return this.outputCore;
+  }
+
+  hasEpsilonTransitions(): boolean {
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
+    for (const fromState in delta) {
+      for (const toState in delta[fromState]) {
+        if (delta[fromState][toState].some(edge => edge.inputChar === EPSILON)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   undo() {

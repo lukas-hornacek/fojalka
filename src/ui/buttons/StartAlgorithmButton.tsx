@@ -40,7 +40,11 @@ export function StartGrammarAlgorithmButton({ setButtonSet }: { setButtonSet: Re
   ];
 
   function startAlgorithm(algorithm: IAlgorithm) {
-    core?.algorithmStart(algorithm);
+    const e = core?.algorithmStart(algorithm);
+    if (e !== undefined) {
+      alert(e.details);
+      return;
+    }
     setButtonSet(Running.ALGORITHM);
   }
 
@@ -93,7 +97,11 @@ export function StartAutomatonAlgorithmButton({ setButtonSet }: { setButtonSet: 
   ];
 
   function startAlgorithm(algorithm: IAlgorithm) {
-    core?.algorithmStart(algorithm);
+    const e = core?.algorithmStart(algorithm);
+    if (e !== undefined) {
+      alert(e.details);
+      return;
+    }
     setButtonSet(Running.ALGORITHM);
   }
 
