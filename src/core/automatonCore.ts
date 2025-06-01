@@ -35,11 +35,12 @@ export interface IAutomatonCore {
   undo: () => IErrorMessage | undefined;
 
   // run functions
-  containsWord: (word: string[]) => boolean;
+  containsWord: (word: string[]) => IErrorMessage | boolean;
   runStart: (word: string[]) => IErrorMessage | undefined;
   runNext: () => IErrorMessage | undefined;
   runUndo: () => IErrorMessage | undefined;
   runEnd: () => IErrorMessage | undefined;
+  getRemainingInput: () => string[] | undefined;
 
   simulationInProgress: () => boolean;
   algorithmInProgress: (inProgress: boolean) => void;
@@ -314,6 +315,10 @@ export class AutomatonCore implements IAutomatonCore {
 
     this.visual.clearHighlights();
     this.simulation = undefined;
+  }
+
+  getRemainingInput() : string[] | undefined {
+    return this.simulation?.configuration.remainingInput;
   }
 
   createEdge(edgeProps: IUniversalEdgeProps) {
