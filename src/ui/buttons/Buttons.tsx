@@ -1,9 +1,9 @@
 import { useContext, useState } from "react";
-import { ICoreType, Kind, Mode, ObjectType } from "../core/core";
-import { CoreContext } from "../core/CoreContext";
-import AutomatonEditButtons from "./AutomatonEditButtons";
+import { ICoreType, Kind, Mode, ObjectType } from "../../core/core";
+import { CoreContext } from "../../core/CoreContext";
 import { Button, Form, Modal, ToggleButton, ToggleButtonGroup } from "react-bootstrap";
-import SimulationControls from "./SimulationControls";
+import AutomatonEditButtons from "./AutomatonEditButtons";
+import { AutomatonVisualButtons, GrammarVisualButtons } from "./VisualButtons";
 
 export default function Buttons({ mode, primaryType }: { mode: Mode, primaryType: ICoreType }) {
   const core = useContext(CoreContext);
@@ -17,6 +17,7 @@ export default function Buttons({ mode, primaryType }: { mode: Mode, primaryType
     return (
       <div>
         <GlobalButtons mode={mode} />
+        <hr />
         {primaryType.kind === Kind.AUTOMATON ? <AutomatonEditButtons /> : null}
       </div>
     );
@@ -24,6 +25,7 @@ export default function Buttons({ mode, primaryType }: { mode: Mode, primaryType
     return (
       <div>
         <GlobalButtons mode={mode} />
+        <hr />
         {primaryType.kind === Kind.AUTOMATON ? <AutomatonVisualButtons /> : <GrammarVisualButtons />}
       </div>
     );
@@ -80,10 +82,6 @@ function SwitchModeButtons({ mode }: { mode: Mode }) {
   }
 }
 
-// TODO
-// this should prompt the user to select object type (automaton/grammar + type)
-// then give a warning that this action will delete current windows
-// and finally create new primary window with selected type
 function NewWindowButton() {
   const core = useContext(CoreContext);
   const [show, setShow] = useState(false);
@@ -156,15 +154,4 @@ function ImportExportButtons() {
       <button className="btn btn-primary">Export</button>
     </>
   );
-}
-
-// algorithm, simulation
-// (antonove veci)
-function AutomatonVisualButtons() {
-  return <SimulationControls />;
-}
-
-// algorithm
-function GrammarVisualButtons() {
-  return <></>;
 }

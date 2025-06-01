@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Kind } from "../../../core/core.ts";
+import { Kind, Mode } from "../../../core/core.ts";
 import GrammarRepresentation from "./GrammarRepresentation";
 import "./styles.css";
 import { CoreContext } from "../../../core/CoreContext.tsx";
@@ -9,14 +9,18 @@ interface ProductionRule {
   output: string[];
 }
 
-export const GrammarWindow: React.FC<object> = () => {
+interface GrammarWindowProps {
+  primary: boolean
+}
+
+export const GrammarWindow: React.FC<GrammarWindowProps> = ({ primary }) => {
   const core = useContext(CoreContext);
 
   if (core === undefined) {
     throw new Error("GrammarWindow must be used within a CoreProvider");
   }
 
-  const grammar = core.primary;
+  const grammar = primary ? core.primary : core.secondary!;
 
   if (grammar.kind !== Kind.GRAMMAR) {
     throw new Error("GrammarWindow must be used with GrammarCore");
@@ -30,6 +34,7 @@ export const GrammarWindow: React.FC<object> = () => {
   const [newTerminal, setNewTerminal] = useState("");
 
   const [grammarRepr, setGrammarRepr] = useState<React.ReactNode>(grammar.display());
+  grammar.visual.refresher = setGrammarRepr;
 
   useEffect(() => {
     setNonTerminals(grammar.grammar.nonTerminalSymbols);
@@ -38,8 +43,8 @@ export const GrammarWindow: React.FC<object> = () => {
     setNewRule({ input: "", output: "" });
     setNewNonTerminal("");
     setNewTerminal("");
-    setGrammarRepr(grammar.display());
-  }, [grammar]);
+    setGrammarRepr(grammarRepr);
+  }, [grammar, grammarRepr]);
 
   // This method has to be called everytime a change is made to the grammar (to obtain the updated string repr.)
   const refreshRepr = () => {
@@ -133,18 +138,18 @@ export const GrammarWindow: React.FC<object> = () => {
           {nonTerminals.map((nt, i) =>
             <div key={i} className="list-item">
               <span>{nt}</span>
-              <button onClick={() => handleDeleteNonTerminal(i)} className="delete-btn">✕</button>
+              {core.mode.mode === Mode.EDIT ? <button onClick={() => handleDeleteNonTerminal(i)} className="delete-btn">✕</button> : null}
             </div>
           )}
         </div>
-        <div className="input-row">
+        {core.mode.mode === Mode.EDIT ? <div className="input-row">
           <input
             value={newNonTerminal}
             onChange={e => setNewNonTerminal(e.target.value)}
             placeholder="Non-terminal (e.g. A)"
           />
           <button onClick={handleAddNonTerminal}>Add</button>
-        </div>
+        </div> : null}
       </div>
 
       <div className="section">
@@ -153,18 +158,18 @@ export const GrammarWindow: React.FC<object> = () => {
           {terminals.map((t, i) =>
             <div key={i} className="list-item">
               <span>{t}</span>
-              <button onClick={() => handleDeleteTerminal(i)} className="delete-btn">✕</button>
+              {core.mode.mode === Mode.EDIT ? <button onClick={() => handleDeleteTerminal(i)} className="delete-btn">✕</button> : null}
             </div>
           )}
         </div>
-        <div className="input-row">
+        {core.mode.mode === Mode.EDIT ? <div className="input-row">
           <input
             value={newTerminal}
             onChange={e => setNewTerminal(e.target.value)}
             placeholder="Terminal (e.g. a)"
           />
           <button onClick={handleAddTerminal}>Add</button>
-        </div>
+        </div> : null}
       </div>
 
       <div className="section">
@@ -173,11 +178,11 @@ export const GrammarWindow: React.FC<object> = () => {
           {rules.map((r, i) =>
             <div key={i} className="list-item">
               <span>{r.input} → {r.output.join(" ")}</span>
-              <button onClick={() => handleDeleteRule(i)} className="delete-btn">✕</button>
+              {core.mode.mode === Mode.EDIT ? <button onClick={() => handleDeleteRule(i)} className="delete-btn">✕</button> : null}
             </div>
           )}
         </div>
-        <div className="input-row rule-input-row">
+        {core.mode.mode === Mode.EDIT ? <div className="input-row rule-input-row">
           <input
             value={newRule.input}
             onChange={e => setNewRule({ ...newRule, input: e.target.value })}
@@ -190,7 +195,7 @@ export const GrammarWindow: React.FC<object> = () => {
             placeholder="RHS (e.g. a A)"
           />
           <button onClick={handleAddRule}>Add Rule</button>
-        </div>
+        </div> : null}
       </div>
 
       <GrammarRepresentation grammarRepr={grammarRepr} />

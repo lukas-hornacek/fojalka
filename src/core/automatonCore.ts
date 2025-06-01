@@ -13,6 +13,7 @@ import { INITIAL_STATE } from "../constants";
 export interface IAutomatonCore {
   kind: Kind.AUTOMATON;
   mode: ModeHolder;
+  visual: IAutomatonVisual;
   automaton: IAutomaton;
 
   // called from AutomatonWindow, which own the Cytoscape HTML element
@@ -82,7 +83,6 @@ export class AutomatonCore implements IAutomatonCore {
 
   init(): undefined {
     this.visual.init();
-    this.visual.addNode(INITIAL_STATE, { x: 0, y:0 });
     this.visual.fit();
   }
 

@@ -90,7 +90,7 @@ export class Core implements ICore {
       }
     } else {
       this.primary = new GrammarCore(type === ObjectType.GRAMMAR_REGULAR ? GrammarType.REGULAR : GrammarType.CONTEXT_FREE, this.mode);
-
+      this.primary.visual.refresh();
     }
     this.setPrimaryType?.(this.primary);
 
@@ -99,7 +99,7 @@ export class Core implements ICore {
     }
   };
 
-  // TODO test if this correctly stops any running algorith/simulation
+  // TODO test if this correctly stops any running algorithm/simulation
   switchToEditMode(keepSecondary: boolean) {
     if (this.mode.mode === Mode.EDIT) {
       return new ErrorMessage("Cannot switch to edit mode when already in edit mode.");
@@ -171,6 +171,9 @@ export class Core implements ICore {
       }
     }
 
+    this.setPrimaryType?.(this.primary);
+    this.setSecondaryType?.(this.secondary);
+
     if (this.primary.kind === Kind.AUTOMATON) {
       this.primary.algorithmInProgress(true);
     }
@@ -210,19 +213,38 @@ export class Core implements ICore {
   }
 
   algorithmDelete(keepSecondary: boolean) {
+    this.setSecondaryType?.(undefined);
     if (keepSecondary) {
       if (this.secondary === undefined) {
         return new ErrorMessage("Cannot keep second window, because the window does not exit.");
       }
-      this.primary = this.secondary;
+      this.moveWindows();
     }
     if (this.primary.kind === Kind.AUTOMATON) {
       this.primary.algorithmInProgress(false);
     }
+    this.setPrimaryType?.(this.primary);
+
+    this.primary.highlight([]);
+
     this.secondary = undefined;
     this.algorithm = undefined;
-    this.setPrimaryType?.(this.primary);
-    this.setSecondaryType?.(undefined);
+  }
+
+  moveWindows() {
+    if (this.primary.kind === Kind.AUTOMATON && this.secondary?.kind === Kind.AUTOMATON) {
+      const elems = this.secondary.visual.getElements();
+      this.primary = this.secondary;
+      this.primary.visual.reinitialize(elems);
+      this.primary.visual.init();
+    } else if (this.primary.kind === Kind.GRAMMAR && this.secondary?.kind === Kind.AUTOMATON) {
+      const elems = this.secondary.visual.getElements();
+      this.setPrimaryType?.(this.secondary);
+      this.primary = this.secondary;
+      this.primary.visual.reinitialize(elems);
+    } else {
+      this.primary = this.secondary!;
+    }
   }
 
   //large part of the code for next and transform is the same, so I put it in this function

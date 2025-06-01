@@ -1,6 +1,6 @@
 import "./App.css";
 import { CoreContext } from "../core/CoreContext";
-import Buttons from "./Buttons.tsx";
+import Buttons from "./buttons/Buttons.tsx";
 import Windows from "./Windows.tsx";
 import { useContext, useState } from "react";
 import { ICoreType, Mode } from "../core/core.ts";

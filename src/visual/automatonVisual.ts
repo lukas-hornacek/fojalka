@@ -1,5 +1,6 @@
-import cytoscape from "cytoscape";
+import cytoscape, { ElementDefinition } from "cytoscape";
 import { Kind } from "../core/core";
+import { INITIAL_STATE, PRIMARY_CYTOSCAPE_ID } from "../constants";
 
 export type NodeProps = {
   id: string,
@@ -19,6 +20,8 @@ export interface IAutomatonVisual {
 
   init: () => void;
   fit: () => void;
+  getElements: () => ElementDefinition[]
+  reinitialize: (elements: ElementDefinition[]) => void;
 
   addNode: (id: string, position: { x: number; y: number }) => void;
   removeNode: (id: string) => void;
@@ -39,15 +42,31 @@ export class AutomatonVisual implements IAutomatonVisual {
   kind = Kind.AUTOMATON as const;
   id: string;
   cy?: cytoscape.Core;
+  elems?: ElementDefinition[];
 
   constructor(id: string) {
     this.id = id;
   }
 
+  reinitialize(elems: ElementDefinition[]) {
+    this.id = PRIMARY_CYTOSCAPE_ID;
+    this.elems = elems;
+  }
+
+  getElements() {
+    const elems: ElementDefinition[] = this.cy!.elements().map(e => ({
+      data: e.data(),
+      group: e.group(),
+      classes: e.classes(),
+    }));
+    return elems;
+  }
+
   init() {
+    this.cy?.destroy();
     this.cy = cytoscape({
       container: document.getElementById(this.id),
-      elements: [],
+      elements: this.elems ?? [{ group: "nodes", data: { id: INITIAL_STATE }, position: { x: 0, y: 0 } }],
       style: [
         {
           selector: "node",

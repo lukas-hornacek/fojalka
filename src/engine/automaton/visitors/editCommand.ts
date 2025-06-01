@@ -99,6 +99,7 @@ export class VisualVisitor implements IEditCommandVisitor {
     // this.visual.setRepresentation(command.grammar.toString());
     this.visual.storeRuleId(command.productionRule.id);
     this.visual.refresh();
+    this.visual.refresher?.(this.visual.display());
   }
 
   // no point implementing this until we have actual grammar visualisation
@@ -108,6 +109,7 @@ export class VisualVisitor implements IEditCommandVisitor {
     }
     this.visual.removeRuleId(command.productionRuleId);
     this.visual.refresh();
+    this.visual.refresher?.(this.visual.display());
   }
 
   // no point implementing this until we have actual grammar visualisation
@@ -125,6 +127,7 @@ export class VisualVisitor implements IEditCommandVisitor {
     }
     // throw new Error(`Not implemented. ${command}`);
     this.visual.refresh();
+    this.visual.refresher?.(this.visual.display());
 
   }
 
@@ -135,6 +138,7 @@ export class VisualVisitor implements IEditCommandVisitor {
     }
     // throw new Error(`Not implemented. ${command}`);
     this.visual.refresh();
+    this.visual.refresher?.(this.visual.display());
   }
 
   // no point implementing this until we have actual grammar visualisation
@@ -152,6 +156,7 @@ export class VisualVisitor implements IEditCommandVisitor {
       throw new Error("Type mismatch");
     }
     this.visual.refresh();
+    this.visual.refresher?.(this.visual.display());
   }
 
   // no point implementing this until we have actual grammar visualisation
@@ -161,5 +166,6 @@ export class VisualVisitor implements IEditCommandVisitor {
       throw new Error("Type mismatch");
     }
     this.visual.refresh();
+    this.visual.refresher?.(this.visual.display());
   }
 }

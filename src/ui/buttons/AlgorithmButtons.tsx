@@ -1,8 +1,9 @@
 import { useContext } from "react";
-import { CoreContext } from "../core/CoreContext";
+import { CoreContext } from "../../core/CoreContext";
 import { Dropdown, DropdownButton, Stack } from "react-bootstrap";
+import { Running } from "./VisualButtons";
 
-export default function AlgorithmButtons() {
+export default function AlgorithmButtons({ setButtonSet }: { setButtonSet: React.Dispatch<React.SetStateAction<Running>> }) {
   const coreContext = useContext(CoreContext);
 
   if (!coreContext) {
@@ -30,12 +31,13 @@ export default function AlgorithmButtons() {
     }
   }
 
-  //TODO - tu treba doplnit zatvorenie okien a vymenu buttonov pre algoritmus za buttony na editovanie
+  //TODO - tu treba doplnit zatvorenie okien
   function algorithmClose(keepSecondary: boolean) {
     const e = coreContext!.algorithmDelete(keepSecondary);
     if (e !== undefined) {
       alert(e.details);
     }
+    setButtonSet(Running.NOTHING);
   }
 
   return (

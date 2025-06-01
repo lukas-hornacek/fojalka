@@ -1,6 +1,6 @@
 import { useContext, useRef } from "react";
-import { CoreContext } from "../core/CoreContext";
-import { Kind } from "../core/core";
+import { CoreContext } from "../../core/CoreContext";
+import { Kind } from "../../core/core";
 
 // buttons for testing interaction between UI and Core
 export default function AutomatonEditButtons() {
