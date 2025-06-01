@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { ICoreType, Kind, Mode, ObjectType } from "../../core/core";
 import { CoreContext } from "../../core/CoreContext";
-import { Button, Form, Modal, ToggleButton, ToggleButtonGroup } from "react-bootstrap";
+import { Button, Dropdown, DropdownButton, Form, Modal, ToggleButton, ToggleButtonGroup } from "react-bootstrap";
 import AutomatonEditButtons from "./AutomatonEditButtons";
 import { AutomatonVisualButtons, GrammarVisualButtons } from "./VisualButtons";
 
@@ -74,10 +74,10 @@ function SwitchModeButtons({ mode }: { mode: Mode }) {
     );
   } else {
     return (
-      <>
-        <button className="btn btn-primary" onClick={() => switchMode(Mode.EDIT, false)}>Switch to Edit mode (keep first window)</button>
-        <button className="btn btn-primary" onClick={() => switchMode(Mode.EDIT, true)}>Switch to Edit Mode (keep second window)</button>
-      </>
+      <DropdownButton id="dropdown-algorithm-button" title="Switch to Edit mode">
+        <Dropdown.Item onClick={() => switchMode(Mode.EDIT, false)}>Keep first window</Dropdown.Item>
+        <Dropdown.Item onClick={() => switchMode(Mode.EDIT, true)}>Keep second window</Dropdown.Item>
+      </DropdownButton>
     );
   }
 }
@@ -94,12 +94,6 @@ function NewWindowButton() {
 
   const submit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // TODO make sure to stop any algorithms/simulations and remove secondary window
-    if (core.mode.mode === Mode.VISUAL) {
-      console.log("");
-    }
-
     core.newWindow(localType);
     setShow(false);
   };

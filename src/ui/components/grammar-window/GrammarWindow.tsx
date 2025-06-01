@@ -43,8 +43,13 @@ export const GrammarWindow: React.FC<GrammarWindowProps> = ({ primary }) => {
     setNewRule({ input: "", output: "" });
     setNewNonTerminal("");
     setNewTerminal("");
-    setGrammarRepr(grammarRepr);
-  }, [grammar, grammarRepr]);
+    grammar.visual.refresh();
+    setGrammarRepr(grammar.display());
+  }, [grammar]);
+
+  useEffect(() => {
+    setRules(grammar.grammar.productionRules.map(rule => ({ input: rule.inputNonTerminal, output: rule.outputSymbols })));
+  }, [grammarRepr, grammar]);
 
   // This method has to be called everytime a change is made to the grammar (to obtain the updated string repr.)
   const refreshRepr = () => {

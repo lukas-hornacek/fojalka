@@ -58,11 +58,17 @@ export class GrammarVisual implements IGrammarVisual {
         this.highlightedSymbols.add(id);
       }
     }
+
+    this.refresh();
+    this.refresher?.(this.display());
   }
 
   clearHighlights() {
     this.highlightedRuleIds.clear();
     this.highlightedSymbols.clear();
+
+    this.refresh();
+    this.refresher?.(this.display());
   }
 
   // refresh representation according to grammar

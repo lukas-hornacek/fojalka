@@ -88,11 +88,13 @@ export class Core implements ICore {
       if (reinitialize) {
         this.primary.init();
       }
+      this.setPrimaryType?.(this.primary);
     } else {
       this.primary = new GrammarCore(type === ObjectType.GRAMMAR_REGULAR ? GrammarType.REGULAR : GrammarType.CONTEXT_FREE, this.mode);
+      this.setPrimaryType?.(this.primary);
       this.primary.visual.refresh();
+      this.primary.visual.refresher?.(this.primary.display());
     }
-    this.setPrimaryType?.(this.primary);
 
     if (this.mode.mode === Mode.VISUAL) {
       this.switchToEditMode(false);
