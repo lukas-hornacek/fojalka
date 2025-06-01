@@ -49,7 +49,7 @@ export function StartGrammarAlgorithmButton({ setButtonSet }: { setButtonSet: Re
 
   return (
     <>
-      <DropdownButton id="dropdown-algorithm-button" title="Close algorithm">
+      <DropdownButton id="dropdown-algorithm-button" title="Start algorithm">
         {dropdownItems}
       </DropdownButton>
     </>
