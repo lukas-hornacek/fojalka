@@ -127,7 +127,9 @@ export class NextStepVisitor implements IConfigurationVisitor {
       }
     }
     if (nextEdgeList.length === 0) {
-      throw new RunStoppedError("No posible next step from this state and input symbol.");
+      throw new RunStoppedError(
+        "No posible next step from this state and input symbol. Automaton is at a dead end. This may be caused by non-determinism, if you want  a different run try running the simulation again or undoing the last step"
+      );
     }
     else {
       let m: number;
