@@ -72,6 +72,14 @@ export default function VisualWindows() {
     setWordRead(prev => [...prev, wordRemaining[0]]);
     setWordRemaining(prev => prev.slice(1));
 
+    const newRemaining = automatonCore.getRemainingInput();
+    if (!newRemaining) { return false; }
+
+    if (wordRemaining.length != newRemaining.length) {
+      setWordRead(prev => [...prev, wordRemaining[0]]);
+      setWordRemaining(prev => prev.slice(1));
+    }
+
     return true;
   }
 
@@ -88,6 +96,14 @@ export default function VisualWindows() {
 
     setWordRemaining(prev => [wordRead[0], ...prev]);
     setWordRead(prev => prev.slice(1));
+
+    const newRemaining = automatonCore.getRemainingInput();
+    if (!newRemaining) { return false; }
+
+    if (wordRemaining.length != newRemaining.length) {
+      setWordRemaining(prev => [wordRead[0], ...prev]);
+      setWordRead(prev => prev.slice(1));
+    }
 
     return true;
   }
