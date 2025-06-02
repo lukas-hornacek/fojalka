@@ -123,7 +123,7 @@ function NewWindowButton() {
                 id="phrasal"
                 value={ObjectType.GRAMMAR_PHRASAL}
                 variant={localType === ObjectType.GRAMMAR_PHRASAL ? "primary" : "outline-primary"}
-              >Frázová gramatika</ToggleButton>
+              >Bezkontextová gramatika</ToggleButton>
             </ToggleButtonGroup>
 
             <Form.Group className="d-flex justify-content-center mt-2 gap-2">
