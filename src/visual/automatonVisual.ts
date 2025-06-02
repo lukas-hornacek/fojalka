@@ -54,12 +54,19 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   getElements() {
-    const elems: ElementDefinition[] = this.cy!.elements().map(e => ({
-      data: e.data(),
-      group: e.group(),
-      classes: e.classes(),
+    const nodes = this.cy?.nodes().map(node => ({
+      data: node.data(),
+      group: node.group(),
+      classes: node.classes(),
+      position: node.position(),
     }));
-    return elems;
+    const edges: ElementDefinition[] = this.cy!.edges().map(edge => ({
+      data: edge.data(),
+      group: edge.group(),
+      classes: edge.classes(),
+    }));
+    // cytoscape does not play well with TypeScript...
+    return [...nodes as ElementDefinition[], ...edges];
   }
 
   init() {
