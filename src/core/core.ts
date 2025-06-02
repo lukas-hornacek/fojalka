@@ -137,12 +137,14 @@ export class Core implements ICore {
     try {
       let result = this.algorithm.next();
       if (result === undefined) {
+        this.primary.highlight([]);
         return new ErrorMessage("Algorithm is already completed.");
       }
       while (result !== undefined) {
         this.algorithmStep(result);
         result = this.algorithm.next();
       }
+      this.primary.highlight([]);
 
     } catch (e: unknown) {
       if (e instanceof Error) {
@@ -192,6 +194,7 @@ export class Core implements ICore {
     try {
       const result = this.algorithm.next();
       if (result === undefined) {
+        this.primary.highlight([]);
         return new ErrorMessage("Algorithm is already completed.");
       }
       this.algorithmStep(result);

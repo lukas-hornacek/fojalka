@@ -398,7 +398,7 @@ export class AutomatonToGrammarAlgorithm extends Algorithm {
           }
           const rule = this.outputCore!.factory.createProductionRule(from, output, this.outputCore!.grammar);
           const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
-          this.results.push({ highlight: [edge.id], command: command });
+          this.results.push({ highlight: [edge.id, from, to], command: command });
         }
       }
     }
