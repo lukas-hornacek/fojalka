@@ -11,7 +11,9 @@ import { ModeHolder, Kind, Mode } from "./core";
 export interface IGrammarCore {
   kind: Kind.GRAMMAR;
   mode: ModeHolder;
+  factory: IGrammarFactory;
   grammar: Grammar;
+  visual: IGrammarVisual;
 
   display: () => React.ReactNode;
 
@@ -240,6 +242,7 @@ export class GrammarCore implements IGrammarCore {
     }
     const maybeError = this.grammar.undo();
     this.visual.refresh();
+    this.visual.refresher?.(this.visual.display());
     return maybeError;
   }
 

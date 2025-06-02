@@ -1,5 +1,3 @@
-import { SECONDARY_CYTOSCAPE_ID } from "../../constants";
-import { AutomatonCore } from "../../core/automatonCore";
 import { ICoreType, Kind, ModeHolder } from "../../core/core";
 import { AutomatonType } from "./../automaton/automaton";
 import { AutomatonEditCommand } from "../automaton/commands/edit";
@@ -58,24 +56,4 @@ export abstract class Algorithm implements IAlgorithm {
 
   //function computes all commands and highlights in advance and stores it in results
   protected abstract precomputeResults(): void;
-
 }
-
-// TODO remove this
-export class TestingAlgorithm implements IAlgorithm {
-  inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
-  outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
-
-  init(mode: ModeHolder): ICoreType | undefined {
-    return new AutomatonCore(this.outputType.AutomatonType!, SECONDARY_CYTOSCAPE_ID, mode);
-  }
-
-  next(): AlgorithmResult | undefined {
-    return;
-  }
-
-  undo(): IErrorMessage | undefined {
-    return;
-  }
-}
-

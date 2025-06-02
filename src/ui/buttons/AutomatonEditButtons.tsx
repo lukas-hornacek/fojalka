@@ -1,9 +1,9 @@
 import { useContext, useRef } from "react";
-import { CoreContext } from "../core/CoreContext";
-import { Kind } from "../core/core";
+import { CoreContext } from "../../core/CoreContext";
+import { Kind } from "../../core/core";
 
 // buttons for testing interaction between UI and Core
-export default function EditButtons() {
+export default function AutomatonEditButtons() {
   const coreContext = useContext(CoreContext);
 
   const id = useRef("");
@@ -106,31 +106,32 @@ export default function EditButtons() {
 
   return (
     <>
-      <div className="row">
-        <div className="col-2">
+      <div className="d-flex">
+
+        <div className="col">
           <div>From:</div>
           <input onChange={e => from.current = e.target.value}/>
+        </div>
+        <div className="col">
           <div>To:</div>
           <input onChange={e => to.current = e.target.value}/>
         </div>
-        <div className="col-2">
+        <div className="col">
           <div>Character:</div>
           <input onChange={e => char.current = e.target.value}/>
+        </div>
+        <div className="col">
           <div>ID:</div>
           <input onChange={e => id.current = e.target.value}/>
         </div>
-        <div className="col-2">
-          <div className="stack">
-            <button className="btn btn-primary" onClick={addEdge}>Add edge</button>
-            <button className="btn btn-primary" onClick={removeEdge}>Remove edge</button>
 
-            <button className="btn btn-primary" onClick={addState}>Add state</button>
-            <button className="btn btn-primary" onClick={removeState}>Remove state</button>
+        <button className="btn btn-primary mt-auto" onClick={addEdge}>Add edge</button>
+        <button className="btn btn-primary mt-auto" onClick={removeEdge}>Remove edge</button>
+        <button className="btn btn-primary mt-auto" onClick={addState}>Add state</button>
+        <button className="btn btn-primary mt-auto" onClick={removeState}>Remove state</button>
 
-            <button className="btn btn-primary" onClick={undo}>Undo</button>
-            <button className="btn btn-primary" onClick={fit}>Fit automaton to screen</button>
-          </div>
-        </div>
+        <button className="btn btn-primary mt-auto" onClick={undo}>Undo</button>
+        <button className="btn btn-primary mt-auto" onClick={fit}>Fit automaton to screen</button>
       </div>
     </>
   );

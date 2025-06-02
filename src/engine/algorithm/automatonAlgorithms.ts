@@ -1,7 +1,7 @@
 import { SECONDARY_CYTOSCAPE_ID, EPSILON, INITIAL_STATE } from "../../constants";
-import { AutomatonCore } from "../../core/automatonCore";
+import { AutomatonCore, IAutomatonCore } from "../../core/automatonCore";
 import { Kind, ModeHolder } from "../../core/core";
-import { GrammarCore } from "../../core/grammarCore";
+import { GrammarCore, IGrammarCore } from "../../core/grammarCore";
 import { AutomatonType } from "./../automaton/automaton";
 import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RemoveEdgeCommand, RenameStateCommand, SetStateFinalFlagCommand } from "../automaton/commands/edit";
 import { ErrorMessage } from "../common";
@@ -13,10 +13,10 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
-  inputCore: AutomatonCore;
-  outputCore?: AutomatonCore;
+  inputCore: IAutomatonCore;
+  outputCore?: IAutomatonCore;
 
-  constructor(_inputCore: AutomatonCore) {
+  constructor(_inputCore: IAutomatonCore) {
     super();
     this.inputCore = _inputCore;
   }
@@ -25,6 +25,7 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
     if (this.inputCore.automaton.automatonType !== this.inputType.AutomatonType) {
       throw new Error("Cannot use algorithm, as it only works with finite automata.");
     }
+
     if (this.hasEpsilonTransitions()) {
       throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions.");
     }
@@ -147,19 +148,18 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
 
     return false;
   }
-
 }
 
 export class RemoveEpsilonAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
-  outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
+  outputType?: AlgorithmParams = undefined;
 
-  inputCore: AutomatonCore;
+  inputCore: IAutomatonCore;
 
   //only for the mode in init, so it wont be unused variable
-  outputCore?: AutomatonCore;
+  outputCore?: IAutomatonCore;
 
-  constructor(_inputCore: AutomatonCore) {
+  constructor(_inputCore: IAutomatonCore) {
     super();
     this.inputCore = _inputCore;
   }
@@ -324,10 +324,10 @@ export class AutomatonToGrammarAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
   outputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
 
-  inputCore: AutomatonCore;
-  outputCore?: GrammarCore;
+  inputCore: IAutomatonCore;
+  outputCore?: IGrammarCore;
 
-  constructor(_inputCore: AutomatonCore) {
+  constructor(_inputCore: IAutomatonCore) {
     super();
     this.inputCore = _inputCore;
   }
