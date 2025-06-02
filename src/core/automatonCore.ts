@@ -263,6 +263,7 @@ export class AutomatonCore implements IAutomatonCore {
     }
 
     this.simulation = this.automaton.createRunSimulation(word);
+    this.visual.highlightElements([this.simulation.configuration.stateId]);
   }
 
   runNext() {
@@ -289,7 +290,6 @@ export class AutomatonCore implements IAutomatonCore {
     this.visual.highlightElements([result.id, this.simulation.configuration.stateId]);
   }
 
-  // TODO update visual
   runUndo() {
     if (this.mode.mode !== Mode.VISUAL) {
       return new ErrorMessage("Operation is only permitted in visual mode.");
@@ -303,6 +303,8 @@ export class AutomatonCore implements IAutomatonCore {
     if (e !== undefined) {
       return new ErrorMessage(e.details);
     }
+    this.visual.clearHighlights();
+    this.visual.highlightElements([this.simulation.configuration.stateId]);
   }
 
   runEnd() {
