@@ -25,9 +25,11 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
     if (this.inputCore.automaton.automatonType !== this.inputType.AutomatonType) {
       throw new Error("Cannot use algorithm, as it only works with finite automata.");
     }
-
     if (this.hasEpsilonTransitions()) {
       throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions.");
+    }
+    if (!this.isContinuous()) {
+      throw new Error("Cannot use algorithm, as the input automaton has multiple components.");
     }
 
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
@@ -125,6 +127,7 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
   }
 
   stateToString(state: string[]): string {
+    state.sort();
     return "{" + state.join() + "}";
   }
 
@@ -147,6 +150,24 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
     }
 
     return false;
+  }
+
+  isContinuous(): boolean {
+    const visited: string[] = [this.inputCore.automaton.initialStateId];
+    const notProcessed: string[] = [this.inputCore.automaton.initialStateId];
+
+    while (notProcessed.length !== 0) {
+      const current: string = notProcessed.pop()!;
+
+      for (const state in this.inputCore.automaton.deltaFunctionMatrix[current]) {
+        if (!visited.includes(state)) {
+          visited.push(state);
+          notProcessed.push(state);
+        }
+      }
+    }
+
+    return visited.length === this.inputCore.automaton.states.length;
   }
 }
 
