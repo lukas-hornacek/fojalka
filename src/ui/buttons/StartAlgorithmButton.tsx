@@ -6,9 +6,14 @@ import { useContext } from "react";
 import { CoreContext } from "../../core/CoreContext";
 import { GrammarNormalFormAlgorithm, GrammarToAutomatonAlgorithm } from "../../engine/algorithm/grammarAlgorithms";
 import { Kind } from "../../core/core";
+import { GrammarType } from "../../engine/grammar/grammar";
+import { AutomatonType } from "../../engine/automaton/automaton";
 
 interface AlgorithmWrapper {
   name: string,
+  // this overlap is dangerous but it works as long as StartGrammarAlgorithmButton and
+  // StartGrammarAutomatonButton first check if object is of correct Kind
+  inputType: GrammarType | AutomatonType,
   algorithm: () => IAlgorithm,
 }
 
@@ -21,6 +26,7 @@ export function StartGrammarAlgorithmButton({ setButtonSet }: { setButtonSet: Re
   const algorithms: AlgorithmWrapper[] = [
     {
       name: "Regulárna gramatika -> nedeterministický automat",
+      inputType: GrammarType.REGULAR,
       algorithm: () => {
         if (core.primary.kind != Kind.GRAMMAR) {
           throw new Error("Invalid algorithm input type");
@@ -30,6 +36,7 @@ export function StartGrammarAlgorithmButton({ setButtonSet }: { setButtonSet: Re
     },
     {
       name: "Normálna forma",
+      inputType: GrammarType.REGULAR,
       algorithm: () => {
         if (core.primary.kind != Kind.GRAMMAR) {
           throw new Error("Invalid algorithm input type.");
@@ -48,13 +55,14 @@ export function StartGrammarAlgorithmButton({ setButtonSet }: { setButtonSet: Re
     setButtonSet(Running.ALGORITHM);
   }
 
-  const dropdownItems = algorithms.map(a =>
-    <Dropdown.Item key={a.name} onClick={() => startAlgorithm(a.algorithm())}>{a.name}</Dropdown.Item>);
+  const dropdownItems = algorithms
+    .filter(a => core.primary.kind === Kind.GRAMMAR && core.primary.grammar.grammarType === a.inputType)
+    .map(a => <Dropdown.Item key={a.name} onClick={() => startAlgorithm(a.algorithm())}>{a.name}</Dropdown.Item>);
 
   return (
     <>
       <DropdownButton id="dropdown-algorithm-button" title="Start algorithm">
-        {dropdownItems}
+        {dropdownItems.length > 0 ? dropdownItems : <Dropdown.Item disabled>No algorithms available</Dropdown.Item>}
       </DropdownButton>
     </>
   );
@@ -69,6 +77,7 @@ export function StartAutomatonAlgorithmButton({ setButtonSet }: { setButtonSet: 
   const algorithms: AlgorithmWrapper[] = [
     {
       name: "Nedeterministický automat -> deterministický automat",
+      inputType: AutomatonType.FINITE,
       algorithm: () => {
         if (core.primary.kind != Kind.AUTOMATON) {
           throw new Error("Invalid algorithm input type.");
@@ -78,6 +87,7 @@ export function StartAutomatonAlgorithmButton({ setButtonSet }: { setButtonSet: 
     },
     {
       name: "Odepsilonovanie",
+      inputType: AutomatonType.FINITE,
       algorithm: () => {
         if (core.primary.kind != Kind.AUTOMATON) {
           throw new Error("Invalid algorithm input type.");
@@ -87,6 +97,7 @@ export function StartAutomatonAlgorithmButton({ setButtonSet }: { setButtonSet: 
     },
     {
       name: "Nedeterministický automat -> regulárna gramatika",
+      inputType: AutomatonType.FINITE,
       algorithm: () => {
         if (core.primary.kind != Kind.AUTOMATON) {
           throw new Error("Invalid algorithm input type.");
@@ -105,13 +116,14 @@ export function StartAutomatonAlgorithmButton({ setButtonSet }: { setButtonSet: 
     setButtonSet(Running.ALGORITHM);
   }
 
-  const dropdownItems = algorithms.map(a =>
-    <Dropdown.Item key={a.name} onClick={() => startAlgorithm(a.algorithm())}>{a.name}</Dropdown.Item>);
+  const dropdownItems = algorithms
+    .filter(a => core.primary.kind === Kind.AUTOMATON && core.primary.automaton.automatonType === a.inputType)
+    .map(a => <Dropdown.Item key={a.name} onClick={() => startAlgorithm(a.algorithm())}>{a.name}</Dropdown.Item>);
 
   return (
     <>
       <DropdownButton id="dropdown-algorithm-button" title="Start algorithm">
-        {dropdownItems}
+        {dropdownItems.length > 0 ? dropdownItems : <Dropdown.Item disabled>No algorithms available</Dropdown.Item>}
       </DropdownButton>
     </>
   );
