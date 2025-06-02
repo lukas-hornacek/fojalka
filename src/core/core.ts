@@ -169,6 +169,7 @@ export class Core implements ICore {
       this.secondary = algorithm.init(this.mode);
     } catch (e: unknown) {
       if (e instanceof Error) {
+        this.algorithmDelete(false);
         return new ErrorMessage(e.message);
       }
     }

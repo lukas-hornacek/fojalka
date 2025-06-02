@@ -20,7 +20,7 @@ export function StartGrammarAlgorithmButton({ setButtonSet }: { setButtonSet: Re
 
   const algorithms: AlgorithmWrapper[] = [
     {
-      name: "Regulárna gramatika -> deterministický automat",
+      name: "Regulárna gramatika -> nedeterministický automat",
       algorithm: () => {
         if (core.primary.kind != Kind.GRAMMAR) {
           throw new Error("Invalid algorithm input type");
@@ -86,7 +86,7 @@ export function StartAutomatonAlgorithmButton({ setButtonSet }: { setButtonSet: 
       }
     },
     {
-      name: "Deterministický automat -> regulárna gramatika",
+      name: "Nedeterministický automat -> regulárna gramatika",
       algorithm: () => {
         if (core.primary.kind != Kind.AUTOMATON) {
           throw new Error("Invalid algorithm input type.");
