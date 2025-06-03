@@ -90,9 +90,9 @@ export default function MainMenu({
                     core.setCorePrimary(loaded);
 
                     //setCore(core2);
-                    /* if (core2.primary.kind === Kind.AUTOMATON) {
-                      core2.primary.init();
-                    } */
+                    if (core.primary.kind === Kind.AUTOMATON) {
+                      core.primary.init();
+                    }
 
                     // I ..... dont know
                   }

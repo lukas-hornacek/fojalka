@@ -326,7 +326,27 @@ export default function AutomatonEditControls({ children }: Props) {
           console.error(e.details);
           alert(`Error: ${e.details}`);
         } else {
-          console.log("state renamed successfuly");
+          const e2 = core.setIsFinalState(
+            selectedNodeId,
+            formData.get("state-is-final") != null
+          );
+
+          if (e2 !== undefined) {
+            console.error(e2.details);
+            alert(`Error: ${e2.details}`);
+          } else {
+            if (formData.get("state-is-initial") != null) {
+              const e3 = core.setInitialState(selectedNodeId);
+
+              if (e3 !== undefined) {
+                console.error(e3.details);
+                alert(`Error: ${e3.details}`);
+              } else {
+                console.log("state edited successfuly");
+              }
+            }
+          }
+
           closeModal();
         }
         setSelectedNodeId("");

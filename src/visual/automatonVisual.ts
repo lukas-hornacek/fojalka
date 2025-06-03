@@ -22,7 +22,7 @@ export interface IAutomatonVisual {
 
   init: () => void;
   fit: () => void;
-  getElements: () => ElementDefinition[]
+  getElements: () => ElementDefinition[];
   reinitialize: (elements: ElementDefinition[]) => void;
 
   addNode: (id: string, position: { x: number; y: number }) => void;
@@ -74,19 +74,19 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   getElements() {
-    const nodes = this.cy?.nodes().map(node => ({
+    const nodes = this.cy?.nodes().map((node) => ({
       data: node.data(),
       group: node.group(),
       classes: node.classes(),
       position: node.position(),
     }));
-    const edges: ElementDefinition[] = this.cy!.edges().map(edge => ({
+    const edges: ElementDefinition[] = this.cy!.edges().map((edge) => ({
       data: edge.data(),
       group: edge.group(),
       classes: edge.classes(),
     }));
     // cytoscape does not play well with TypeScript...
-    return [...nodes as ElementDefinition[], ...edges];
+    return [...(nodes as ElementDefinition[]), ...edges];
   }
 
   init() {
@@ -98,7 +98,11 @@ export class AutomatonVisual implements IAutomatonVisual {
       elements: this.elems ?? [
         {
           group: "nodes",
-          data: { id: this.initialState },
+          data: {
+            id: this.initialState,
+            initial: "true",
+            final: "false",
+          },
           position: this.initialStatePosition,
         },
       ],
@@ -131,6 +135,19 @@ export class AutomatonVisual implements IAutomatonVisual {
             "target-arrow-color": "SteelBlue",
             "source-arrow-color": "SteelBlue",
           },
+        }, {
+          selector: 'node[initial = "true"]',
+          css: {
+            "background-color": "Green",
+          },
+        },
+        {
+          selector: 'node[final = "true"]',
+          css: {
+            "border-style": "double",
+            "border-color": "Black",
+            "border-width": 6,
+          },
         },
       ],
       layout: { name: "grid", rows: 1 },
@@ -140,7 +157,7 @@ export class AutomatonVisual implements IAutomatonVisual {
 
     // init done
     this.initialized = true;
-    this.toCallBack.forEach(fn => fn(this.cy!));
+    this.toCallBack.forEach((fn) => fn(this.cy!));
   }
 
   callbackAfterInit(fn: (cy: cytoscape.Core) => void) {
@@ -183,7 +200,11 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   addNode(id: string, position: { x: number; y: number }) {
-    this.cy?.add({ group: "nodes", data: { id }, position });
+    this.cy?.add({
+      group: "nodes",
+      data: { id: id, initial: "false", final: "false" },
+      position,
+    });
   }
 
   removeNode(id: string) {
@@ -201,24 +222,33 @@ export class AutomatonVisual implements IAutomatonVisual {
     newJSON!.elements.nodes = newJSON!.elements.nodes?.map((n: any) =>
       n.data.id === id ? { ...n, data: { ...n.data, id: newId } } : n
     );
-    newJSON!.elements.edges = newJSON!.elements.edges?.map((e: any) =>
-      e.data.source === id ? { ...e, data: { ...e.data, source: newId } } : e
-    ) ?? undefined;
-    newJSON!.elements.edges = newJSON!.elements.edges?.map((e: any) =>
-      e.data.target === id ? { ...e, data: { ...e.data, target: newId } } : e
-    ) ?? undefined;
+    newJSON!.elements.edges =
+      newJSON!.elements.edges?.map((e: any) =>
+        e.data.source === id ? { ...e, data: { ...e.data, source: newId } } : e
+      ) ?? undefined;
+    newJSON!.elements.edges =
+      newJSON!.elements.edges?.map((e: any) =>
+        e.data.target === id ? { ...e, data: { ...e.data, target: newId } } : e
+      ) ?? undefined;
 
     this.cy?.remove("*");
     this.cy?.json(newJSON);
   }
 
-  // TODO
   setInitialNode(id: string) {
-    console.log(id);
+    //console.log("hľa", this.cy?.nodes('[initial = "true"]'));
+
+    // remove from the previous
+    this.cy?.nodes('[initial = "true"]').data("initial", "false");
+
+    // add to new one
+    this.cy?.getElementById(id).data("initial", "true");
+
+    //console.log(id);
   }
 
-  // TODO
   setIsFinalNode(id: string, isFinal: boolean) {
+    this.cy?.getElementById(id).data("final", isFinal ? "true" : "false");
     console.log(id, isFinal);
   }
 
@@ -270,10 +300,10 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   clearHighlights() {
-    this.cy?.nodes().forEach(node => {
+    this.cy?.nodes().forEach((node) => {
       node.style({ "background-color": "#666" }); // your default node color
     });
-    this.cy?.edges().forEach(edge => {
+    this.cy?.edges().forEach((edge) => {
       edge.style({
         "line-color": "#ccc",
         "target-arrow-color": "#ccc",

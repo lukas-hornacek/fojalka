@@ -163,8 +163,7 @@ export class AutomatonCore implements IAutomatonCore {
           );
         });
 
-        automatonCore.automaton.finalStateIds =
-          savedAutomaton.automaton.finalStateIds;
+        savedAutomaton.automaton.finalStateIds.forEach(id => automatonCore.setIsFinalState(id, true));
 
         for (const from in savedAutomaton.automaton.deltaFunctionMatrix) {
           for (const to in savedAutomaton.automaton.deltaFunctionMatrix[from]) {
