@@ -236,20 +236,15 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   setInitialNode(id: string) {
-    //console.log("hľa", this.cy?.nodes('[initial = "true"]'));
-
     // remove from the previous
     this.cy?.nodes('[initial = "true"]').data("initial", "false");
 
     // add to new one
     this.cy?.getElementById(id).data("initial", "true");
-
-    //console.log(id);
   }
 
   setIsFinalNode(id: string, isFinal: boolean) {
     this.cy?.getElementById(id).data("final", isFinal ? "true" : "false");
-    console.log(id, isFinal);
   }
 
   addEdge(id: string, from: string, to: string, label: string) {

@@ -317,38 +317,40 @@ export default function AutomatonEditControls({ children }: Props) {
 
     switch (core?.kind) {
       case Kind.AUTOMATON: {
-        const e = core.renameState(
+        if (formData.get("state-name")?.toString() !== selectedNodeId) {
+          const e = core.renameState(
+            selectedNodeId,
+            formData.get("state-name")?.toString() || selectedNodeId
+          );
+          if (e !== undefined) {
+            console.error(e.details);
+            alert(`Error: ${e.details}`);
+          }
+        }
+
+        const e2 = core.setIsFinalState(
           selectedNodeId,
-          formData.get("state-name")?.toString() || selectedNodeId
+          formData.get("state-is-final") != null
         );
 
-        if (e !== undefined) {
-          console.error(e.details);
-          alert(`Error: ${e.details}`);
+        if (e2 !== undefined) {
+          console.error(e2.details);
+          alert(`Error: ${e2.details}`);
         } else {
-          const e2 = core.setIsFinalState(
-            selectedNodeId,
-            formData.get("state-is-final") != null
-          );
+          if (formData.get("state-is-initial") != null) {
+            const e3 = core.setInitialState(selectedNodeId);
 
-          if (e2 !== undefined) {
-            console.error(e2.details);
-            alert(`Error: ${e2.details}`);
-          } else {
-            if (formData.get("state-is-initial") != null) {
-              const e3 = core.setInitialState(selectedNodeId);
-
-              if (e3 !== undefined) {
-                console.error(e3.details);
-                alert(`Error: ${e3.details}`);
-              } else {
-                console.log("state edited successfuly");
-              }
+            if (e3 !== undefined) {
+              console.error(e3.details);
+              alert(`Error: ${e3.details}`);
+            } else {
+              console.log("state edited successfuly");
             }
           }
-
-          closeModal();
         }
+
+        closeModal();
+
         setSelectedNodeId("");
         break;
       }
