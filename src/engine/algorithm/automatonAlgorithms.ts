@@ -26,7 +26,7 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
       throw new Error("Cannot use algorithm, as it only works with finite automata.");
     }
     if (this.hasEpsilonTransitions()) {
-      throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions.");
+      throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions. Try running algorithm for epsilon removal first.");
     }
     if (!this.isContinuous()) {
       throw new Error("Cannot use algorithm, as some of the states are not reachable from the ititial state.");
