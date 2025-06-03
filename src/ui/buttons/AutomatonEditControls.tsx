@@ -1,5 +1,5 @@
-import { createContext, ReactNode, useEffect, useRef, useState } from "react";
-import { Core, ICore, Kind, ModeHolder } from "../../core/core";
+import { ReactNode, useContext, useEffect, useRef, useState } from "react";
+import { Kind, ModeHolder } from "../../core/core";
 import ReactModal, { Styles } from "react-modal";
 import Mousetrap from "mousetrap";
 import { exportAutomaton } from "../importExport";
@@ -8,10 +8,9 @@ import { AutomatonType } from "../../engine/automaton/automaton";
 import { INITIAL_STATE, PRIMARY_CYTOSCAPE_ID } from "../../constants";
 import NodeEditables from "../NodeEditables";
 import EdgeEditables from "../EdgeEditables";
+import { CoreContext } from "../../core/CoreContext";
 
 ReactModal.setAppElement("#root");
-
-export const CoreContext = createContext<ICore | undefined>(undefined);
 
 const customModalStyles: Styles = {
   content: {
@@ -33,11 +32,15 @@ interface Props {
   children: ReactNode;
 }
 
-export default function EditButtons({ children }: Props) {
-  // the core is here, in this little state
-  const [coreState, setCoreState] = useState<ICore>(
-    new Core(
-      new AutomatonCore(
+export default function AutomatonEditControls({ children }: Props) {
+  const coreContext = useContext(CoreContext);
+
+  if (coreContext === undefined) {
+    throw new Error("This shit, too, must be used within a CoreProvider");
+  }
+
+  useEffect(() => {
+    coreContext.setCorePrimary(new AutomatonCore(
         AutomatonType.FINITE,
         PRIMARY_CYTOSCAPE_ID,
         new ModeHolder(),
@@ -48,9 +51,9 @@ export default function EditButtons({ children }: Props) {
           automatonCore.getCytoscape()!.on("tap", "edge", clickEdgeHandler);
           automatonCore.getCytoscape()!.on("tap", clickElsewhereHandler);
         }
-      )
-    )
-  );
+      ))
+  }, []);
+
 
   const [isVisibleModal, setIsStateModal] = useState<boolean>(false);
   const [mode, setMode] = useState<mode>("none");
@@ -107,6 +110,8 @@ export default function EditButtons({ children }: Props) {
       clickPosition.current = e.position;
       console.log(e.position);
 
+      setSelectedEdgeId("");
+      setSelectedNodeId("");
       setIsStateModal(true);
     }
   };
@@ -121,6 +126,9 @@ export default function EditButtons({ children }: Props) {
       to.current = e.target.id();
       console.log("selected second node:", to.current);
 
+
+      setSelectedEdgeId("");
+      setSelectedNodeId("");
       setIsStateModal(true);
     }
   };
@@ -136,7 +144,7 @@ export default function EditButtons({ children }: Props) {
 
   // set handler based on the mode
   useEffect(() => {
-    const core = coreState.primary;
+    const core = coreContext?.primary;
     const cy = core.getCytoscape();
 
     switch (mode) {
@@ -161,17 +169,18 @@ export default function EditButtons({ children }: Props) {
     }
   }, [mode]);
 
-  if (!coreState) {
+  if (!coreContext) {
     throw new Error("AutomatonWindow must be used within a CoreProvider");
   }
 
   function closeModal() {
     console.log("closed modal");
     setIsStateModal(false);
+    setMode("none");
   }
 
   function addState() {
-    const core = coreState.primary;
+    const core = coreContext?.primary;
 
     // the button works like a toggle
     if (mode == "createNode") {
@@ -179,7 +188,7 @@ export default function EditButtons({ children }: Props) {
       return;
     }
 
-    switch (core.kind) {
+    switch (core?.kind) {
       case Kind.AUTOMATON: {
         setMode("createNode");
 
@@ -192,7 +201,7 @@ export default function EditButtons({ children }: Props) {
   }
 
   function addEdge() {
-    const core = coreState.primary;
+    const core = coreContext?.primary;
 
     // the button works like a toggle
     if (mode == "createEdge") {
@@ -200,7 +209,7 @@ export default function EditButtons({ children }: Props) {
       return;
     }
 
-    switch (core.kind) {
+    switch (core?.kind) {
       case Kind.AUTOMATON: {
         setMode("createEdge");
 
@@ -215,10 +224,10 @@ export default function EditButtons({ children }: Props) {
   function removeElement() {
     setMode("none");
 
-    const core = coreState.primary;
-    const cy = core.getCytoscape();
+    const core = coreContext?.primary;
+    const cy = core?.getCytoscape();
 
-    switch (core.kind) {
+    switch (core?.kind) {
       case Kind.AUTOMATON: {
         // remove nodes
         cy!
@@ -257,16 +266,16 @@ export default function EditButtons({ children }: Props) {
   }
 
   function undo() {
-    const e = coreState.primary.undo();
+    const e = coreContext?.primary.undo();
     if (e !== undefined) {
       console.log(e.details);
     }
   }
 
   function fit() {
-    const core = coreState.primary;
+    const core = coreContext?.primary;
 
-    switch (core.kind) {
+    switch (core?.kind) {
       case Kind.AUTOMATON: {
         core.fit();
         break;
@@ -278,9 +287,9 @@ export default function EditButtons({ children }: Props) {
   }
 
   function formAddState(formData: FormData) {
-    const core = coreState.primary;
+    const core = coreContext?.primary;
 
-    switch (core.kind) {
+    switch (core?.kind) {
       case Kind.AUTOMATON: {
         const e = core.addState(
           formData.get("state-name")?.toString() || "",
@@ -303,9 +312,9 @@ export default function EditButtons({ children }: Props) {
   }
 
   function formEditState(formData: FormData) {
-    const core = coreState.primary;
+    const core = coreContext?.primary;
 
-    switch (core.kind) {
+    switch (core?.kind) {
       case Kind.AUTOMATON: {
         const e = core.renameState(
           selectedNodeId,
@@ -319,6 +328,7 @@ export default function EditButtons({ children }: Props) {
           console.log("state renamed successfuly");
           closeModal();
         }
+        setSelectedNodeId("");
         break;
       }
       case Kind.GRAMMAR:
@@ -328,9 +338,9 @@ export default function EditButtons({ children }: Props) {
   }
 
   function formAddEdge(formData: FormData) {
-    const core = coreState.primary;
+    const core = coreContext?.primary;
 
-    switch (core.kind) {
+    switch (core?.kind) {
       case Kind.AUTOMATON: {
         const char = formData.get("edge-character")?.toString() || "";
 
@@ -357,9 +367,9 @@ export default function EditButtons({ children }: Props) {
   }
 
   function formEditEdge(formData: FormData) {
-    const core = coreState.primary;
+    const core = coreContext?.primary;
 
-    switch (core.kind) {
+    switch (core?.kind) {
       case Kind.AUTOMATON: {
         const char = formData.get("edge-character")?.toString() || "";
 
@@ -374,6 +384,7 @@ export default function EditButtons({ children }: Props) {
           console.log("edge edited successfuly");
           closeModal();
         }
+        setSelectedEdgeId("");
         break;
       }
       case Kind.GRAMMAR:
@@ -383,7 +394,7 @@ export default function EditButtons({ children }: Props) {
   }
 
   return (
-    <CoreContext.Provider value={coreState}>
+    <>
       <div className="row">
         <div className="col-2">
           <div className="stack">
@@ -418,8 +429,8 @@ export default function EditButtons({ children }: Props) {
             <button
               className="btn btn-primary"
               onClick={() => {
-                if (coreState.primary.kind === Kind.AUTOMATON) {
-                  console.log(exportAutomaton(coreState.primary));
+                if (coreContext?.primary.kind === Kind.AUTOMATON) {
+                  console.log(exportAutomaton(coreContext?.primary));
                 }
               }}
             >
@@ -464,7 +475,7 @@ export default function EditButtons({ children }: Props) {
                         .on("tap", clickElsewhereHandler);
                     }
                   );
-                  setCoreState(new Core(newAutomatonCore));
+                  coreContext.setCorePrimary(newAutomatonCore);
                 });
               }}
             />
@@ -518,6 +529,6 @@ export default function EditButtons({ children }: Props) {
         </form>
       </ReactModal>
       {children}
-    </CoreContext.Provider>
+      </>
   );
 }

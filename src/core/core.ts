@@ -38,6 +38,8 @@ export interface ICore {
   primary: ICoreType,
   secondary?: ICoreType,
 
+  setCorePrimary: (primary: IAutomatonCore | IGrammarCore) => void;
+
   // switches to edit mode and if there are two cores present, deletes one of them
   switchToEditMode: (keepSecondary: boolean) => IErrorMessage | undefined;
   // switches to visual mode without immediately running any algorithm/simulation (and therefore without creating second window)
@@ -80,9 +82,15 @@ export class Core implements ICore {
   setPrimaryType?: React.Dispatch<React.SetStateAction<ICoreType>>;
   setSecondaryType?: React.Dispatch<React.SetStateAction<ICoreType | undefined>>;
 
-  constructor(primary?: IAutomatonCore | IGrammarCore) {
+  constructor() {
     this.mode = new ModeHolder();
-    this.primary = primary ?? new AutomatonCore(AutomatonType.FINITE, PRIMARY_CYTOSCAPE_ID, this.mode);
+    this.primary = new AutomatonCore(AutomatonType.FINITE, PRIMARY_CYTOSCAPE_ID, this.mode);
+  }
+
+  // like a constructor, because I am too tired to rework the whole fucking thing again
+  setCorePrimary(primary: IAutomatonCore | IGrammarCore) {
+    this.mode = new ModeHolder();
+    this.primary = primary;
   }
 
   newWindow(type: ObjectType) {

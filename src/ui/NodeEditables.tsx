@@ -4,7 +4,7 @@ interface NodeEditablesProps {
 }
 
 export default function NodeEditables({ id, formAction }: NodeEditablesProps) {
-  return <div>
+  return <div className="editables">
     <h2>Edit state</h2>
     <form action={formAction}>
       <label htmlFor="state-name">Name of the state: </label>

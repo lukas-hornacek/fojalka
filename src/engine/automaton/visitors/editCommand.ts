@@ -90,6 +90,9 @@ export class VisualVisitor implements IEditCommandVisitor {
       throw new Error("Type mismatch");
     }
     this.visual.editEdge(command.edgeId, command.edge.label);
+
+    //this.visual.removeEdge(command.edgeId);
+    //this.visual.addEdge(command.edge.id, command.edge.);
   }
 
   // TODO Use the command argument to highlight the change

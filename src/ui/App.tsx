@@ -1,6 +1,6 @@
-import "./App.css";
+import "./styles/main.css";
 import { CoreContext } from "../core/CoreContext";
-import Buttons from "./buttons/Buttons.tsx";
+import MainMenu from "./MainMenu.tsx";
 import Windows from "./Windows.tsx";
 import { useContext, useState } from "react";
 import { ICoreType, Mode } from "../core/core.ts";
@@ -23,7 +23,7 @@ export default function App() {
   return (
     <div className="container-fluid">
       <h1>Víla Fojálka</h1>
-      <Buttons mode={mode} primaryType={primaryType} />
+      <MainMenu mode={mode} primaryType={primaryType} />
       <Windows primaryType={primaryType} secondaryType={secondaryType} />
     </div>
   );

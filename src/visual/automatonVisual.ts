@@ -218,8 +218,17 @@ export class AutomatonVisual implements IAutomatonVisual {
     });
   }
 
+  // delete and re-add the edge
   editEdge(id: string, label: string) {
-    this.cy?.getElementById(`edges#${id}`).data("label", label);
+    const data: any = this.cy?.getElementById(id).data();
+    this.cy?.getElementById(id).remove();
+
+    data.label = label;
+
+    this.cy?.add({
+      group: "edges",
+      data: data,
+    });
     console.log(id, label);
   }
 

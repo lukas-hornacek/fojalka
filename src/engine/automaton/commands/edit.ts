@@ -394,6 +394,8 @@ export class EditEdgeCommand extends AutomatonEditCommand {
     let toState = "";
     let index = -1;
 
+    console.log(this.automaton.deltaFunctionMatrix);
+
     for (const from in this.automaton.deltaFunctionMatrix) {
       for (const to in this.automaton.deltaFunctionMatrix[from]) {
         const find = this.automaton.deltaFunctionMatrix[from][to].findIndex(someEdge => someEdge.id === this.edgeId);
@@ -417,6 +419,8 @@ export class EditEdgeCommand extends AutomatonEditCommand {
     if (this.automaton.states.includes(this.edge.inputChar)) {
       return new ErrorMessage(`Edge cannot contain character ${this.edge.inputChar}, as there is already a state with that name.`);
     }
+
+    
 
     this.saveBackup();
 

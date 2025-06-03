@@ -4,7 +4,7 @@ interface EdgeEditablesProps {
 }
 
 export default function EdgeEditables({ char, formAction }: EdgeEditablesProps) {
-  return <div>
+  return <div className="editables">
     <h2>Edit edge</h2>
     <form action={formAction}>
       <label htmlFor="edge-character">Edge character: </label>

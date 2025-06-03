@@ -1,16 +1,8 @@
-import { useContext } from "react";
 import { ICoreType, Kind } from "../core/core";
-import { CoreContext } from "../core/CoreContext";
 import AutomatonWindow from "./AutomatonWindow";
 import GrammarWindow from "./components/grammar-window/GrammarWindow";
 
 export default function Windows({ primaryType, secondaryType }: { primaryType: ICoreType, secondaryType: ICoreType | undefined }) {
-  const core = useContext(CoreContext);
-
-  if (!core) {
-    throw new Error("Windows must be used within a CoreProvider");
-  }
-
   if (secondaryType === undefined) {
     return (
       <div id="cy-window" className="d-flex flex-row">

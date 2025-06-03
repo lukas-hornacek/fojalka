@@ -385,6 +385,10 @@ export class AutomatonCore implements IAutomatonCore {
     }
 
     const edge: IEdge = this.factory.createEdge(props);
+
+    // this is extremely important, otherwise it fucks up the renaming
+    edge.id = id;
+
     const command: AutomatonEditCommand = new EditEdgeCommand(
       this.automaton,
       id,
