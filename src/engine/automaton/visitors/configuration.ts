@@ -110,14 +110,13 @@ export class NextStepVisitor implements IConfigurationVisitor {
         }
       }
 
-      const m = Math.floor(Math.random() * (nextEdgeList.length + 1));
-      if (m === nextEdgeList.length) {
+      if (0 === nextEdgeList.length) {
         throw new Error("Input end reached");
-      } else {
-        const edgeUSed = nextEdgeList[m];
-        this.result = edgeUSed.edge;
-        return new NFAConfiguration(edgeUSed.state, configuration.remainingInput);
       }
+      const m = Math.floor(Math.random() * nextEdgeList.length);
+      const edgeUSed = nextEdgeList[m];
+      this.result = edgeUSed.edge;
+      return new NFAConfiguration(edgeUSed.state, configuration.remainingInput);
     }
 
     if (this.automaton.automatonType != AutomatonType.FINITE) {

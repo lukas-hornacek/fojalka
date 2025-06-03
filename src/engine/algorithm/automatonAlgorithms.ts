@@ -29,7 +29,7 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
       throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions.");
     }
     if (!this.isContinuous()) {
-      throw new Error("Cannot use algorithm, as the input automaton has multiple components.");
+      throw new Error("Cannot use algorithm, as some of the states are not reachable from the ititial state.");
     }
 
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
