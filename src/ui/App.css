@@ -1,5 +1,6 @@
 #cy-primary, #cy-secondary {
-    height: 90%;
+    width: 90%;
+    height: 70vh;
     border: solid 1px black;
 }
 
