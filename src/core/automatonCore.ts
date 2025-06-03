@@ -205,7 +205,6 @@ export class AutomatonCore implements IAutomatonCore {
   callbackAfterInit(fn: (cy: cytoscape.Core) => void) {
     this.visual.callbackAfterInit(fn);
   }
-  
 
   init(): undefined {
     this.visual.init();

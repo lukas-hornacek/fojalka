@@ -46,12 +46,13 @@ export class Grammar {
   constructor(grammarType: GrammarType,
     nonTerminalSymbols: string[],
     terminalSymbols: string[],
-    initialNonTerminalSymbol: string) {
+    initialNonTerminalSymbol: string,
+    productionRules?: ProductionRule[]) {
     this.grammarType = grammarType;
     this.nonTerminalSymbols = nonTerminalSymbols;
     this.terminalSymbols = terminalSymbols;
     this.initialNonTerminalSymbol = initialNonTerminalSymbol;
-    this.productionRules = [];
+    this.productionRules = productionRules ?? [];
     this.commandHistory = [];
   }
 

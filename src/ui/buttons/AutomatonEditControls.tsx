@@ -7,7 +7,6 @@ import NodeEditables from "../NodeEditables";
 import EdgeEditables from "../EdgeEditables";
 import { CoreContext } from "../App";
 
-
 ReactModal.setAppElement("#root");
 
 const customModalStyles: Styles = {
@@ -133,7 +132,7 @@ export default function AutomatonEditControls({ children }: Props) {
     // a fucking setInterval
 
     //setInterval(() => {}, 500);
-    
+
     console.log("activation!!!");
     if (coreContext.primary.kind === Kind.AUTOMATON) {
       coreContext.primary.callbackAfterInit((cy) => {
@@ -482,7 +481,7 @@ export default function AutomatonEditControls({ children }: Props) {
               }}
             /> */}
           </div>
-          {/*       does not work ://  
+          {/*       does not work ://
             {selectedNodeId === "" &&
             selectedEdgeId === "" &&
             mode === "createEdge" && (
@@ -492,19 +491,19 @@ export default function AutomatonEditControls({ children }: Props) {
                   : "Select second node"}
               </div>
             )} */}
-          {selectedNodeId !== "" && (
+          {selectedNodeId !== "" &&
             <div>
               <NodeEditables id={selectedNodeId} formAction={formEditState} />
             </div>
-          )}
-          {selectedEdgeId !== "" && (
+          }
+          {selectedEdgeId !== "" &&
             <div>
               <EdgeEditables
                 char={selectedEdgeChar}
                 formAction={formEditEdge}
               />
             </div>
-          )}
+          }
         </div>
       </div>
 

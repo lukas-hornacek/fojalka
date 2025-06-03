@@ -181,21 +181,21 @@ export const GrammarWindow: React.FC<GrammarWindowProps> = ({ primary }) => {
       <div className="section">
         <h3>Non-Terminals</h3>
         <div className="list">
-          {nonTerminals.map((nt, i) => (
+          {nonTerminals.map((nt, i) =>
             <div key={i} className="list-item">
               <span>{nt}</span>
-              {core.mode.mode === Mode.EDIT ? (
+              {core.mode.mode === Mode.EDIT ?
                 <button
                   onClick={() => handleDeleteNonTerminal(i)}
                   className="delete-btn"
                 >
                   ✕
                 </button>
-              ) : null}
+                : null}
             </div>
-          ))}
+          )}
         </div>
-        {core.mode.mode === Mode.EDIT ? (
+        {core.mode.mode === Mode.EDIT ?
           <div className="input-row">
             <input
               value={newNonTerminal}
@@ -204,27 +204,27 @@ export const GrammarWindow: React.FC<GrammarWindowProps> = ({ primary }) => {
             />
             <button onClick={handleAddNonTerminal}>Add</button>
           </div>
-        ) : null}
+          : null}
       </div>
 
       <div className="section">
         <h3>Terminals</h3>
         <div className="list">
-          {terminals.map((t, i) => (
+          {terminals.map((t, i) =>
             <div key={i} className="list-item">
               <span>{t}</span>
-              {core.mode.mode === Mode.EDIT ? (
+              {core.mode.mode === Mode.EDIT ?
                 <button
                   onClick={() => handleDeleteTerminal(i)}
                   className="delete-btn"
                 >
                   ✕
                 </button>
-              ) : null}
+                : null}
             </div>
-          ))}
+          )}
         </div>
-        {core.mode.mode === Mode.EDIT ? (
+        {core.mode.mode === Mode.EDIT ?
           <div className="input-row">
             <input
               value={newTerminal}
@@ -233,29 +233,29 @@ export const GrammarWindow: React.FC<GrammarWindowProps> = ({ primary }) => {
             />
             <button onClick={handleAddTerminal}>Add</button>
           </div>
-        ) : null}
+          : null}
       </div>
 
       <div className="section">
         <h3>Production Rules</h3>
         <div className="list">
-          {rules.map((r, i) => (
+          {rules.map((r, i) =>
             <div key={i} className="list-item">
               <span>
                 {r.input} → {r.output.join(" ")}
               </span>
-              {core.mode.mode === Mode.EDIT ? (
+              {core.mode.mode === Mode.EDIT ?
                 <button
                   onClick={() => handleDeleteRule(i)}
                   className="delete-btn"
                 >
                   ✕
                 </button>
-              ) : null}
+                : null}
             </div>
-          ))}
+          )}
         </div>
-        {core.mode.mode === Mode.EDIT ? (
+        {core.mode.mode === Mode.EDIT ?
           <div className="input-row rule-input-row">
             <input
               value={newRule.input}
@@ -274,7 +274,7 @@ export const GrammarWindow: React.FC<GrammarWindowProps> = ({ primary }) => {
             />
             <button onClick={handleAddRule}>Add Rule</button>
           </div>
-        ) : null}
+          : null}
       </div>
 
       <GrammarRepresentation grammarRepr={grammarRepr} />

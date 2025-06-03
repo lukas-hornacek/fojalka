@@ -16,14 +16,14 @@ export default function App() {
   core.setMode = setMode;
   core.setPrimaryType = setPrimaryType;
   core.setSecondaryType = setSecondaryType;
-  
+
   return (
     <CoreContext.Provider value={core}>
-    <div className="container-fluid">
-      <h1>Víla Fojálka</h1>
-      <MainMenu mode={mode} primaryType={primaryType} setCore={setCore}/>
-      <Windows primaryType={primaryType} secondaryType={secondaryType} />
-    </div>
+      <div className="container-fluid">
+        <h1>Víla Fojálka</h1>
+        <MainMenu mode={mode} primaryType={primaryType} setCore={setCore}/>
+        <Windows primaryType={primaryType} secondaryType={secondaryType} />
+      </div>
     </CoreContext.Provider>
   );
 }

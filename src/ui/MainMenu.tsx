@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { Core, ICore, ICoreType, Kind, Mode, ObjectType } from "../core/core";
+import { ICoreType, Kind, Mode, ObjectType } from "../core/core";
 import {
   Button,
   Dropdown,
@@ -21,11 +21,9 @@ import { GrammarType } from "../engine/grammar/grammar";
 export default function MainMenu({
   mode,
   primaryType,
-  setCore,
 }: {
   mode: Mode;
   primaryType: ICoreType;
-  setCore: React.Dispatch<React.SetStateAction<ICore>>;
 }) {
   const core = useContext(CoreContext);
 
@@ -38,7 +36,7 @@ export default function MainMenu({
       <div className="d-flex">
         <SwitchModeButtons mode={mode} />
         <NewWindowButton />
-        {mode === Mode.EDIT ? (
+        {mode === Mode.EDIT ?
           <>
             <button
               type="button"
@@ -66,49 +64,55 @@ export default function MainMenu({
                 file.text().then((text) => {
                   const loaded = importAutomatonOrGrammar(text);
                   if (loaded != null) {
+
+                    switch (loaded.kind) {
+                      case Kind.AUTOMATON:
+                        core.newWindow(ObjectType.AUTOMATON_FINITE);
+                        console.log("AUTOMATON_FINITE");
+                        break;
+                      case Kind.GRAMMAR:
+                        switch (loaded.type) {
+                          case GrammarType.REGULAR:
+                            core.newWindow(ObjectType.GRAMMAR_REGULAR);
+                            console.log("GRAMMAR_REGULAR");
+                            break;
+                          case GrammarType.CONTEXT_FREE:
+                            core.newWindow(ObjectType.GRAMMAR_PHRASAL);
+                            console.log("GRAMMAR_PHRASAL");
+                            break;
+                        }
+                    }
+
                     // force React to... react to the changes
                     // for something that has reacting in the name
                     // it sure is a lazy bitch
-                    const core2 = new Core();
-                    core2.setCorePrimary(loaded);
-                    if (core2.primary.kind === Kind.AUTOMATON) {
+                    //const core2 = new Core();
+                    core.setCorePrimary(loaded);
+
+                    //setCore(core2);
+                    /* if (core2.primary.kind === Kind.AUTOMATON) {
                       core2.primary.init();
-                    }
+                    } */
 
-                    setCore(core2);
-
-                    switch (core2.primary.kind) {
-                      case Kind.AUTOMATON:
-                        core2.newWindow(ObjectType.AUTOMATON_FINITE);
-                        return;
-                      case Kind.GRAMMAR:
-                        switch (core2.primary.type) {
-                          case GrammarType.REGULAR:
-                            core2.newWindow(ObjectType.GRAMMAR_REGULAR);
-                            return;
-                          case GrammarType.CONTEXT_FREE:
-                            core2.newWindow(ObjectType.GRAMMAR_PHRASAL);
-                            return;
-                        }
-                    }
+                    // I ..... dont know
                   }
                 });
               }}
             />
           </>
-        ) : null}
+          : null}
       </div>
 
       <hr />
-      {mode === Mode.EDIT ? (
-        primaryType.kind === Kind.AUTOMATON ? (
+      {mode === Mode.EDIT ?
+        primaryType.kind === Kind.AUTOMATON ?
           <AutomatonEditButtons children={""} />
-        ) : null
-      ) : primaryType.kind === Kind.AUTOMATON ? (
-        <AutomatonVisualButtons />
-      ) : (
-        <GrammarVisualButtons />
-      )}
+          : null
+        : primaryType.kind === Kind.AUTOMATON ?
+          <AutomatonVisualButtons />
+          :
+          <GrammarVisualButtons />
+      }
     </div>
   );
 }

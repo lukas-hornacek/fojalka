@@ -223,8 +223,6 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   addEdge(id: string, from: string, to: string, label: string) {
-    console.log(id, from, to, label);
-
     this.cy?.add({
       group: "edges",
       data: { id, source: from, target: to, label },

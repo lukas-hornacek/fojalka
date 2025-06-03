@@ -3,7 +3,7 @@ import { AutomatonCore, IAutomatonCore } from "../core/automatonCore";
 import { IAutomaton } from "../engine/automaton/automaton";
 import { Kind } from "../core/core";
 import { GrammarCore, IGrammarCore } from "../core/grammarCore";
-import { GrammarType } from "../engine/grammar/grammar";
+import { GrammarType, ProductionRule } from "../engine/grammar/grammar";
 
 export interface SavedAutomaton {
   kind: Kind.AUTOMATON;
@@ -19,6 +19,7 @@ export interface SavedGrammar {
     nonTerminalSymbols: string[];
     terminalSymbols: string[];
     initialNonTerminalSymbol: string;
+    productionRules: ProductionRule[];
   };
 }
 
@@ -45,16 +46,16 @@ export function exportAutomaton(automatonCore: IAutomatonCore) {
   return exportObject;
 }
 
-
 export function exportGrammar(grammarCore: IGrammarCore) {
   const exportObject: SavedGrammar = {
     kind: grammarCore.kind,
     type: grammarCore.type,
-    grammar: { 
-      grammarType: grammarCore.grammar.grammarType, 
+    grammar: {
+      grammarType: grammarCore.grammar.grammarType,
       nonTerminalSymbols: grammarCore.grammar.nonTerminalSymbols,
       terminalSymbols: grammarCore.grammar.terminalSymbols,
-      initialNonTerminalSymbol: grammarCore.grammar.initialNonTerminalSymbol
+      initialNonTerminalSymbol: grammarCore.grammar.initialNonTerminalSymbol,
+      productionRules: grammarCore.grammar.productionRules,
     },
   };
 
@@ -66,13 +67,12 @@ export function exportGrammar(grammarCore: IGrammarCore) {
   return exportObject;
 }
 
-
 export function importAutomatonOrGrammar(data: string) {
   const imported: SavedAutomaton | SavedGrammar = JSON.parse(data);
 
   console.log("Parsed import:");
   console.log(imported);
-  
+
   switch (imported.kind) {
     case Kind.AUTOMATON:
       return AutomatonCore.fromSavedJSON(imported);

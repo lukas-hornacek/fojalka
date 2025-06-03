@@ -96,7 +96,8 @@ export class GrammarCore implements IGrammarCore {
       savedGrammar.grammar.grammarType,
       savedGrammar.grammar.nonTerminalSymbols,
       savedGrammar.grammar.terminalSymbols,
-      savedGrammar.grammar.initialNonTerminalSymbol
+      savedGrammar.grammar.initialNonTerminalSymbol,
+      savedGrammar.grammar.productionRules
     );
 
     return grammarCore;
