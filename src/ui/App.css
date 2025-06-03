@@ -1,8 +1,8 @@
 #cy-primary, #cy-secondary {
     height: 90%;
-    border: solid;
-    border-width: 1;
+    border: solid 1px black;
 }
+
 
 #cy-window {
     height: 100%;

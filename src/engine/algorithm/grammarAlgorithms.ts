@@ -1,7 +1,7 @@
 import { SECONDARY_CYTOSCAPE_ID, EPSILON, INITIAL_STATE } from "../../constants";
-import { AutomatonCore } from "../../core/automatonCore";
+import { AutomatonCore, IAutomatonCore } from "../../core/automatonCore";
 import { Kind, ModeHolder } from "../../core/core";
-import { GrammarCore } from "../../core/grammarCore";
+import { GrammarCore, IGrammarCore } from "../../core/grammarCore";
 import { AutomatonType } from "./../automaton/automaton";
 import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RenameStateCommand, SetStateFinalFlagCommand } from "../automaton/commands/edit";
 import { ErrorMessage } from "../common";
@@ -13,10 +13,10 @@ export class GrammarToAutomatonAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
-  inputCore: GrammarCore;
-  outputCore?: AutomatonCore;
+  inputCore: IGrammarCore;
+  outputCore?: IAutomatonCore;
 
-  constructor(_inputCore: GrammarCore) {
+  constructor(_inputCore: IGrammarCore) {
     super();
     this.inputCore = _inputCore;
   }
@@ -26,7 +26,7 @@ export class GrammarToAutomatonAlgorithm extends Algorithm {
       throw new Error("Cannot use algorithm, as it only works with regular grammars.");
     }
     if (!this.isGrammarInNormalForm()) {
-      throw new Error("Cannot use algorithm, as the grammar is not in required normal form.");
+      throw new Error("Cannot use algorithm, as the grammar is not in required normal form. Try running the normal form algorithm first.");
     }
 
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
@@ -110,10 +110,10 @@ export class GrammarNormalFormAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
   outputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
 
-  inputCore: GrammarCore;
-  outputCore?: GrammarCore;
+  inputCore: IGrammarCore;
+  outputCore?: IGrammarCore;
 
-  constructor(_inputCore: GrammarCore) {
+  constructor(_inputCore: IGrammarCore) {
     super();
     this.inputCore = _inputCore;
   }

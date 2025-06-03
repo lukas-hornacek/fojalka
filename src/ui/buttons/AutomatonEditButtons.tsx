@@ -1,13 +1,13 @@
 import { createContext, ReactNode, useEffect, useRef, useState } from "react";
-import { Core, ICore, Kind, ModeHolder } from "../core/core";
+import { Core, ICore, Kind, ModeHolder } from "../../core/core";
 import ReactModal, { Styles } from "react-modal";
 import Mousetrap from "mousetrap";
-import { exportAutomaton } from "./importExport";
-import { AutomatonCore } from "../core/automatonCore";
-import { AutomatonType } from "../engine/automaton/automaton";
-import { INITIAL_STATE, PRIMARY_CYTOSCAPE_ID } from "../constants";
-import NodeEditables from "./NodeEditables";
-import EdgeEditables from "./EdgeEditables";
+import { exportAutomaton } from "../importExport";
+import { AutomatonCore } from "../../core/automatonCore";
+import { AutomatonType } from "../../engine/automaton/automaton";
+import { INITIAL_STATE, PRIMARY_CYTOSCAPE_ID } from "../../constants";
+import NodeEditables from "../NodeEditables";
+import EdgeEditables from "../EdgeEditables";
 
 ReactModal.setAppElement("#root");
 

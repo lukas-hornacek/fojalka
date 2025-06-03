@@ -1,7 +1,7 @@
 import { SECONDARY_CYTOSCAPE_ID, EPSILON, INITIAL_STATE } from "../../constants";
-import { AutomatonCore } from "../../core/automatonCore";
+import { AutomatonCore, IAutomatonCore } from "../../core/automatonCore";
 import { Kind, ModeHolder } from "../../core/core";
-import { GrammarCore } from "../../core/grammarCore";
+import { GrammarCore, IGrammarCore } from "../../core/grammarCore";
 import { AutomatonType } from "./../automaton/automaton";
 import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RemoveEdgeCommand, RenameStateCommand, SetStateFinalFlagCommand } from "../automaton/commands/edit";
 import { ErrorMessage } from "../common";
@@ -13,10 +13,10 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
-  inputCore: AutomatonCore;
-  outputCore?: AutomatonCore;
+  inputCore: IAutomatonCore;
+  outputCore?: IAutomatonCore;
 
-  constructor(_inputCore: AutomatonCore) {
+  constructor(_inputCore: IAutomatonCore) {
     super();
     this.inputCore = _inputCore;
   }
@@ -26,7 +26,10 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
       throw new Error("Cannot use algorithm, as it only works with finite automata.");
     }
     if (this.hasEpsilonTransitions()) {
-      throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions.");
+      throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions. Try running algorithm for epsilon removal first.");
+    }
+    if (!this.isContinuous()) {
+      throw new Error("Cannot use algorithm, as some of the states are not reachable from the ititial state.");
     }
 
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
@@ -124,6 +127,7 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
   }
 
   stateToString(state: string[]): string {
+    state.sort();
     return "{" + state.join() + "}";
   }
 
@@ -148,18 +152,35 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
     return false;
   }
 
+  isContinuous(): boolean {
+    const visited: string[] = [this.inputCore.automaton.initialStateId];
+    const notProcessed: string[] = [this.inputCore.automaton.initialStateId];
+
+    while (notProcessed.length !== 0) {
+      const current: string = notProcessed.pop()!;
+
+      for (const state in this.inputCore.automaton.deltaFunctionMatrix[current]) {
+        if (!visited.includes(state)) {
+          visited.push(state);
+          notProcessed.push(state);
+        }
+      }
+    }
+
+    return visited.length === this.inputCore.automaton.states.length;
+  }
 }
 
 export class RemoveEpsilonAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
-  outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
+  outputType?: AlgorithmParams = undefined;
 
-  inputCore: AutomatonCore;
+  inputCore: IAutomatonCore;
 
   //only for the mode in init, so it wont be unused variable
-  outputCore?: AutomatonCore;
+  outputCore?: IAutomatonCore;
 
-  constructor(_inputCore: AutomatonCore) {
+  constructor(_inputCore: IAutomatonCore) {
     super();
     this.inputCore = _inputCore;
   }
@@ -324,10 +345,10 @@ export class AutomatonToGrammarAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
   outputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
 
-  inputCore: AutomatonCore;
-  outputCore?: GrammarCore;
+  inputCore: IAutomatonCore;
+  outputCore?: IGrammarCore;
 
-  constructor(_inputCore: AutomatonCore) {
+  constructor(_inputCore: IAutomatonCore) {
     super();
     this.inputCore = _inputCore;
   }
@@ -377,7 +398,7 @@ export class AutomatonToGrammarAlgorithm extends Algorithm {
           }
           const rule = this.outputCore!.factory.createProductionRule(from, output, this.outputCore!.grammar);
           const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
-          this.results.push({ highlight: [edge.id], command: command });
+          this.results.push({ highlight: [edge.id, from, to], command: command });
         }
       }
     }

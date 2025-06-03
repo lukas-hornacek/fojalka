@@ -1,10 +1,14 @@
-import { IEdge, PDAEdge } from "../edge.ts";
+import { FiniteAutomatonEdge, IEdge, PDAEdge } from "../edge.ts";
 import { AutomatonType, IAutomaton } from "../automaton.ts";
-import { FiniteConfiguration, PDAConfiguration } from "../configuration.ts";
+import { FiniteConfiguration, NFAConfiguration, NPDAConfiguration, PDAConfiguration } from "../configuration.ts";
+import { EPSILON } from "../../../constants.ts";
+import { RunStoppedError } from "../../common.ts";
 
 export interface IConfigurationVisitor {
   visitFiniteConfiguration(configuration: FiniteConfiguration): FiniteConfiguration;
   visitPDAConfiguration(configuration: PDAConfiguration): PDAConfiguration;
+  visitNFAConfiguration(configuration: NFAConfiguration): NFAConfiguration;
+  visitNPDAConfiguration(configuration: NPDAConfiguration): NPDAConfiguration;
 }
 
 export class NextStepVisitor implements IConfigurationVisitor {
@@ -22,15 +26,18 @@ export class NextStepVisitor implements IConfigurationVisitor {
     if (configuration.remainingInput.length === 0) {
       throw new Error("Input end reached");
     }
+    if (this.automaton.automatonType != AutomatonType.FINITE) {
+      throw new Error("Wrong automaton type");
+    }
     const nextSymbol = configuration.remainingInput[0];
 
     let nextState: string | undefined;
     const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
-    for (const fromState in delta) {
-      const edges = delta[fromState];
+    for (const toState in delta) {
+      const edges = delta[toState];
       for (let i = 0; i < edges.length; i++) {
         if (edges[i].inputChar === nextSymbol) {
-          nextState = fromState;
+          nextState = toState;
           this.result = edges[i];
         }
       }
@@ -60,22 +67,19 @@ export class NextStepVisitor implements IConfigurationVisitor {
     let stackWrite: string[] | undefined;
     const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
     findEdge:
-    for (const fromState in delta) {
-      const edges = delta[fromState];
+    for (const toState in delta) {
+      const edges = delta[toState];
       for (let i = 0; i < edges.length; i++) {
         const pdaEdge = edges[i];
         if (pdaEdge instanceof PDAEdge) {
           if (pdaEdge.inputChar === nextSymbol && pdaEdge.readStackChar === stackSymbol) {
-            nextState = fromState;
+            nextState = toState;
             stackWrite = pdaEdge.writeStackWord;
             this.result = edges[i];
             break findEdge;
           }
         }
         else {
-          // Not sure, maybe we can just skip edges in delta function that are not of correct type
-          // the way I implemented it now, will throw if there is a single edge of incorrect type, even if it isn't
-          // the one we are looking for
           throw new Error("AutomatonType is pushDown but one of its edges isn't");
         }
       }
@@ -87,6 +91,141 @@ export class NextStepVisitor implements IConfigurationVisitor {
     else {
       const newStack: string [] = configuration.stack.slice(0, -1).concat(stackWrite);
       return new PDAConfiguration(nextState, configuration.remainingInput.slice(1), newStack);
+    }
+  };
+
+  // this to be simmilair to deterministic finite, only go through all of delta function for given symbol,
+  // put correct steps in a list, then add some probilistic generator that picks the next Step
+  // if the list is empty, we just throw
+  visitNFAConfiguration(configuration: NFAConfiguration): NFAConfiguration {
+    if (configuration.remainingInput.length === 0) {
+      const nextEdgeList: EdgeStatePair[] = [];
+
+      const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
+      for (const toState in delta) {
+        for (const edge of delta[toState]) {
+          if (edge.inputChar === EPSILON) {
+            nextEdgeList.push({ edge: edge, state: toState });
+          }
+        }
+      }
+
+      if (0 === nextEdgeList.length) {
+        throw new Error("Input end reached");
+      }
+      const m = Math.floor(Math.random() * nextEdgeList.length);
+      const edgeUSed = nextEdgeList[m];
+      this.result = edgeUSed.edge;
+      return new NFAConfiguration(edgeUSed.state, configuration.remainingInput);
+    }
+
+    if (this.automaton.automatonType != AutomatonType.FINITE) {
+      throw new Error("Wrong automaton type");
+    }
+    const nextSymbol = configuration.remainingInput[0];
+
+    type EdgeStatePair = {
+      edge: FiniteAutomatonEdge;
+      state: string;
+    };
+    const nextEdgeList: EdgeStatePair[] = [];
+
+    const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
+    for (const toState in delta) {
+      const edges = delta[toState];
+      for (let i = 0; i < edges.length; i++) {
+        if (edges[i].inputChar === nextSymbol || edges[i].inputChar === EPSILON) {
+          const pair: EdgeStatePair = {
+            edge: edges[i],
+            state: toState,
+          };
+          nextEdgeList.push(pair);
+        }
+      }
+    }
+    if (nextEdgeList.length === 0) {
+      throw new RunStoppedError(
+        "No posible next step from this state and input symbol. Automaton is at a dead end. This may be caused by non-determinism, if you want  a different run try running the simulation again or undoing the last step"
+      );
+    }
+    else {
+      let m: number;
+      if (nextEdgeList.length === 1) {
+        m = 0;
+      }
+      else {
+        m = Math.floor(Math.random() * nextEdgeList.length);
+      }
+      const edgeUSed = nextEdgeList[m];
+      this.result = edgeUSed.edge;
+      if (edgeUSed.edge.inputChar === EPSILON) {
+        return new NFAConfiguration(edgeUSed.state, configuration.remainingInput);
+      }
+      else {
+        return new NFAConfiguration(edgeUSed.state, configuration.remainingInput.slice(1));
+      }
+    }
+  }
+
+  visitNPDAConfiguration(configuration: NPDAConfiguration): NPDAConfiguration {
+    if (configuration.remainingInput.length === 0) {
+      throw new Error("Input end reached");
+    }
+
+    if (this.automaton.automatonType != AutomatonType.PDA) {
+      throw new Error("Wrong automaton type");
+    }
+
+    const nextSymbol = configuration.remainingInput[0];
+    const stackSymbol = configuration.stack[configuration.stack.length - 1];
+
+    type EdgeStatePair = {
+      edge: PDAEdge;
+      state: string;
+    };
+    const nextEdgeList: EdgeStatePair[] = [];
+
+    const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
+    for (const toState in delta) {
+      const edges = delta[toState];
+      for (let i = 0; i < edges.length; i++) {
+        const pdaEdge = edges[i];
+        if (pdaEdge instanceof PDAEdge) {
+          if ((pdaEdge.inputChar === nextSymbol || pdaEdge.inputChar === EPSILON) && pdaEdge.readStackChar === stackSymbol) {
+            const pair: EdgeStatePair = {
+              edge: pdaEdge,
+              state: toState,
+            };
+            nextEdgeList.push(pair);
+          }
+        }
+        else {
+          throw new Error("AutomatonType is pushDown but one of its edges isn't");
+        }
+      }
+    }
+
+    if (nextEdgeList.length === 0) {
+      throw new RunStoppedError(
+        "No posible next step from this state and input symbol. Automaton is at a dead end. This may be caused by non-determinism, if you want  a different run try running the simulation again or undoing the last step"
+      );    }
+    else {
+      let m: number;
+      if (nextEdgeList.length === 1) {
+        m = 0;
+      }
+      else {
+        m = Math.floor(Math.random() * nextEdgeList.length);
+      }
+      const edgeUSed = nextEdgeList[m];
+      this.result = edgeUSed.edge;
+      const newStack: string [] = configuration.stack.slice(0, -1).concat(edgeUSed.edge.writeStackWord);
+      if (edgeUSed.edge.inputChar === EPSILON) {
+        return new NPDAConfiguration (edgeUSed.state, configuration.remainingInput, newStack);
+      }
+      else {
+        return new NPDAConfiguration(edgeUSed.state, configuration.remainingInput.slice(1), newStack);
+      }
     }
   };
 }

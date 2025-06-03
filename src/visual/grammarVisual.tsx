@@ -14,6 +14,8 @@ export interface IGrammarVisual {
   refresh: () => void;
   highlight: (ids: string[]) => void;
   clearHighlights: () => void;
+
+  refresher?: React.Dispatch<React.SetStateAction<React.ReactNode>>
 }
 
 export class GrammarVisual implements IGrammarVisual {
@@ -23,6 +25,8 @@ export class GrammarVisual implements IGrammarVisual {
   existingRuleIds: string[] = [];
   highlightedRuleIds: Set<string> = new Set();
   highlightedSymbols: Set<string> = new Set();
+
+  refresher?: React.Dispatch<React.SetStateAction<React.ReactNode>>;
 
   setGrammar(grammar: Grammar) {
     this.grammar = grammar;
@@ -54,11 +58,17 @@ export class GrammarVisual implements IGrammarVisual {
         this.highlightedSymbols.add(id);
       }
     }
+
+    this.refresh();
+    this.refresher?.(this.display());
   }
 
   clearHighlights() {
     this.highlightedRuleIds.clear();
     this.highlightedSymbols.clear();
+
+    this.refresh();
+    this.refresher?.(this.display());
   }
 
   // refresh representation according to grammar

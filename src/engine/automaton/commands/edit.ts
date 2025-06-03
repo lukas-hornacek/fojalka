@@ -41,10 +41,19 @@ export class AddStateCommand extends AutomatonEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    if (this.automaton.states.some((id) => id === this.stateId)) {
-      return new ErrorMessage(
-        `Cannot add state ${this.stateId}, as it has already been added before.`
-      );
+    if (this.automaton.states.some(id => id === this.stateId)) {
+      return new ErrorMessage(`Cannot add state ${this.stateId}, as it has already been added before.`);
+    }
+
+    const delta = this.automaton.deltaFunctionMatrix;
+    for (const fromState in delta) {
+      for (const toState in delta[fromState]) {
+        for (const edge of delta[fromState][toState]) {
+          if (edge.inputChar === this.stateId) {
+            return new ErrorMessage(`Cannot add state ${this.stateId}, as it is already present as an edge symbol.`);
+          }
+        }
+      }
     }
 
     this.saveBackup();
@@ -121,6 +130,17 @@ export class RenameStateCommand extends AutomatonEditCommand {
     }
     if (this.automaton.states.some(id => id === this.newStateId) && this.newStateId !== this.stateId) {
       return new ErrorMessage(`Cannot rename state ${this.stateId} to ${this.newStateId}, as there is already a state with that name.`);
+    }
+
+    const delta = this.automaton.deltaFunctionMatrix;
+    for (const fromState in delta) {
+      for (const toState in delta[fromState]) {
+        for (const edge of delta[fromState][toState]) {
+          if (edge.inputChar === this.newStateId) {
+            return new ErrorMessage(`Cannot rename state ${this.stateId} to ${this.newStateId}, as there is already an edge symbol with that name.`);
+          }
+        }
+      }
     }
 
     this.saveBackup();
@@ -272,7 +292,13 @@ export class AddEdgeCommand extends AutomatonEditCommand {
         (edge) => edge.equals(this.edge)
       )
     ) {
-      return new ErrorMessage("Cannot add edge, as it already exists.");
+      return new ErrorMessage(
+        "Cannot add edge, as it already exists."
+      );
+    }
+
+    if (this.automaton.states.includes(this.edge.inputChar)) {
+      return new ErrorMessage(`Edge cannot contain character ${this.edge.inputChar}, as there is already a state with that name.`);
     }
 
     this.automaton.deltaFunctionMatrix[this.fromStateId][this.toStateId].push(
@@ -386,6 +412,10 @@ export class EditEdgeCommand extends AutomatonEditCommand {
 
     if (index === -1) {
       return new ErrorMessage(`Cannot edit edge ${this.edgeId}, as it does not exist.`);
+    }
+
+    if (this.automaton.states.includes(this.edge.inputChar)) {
+      return new ErrorMessage(`Edge cannot contain character ${this.edge.inputChar}, as there is already a state with that name.`);
     }
 
     this.saveBackup();

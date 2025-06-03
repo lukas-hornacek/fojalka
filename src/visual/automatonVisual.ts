@@ -1,6 +1,7 @@
-import cytoscape from "cytoscape";
+import cytoscape, { ElementDefinition } from "cytoscape";
 import { Kind } from "../core/core";
 import { IAutomaton } from "../engine/automaton/automaton";
+import { PRIMARY_CYTOSCAPE_ID } from "../constants";
 
 export type NodeProps = {
   id: string;
@@ -21,6 +22,8 @@ export interface IAutomatonVisual {
 
   init: () => void;
   fit: () => void;
+  getElements: () => ElementDefinition[]
+  reinitialize: (elements: ElementDefinition[]) => void;
 
   addNode: (id: string, position: { x: number; y: number }) => void;
   removeNode: (id: string) => void;
@@ -44,9 +47,11 @@ export class AutomatonVisual implements IAutomatonVisual {
   kind = Kind.AUTOMATON as const;
   id: string;
   cy?: cytoscape.Core;
+
   initialJSON?: object;
   initialState: string = "";
   initialStatePosition: { x: number; y: number } = { x: 0, y: 0 };
+  elems?: ElementDefinition[];
 
   constructor(
     id: string,
@@ -58,12 +63,34 @@ export class AutomatonVisual implements IAutomatonVisual {
     this.initialStatePosition = initialStatePosition;
   }
 
+  reinitialize(elems: ElementDefinition[]) {
+    this.id = PRIMARY_CYTOSCAPE_ID;
+    this.elems = elems;
+  }
+
+  getElements() {
+    const nodes = this.cy?.nodes().map(node => ({
+      data: node.data(),
+      group: node.group(),
+      classes: node.classes(),
+      position: node.position(),
+    }));
+    const edges: ElementDefinition[] = this.cy!.edges().map(edge => ({
+      data: edge.data(),
+      group: edge.group(),
+      classes: edge.classes(),
+    }));
+    // cytoscape does not play well with TypeScript...
+    return [...nodes as ElementDefinition[], ...edges];
+  }
+
   init() {
     console.log("init");
+    this.cy?.destroy();
 
     this.cy = cytoscape({
       container: document.getElementById(this.id),
-      elements: [
+      elements: this.elems ?? [
         {
           group: "nodes",
           data: { id: this.initialState },
@@ -101,7 +128,7 @@ export class AutomatonVisual implements IAutomatonVisual {
           },
         },
       ],
-      layout: { name: "preset" },
+      layout: { name: "grid", rows: 1 },
       maxZoom: 10,
       selectionType: "single",
     });
