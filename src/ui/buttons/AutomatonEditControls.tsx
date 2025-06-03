@@ -41,19 +41,18 @@ export default function AutomatonEditControls({ children }: Props) {
 
   useEffect(() => {
     coreContext.setCorePrimary(new AutomatonCore(
-        AutomatonType.FINITE,
-        PRIMARY_CYTOSCAPE_ID,
-        new ModeHolder(),
-        INITIAL_STATE,
-        { x: 0, y: 0 },
-        (automatonCore) => {
-          automatonCore.getCytoscape()!.on("tap", "node", clickNodeHandler);
-          automatonCore.getCytoscape()!.on("tap", "edge", clickEdgeHandler);
-          automatonCore.getCytoscape()!.on("tap", clickElsewhereHandler);
-        }
-      ))
+      AutomatonType.FINITE,
+      PRIMARY_CYTOSCAPE_ID,
+      new ModeHolder(),
+      INITIAL_STATE,
+      { x: 0, y: 0 },
+      (automatonCore) => {
+        automatonCore.getCytoscape()!.on("tap", "node", clickNodeHandler);
+        automatonCore.getCytoscape()!.on("tap", "edge", clickEdgeHandler);
+        automatonCore.getCytoscape()!.on("tap", clickElsewhereHandler);
+      }
+    ));
   }, []);
-
 
   const [isVisibleModal, setIsStateModal] = useState<boolean>(false);
   const [mode, setMode] = useState<mode>("none");
@@ -125,7 +124,6 @@ export default function AutomatonEditControls({ children }: Props) {
       // second click
       to.current = e.target.id();
       console.log("selected second node:", to.current);
-
 
       setSelectedEdgeId("");
       setSelectedNodeId("");
@@ -529,6 +527,6 @@ export default function AutomatonEditControls({ children }: Props) {
         </form>
       </ReactModal>
       {children}
-      </>
+    </>
   );
 }

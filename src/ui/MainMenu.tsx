@@ -33,17 +33,17 @@ export default function MainMenu({
         <NewWindowButton />
         {mode === Mode.EDIT ? <ImportExportButtons /> : null}
       </div>
-      
+
       <hr />
-      {mode === Mode.EDIT ? (
-        primaryType.kind === Kind.AUTOMATON ? (
+      {mode === Mode.EDIT ?
+        primaryType.kind === Kind.AUTOMATON ?
           <AutomatonEditButtons children={""} />
-        ) : null
-      ) : primaryType.kind === Kind.AUTOMATON ? (
-        <AutomatonVisualButtons />
-      ) : (
-        <GrammarVisualButtons />
-      )}
+          : null
+        : primaryType.kind === Kind.AUTOMATON ?
+          <AutomatonVisualButtons />
+          :
+          <GrammarVisualButtons />
+      }
     </div>
   );
 }
