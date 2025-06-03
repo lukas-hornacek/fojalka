@@ -1,6 +1,5 @@
 import { useContext, useState } from "react";
-import { ICoreType, Kind, Mode, ObjectType } from "../core/core";
-import { CoreContext } from "../core/CoreContext";
+import { Core, ICore, ICoreType, Kind, Mode, ObjectType } from "../core/core";
 import {
   Button,
   Dropdown,
@@ -11,14 +10,22 @@ import {
   ToggleButtonGroup,
 } from "react-bootstrap";
 import AutomatonEditButtons from "./buttons/AutomatonEditControls";
-import { AutomatonVisualButtons, GrammarVisualButtons } from "./buttons/VisualButtons";
+import {
+  AutomatonVisualButtons,
+  GrammarVisualButtons,
+} from "./buttons/VisualButtons";
+import { importAutomatonOrGrammar } from "./importAndExport";
+import { CoreContext } from "./App";
+import { GrammarType } from "../engine/grammar/grammar";
 
 export default function MainMenu({
   mode,
   primaryType,
+  setCore,
 }: {
   mode: Mode;
   primaryType: ICoreType;
+  setCore: React.Dispatch<React.SetStateAction<ICore>>;
 }) {
   const core = useContext(CoreContext);
 
@@ -31,19 +38,77 @@ export default function MainMenu({
       <div className="d-flex">
         <SwitchModeButtons mode={mode} />
         <NewWindowButton />
-        {mode === Mode.EDIT ? <ImportExportButtons /> : null}
+        {mode === Mode.EDIT ? (
+          <>
+            <button
+              type="button"
+              id="import-button"
+              onClick={() => {
+                // open file select dialog
+                document.getElementById("file-input")?.click();
+              }}
+            >
+              Import
+            </button>
+            <input
+              type="file"
+              id="file-input"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                console.log("file changed");
+                const files = e.target.files;
+                if (files?.length !== 1) {
+                  alert("Select exactly one input file");
+                  return;
+                }
+
+                const file = files[0];
+                file.text().then((text) => {
+                  const loaded = importAutomatonOrGrammar(text);
+                  if (loaded != null) {
+                    // force React to... react to the changes
+                    // for something that has reacting in the name
+                    // it sure is a lazy bitch
+                    const core2 = new Core();
+                    core2.setCorePrimary(loaded);
+                    if (core2.primary.kind === Kind.AUTOMATON) {
+                      core2.primary.init();
+                    }
+
+                    setCore(core2);
+
+                    switch (core2.primary.kind) {
+                      case Kind.AUTOMATON:
+                        core2.newWindow(ObjectType.AUTOMATON_FINITE);
+                        return;
+                      case Kind.GRAMMAR:
+                        switch (core2.primary.type) {
+                          case GrammarType.REGULAR:
+                            core2.newWindow(ObjectType.GRAMMAR_REGULAR);
+                            return;
+                          case GrammarType.CONTEXT_FREE:
+                            core2.newWindow(ObjectType.GRAMMAR_PHRASAL);
+                            return;
+                        }
+                    }
+                  }
+                });
+              }}
+            />
+          </>
+        ) : null}
       </div>
 
       <hr />
-      {mode === Mode.EDIT ?
-        primaryType.kind === Kind.AUTOMATON ?
+      {mode === Mode.EDIT ? (
+        primaryType.kind === Kind.AUTOMATON ? (
           <AutomatonEditButtons children={""} />
-          : null
-        : primaryType.kind === Kind.AUTOMATON ?
-          <AutomatonVisualButtons />
-          :
-          <GrammarVisualButtons />
-      }
+        ) : null
+      ) : primaryType.kind === Kind.AUTOMATON ? (
+        <AutomatonVisualButtons />
+      ) : (
+        <GrammarVisualButtons />
+      )}
     </div>
   );
 }
@@ -183,16 +248,6 @@ function NewWindowButton() {
           </p>
         </Modal.Footer>
       </Modal>
-    </>
-  );
-}
-
-// TODO
-function ImportExportButtons() {
-  return (
-    <>
-      <button className="btn btn-primary">Import</button>
-      <button className="btn btn-primary">Export</button>
     </>
   );
 }

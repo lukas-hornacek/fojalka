@@ -1,14 +1,12 @@
 import { ReactNode, useContext, useEffect, useRef, useState } from "react";
-import { Kind, ModeHolder } from "../../core/core";
+import { Kind } from "../../core/core";
 import ReactModal, { Styles } from "react-modal";
 import Mousetrap from "mousetrap";
-import { exportAutomaton } from "../importExport";
-import { AutomatonCore } from "../../core/automatonCore";
-import { AutomatonType } from "../../engine/automaton/automaton";
-import { INITIAL_STATE, PRIMARY_CYTOSCAPE_ID } from "../../constants";
+import { exportAutomaton } from "../importAndExport";
 import NodeEditables from "../NodeEditables";
 import EdgeEditables from "../EdgeEditables";
-import { CoreContext } from "../../core/CoreContext";
+import { CoreContext } from "../App";
+
 
 ReactModal.setAppElement("#root");
 
@@ -38,21 +36,6 @@ export default function AutomatonEditControls({ children }: Props) {
   if (coreContext === undefined) {
     throw new Error("This shit, too, must be used within a CoreProvider");
   }
-
-  useEffect(() => {
-    coreContext.setCorePrimary(new AutomatonCore(
-      AutomatonType.FINITE,
-      PRIMARY_CYTOSCAPE_ID,
-      new ModeHolder(),
-      INITIAL_STATE,
-      { x: 0, y: 0 },
-      (automatonCore) => {
-        automatonCore.getCytoscape()!.on("tap", "node", clickNodeHandler);
-        automatonCore.getCytoscape()!.on("tap", "edge", clickEdgeHandler);
-        automatonCore.getCytoscape()!.on("tap", clickElsewhereHandler);
-      }
-    ));
-  }, []);
 
   const [isVisibleModal, setIsStateModal] = useState<boolean>(false);
   const [mode, setMode] = useState<mode>("none");
@@ -139,6 +122,27 @@ export default function AutomatonEditControls({ children }: Props) {
       setSelectedEdgeId("");
     }
   };
+
+  // upon creation I guess
+  useEffect(() => {
+    // I am done with it
+    // the audacity!
+    // the horror!
+    // the violation of good coding practises!
+    // behold!
+    // a fucking setInterval
+
+    //setInterval(() => {}, 500);
+    
+    console.log("activation!!!");
+    if (coreContext.primary.kind === Kind.AUTOMATON) {
+      coreContext.primary.callbackAfterInit((cy) => {
+        cy.on("tap", "node", clickNodeHandler);
+        cy.on("tap", "edge", clickEdgeHandler);
+        cy.on("tap", clickElsewhereHandler);
+      });
+    }
+  }, [coreContext]);
 
   // set handler based on the mode
   useEffect(() => {
@@ -435,7 +439,7 @@ export default function AutomatonEditControls({ children }: Props) {
               Export
             </button>
 
-            <button
+            {/* <button
               type="button"
               id="import-button"
               onClick={() => {
@@ -476,21 +480,31 @@ export default function AutomatonEditControls({ children }: Props) {
                   coreContext.setCorePrimary(newAutomatonCore);
                 });
               }}
-            />
+            /> */}
           </div>
-          {selectedNodeId !== "" &&
+          {/*       does not work ://  
+            {selectedNodeId === "" &&
+            selectedEdgeId === "" &&
+            mode === "createEdge" && (
+              <div className="editables">
+                {from.current === ""
+                  ? "Select first node"
+                  : "Select second node"}
+              </div>
+            )} */}
+          {selectedNodeId !== "" && (
             <div>
               <NodeEditables id={selectedNodeId} formAction={formEditState} />
             </div>
-          }
-          {selectedEdgeId !== "" &&
+          )}
+          {selectedEdgeId !== "" && (
             <div>
               <EdgeEditables
                 char={selectedEdgeChar}
                 formAction={formEditEdge}
               />
             </div>
-          }
+          )}
         </div>
       </div>
 

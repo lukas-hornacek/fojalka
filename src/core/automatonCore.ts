@@ -26,7 +26,7 @@ import {
 } from "../engine/automaton/commands/edit";
 import { NextStepCommand } from "../engine/automaton/commands/run";
 import { INITIAL_STATE, PRIMARY_CYTOSCAPE_ID } from "../constants";
-import { SavedAutomaton } from "../ui/importExport";
+import { SavedAutomaton } from "../ui/importAndExport";
 
 export interface IAutomatonCore {
   kind: Kind.AUTOMATON;
@@ -90,6 +90,8 @@ export interface IAutomatonCore {
   visitor: IEditCommandVisitor;
 
   getCytoscape: () => cytoscape.Core | undefined;
+  callbackAfterInit: (fn: (cy: cytoscape.Core) => void) => void;
+
 }
 
 export class AutomatonCore implements IAutomatonCore {
@@ -136,48 +138,43 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   static fromSavedJSON(
-    savedAutomatonString: string,
+    savedAutomaton: SavedAutomaton,
     afterInit?: (automatonCore: AutomatonCore) => void
   ): AutomatonCore {
-    const imported: SavedAutomaton = JSON.parse(savedAutomatonString);
-
-    console.log("Parsed text: ");
-    console.log(imported);
-
     const newAutomatonCore = new AutomatonCore(
-      imported.automaton.automatonType,
+      savedAutomaton.automaton.automatonType,
       PRIMARY_CYTOSCAPE_ID,
       new ModeHolder(),
-      imported.automaton.initialStateId,
-      imported.visuals
-        .filter((x) => x.id === imported.automaton.initialStateId)
+      savedAutomaton.automaton.initialStateId,
+      savedAutomaton.visuals
+        .filter((x) => x.id === savedAutomaton.automaton.initialStateId)
         .map((x) => x.position)[0],
       (automatonCore) => {
         // run this after init
         // copy over values from the JSON
         automatonCore.automaton.automatonType =
-          imported.automaton.automatonType;
+          savedAutomaton.automaton.automatonType;
 
-        imported.automaton.states.forEach((s) => {
+        savedAutomaton.automaton.states.forEach((s) => {
           // this is the ugliest frickin' code I've written this year, it's in O(n^2), but it works
           automatonCore.addState(
             s,
-            imported.visuals.filter((x) => x.id === s).map((x) => x.position)[0]
+            savedAutomaton.visuals.filter((x) => x.id === s).map((x) => x.position)[0]
           );
         });
 
         automatonCore.automaton.finalStateIds =
-          imported.automaton.finalStateIds;
+          savedAutomaton.automaton.finalStateIds;
 
-        for (const from in imported.automaton.deltaFunctionMatrix) {
-          for (const to in imported.automaton.deltaFunctionMatrix[from]) {
-            for (const edge in imported.automaton.deltaFunctionMatrix[from][
+        for (const from in savedAutomaton.automaton.deltaFunctionMatrix) {
+          for (const to in savedAutomaton.automaton.deltaFunctionMatrix[from]) {
+            for (const edge in savedAutomaton.automaton.deltaFunctionMatrix[from][
               to
             ]) {
               automatonCore.addEdge(from, to, {
                 id: "",
                 inputChar:
-                  imported.automaton.deltaFunctionMatrix[from][to][edge]
+                  savedAutomaton.automaton.deltaFunctionMatrix[from][to][edge]
                     .inputChar,
               });
 
@@ -204,6 +201,11 @@ export class AutomatonCore implements IAutomatonCore {
   getCytoscape() {
     return this.visual.getCytoscape();
   }
+
+  callbackAfterInit(fn: (cy: cytoscape.Core) => void) {
+    this.visual.callbackAfterInit(fn);
+  }
+  
 
   init(): undefined {
     this.visual.init();

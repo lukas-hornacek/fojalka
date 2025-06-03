@@ -1,8 +1,8 @@
 import { useContext, useState, useRef, useEffect } from "react";
-import { CoreContext } from "../../core/CoreContext";
 import { Kind } from "../../core/core";
 import { EPSILON } from "../../constants";
 import { Running } from "./VisualButtons";
+import { CoreContext } from "../App";
 
 export default function SimulationButton({ buttonSet, setButtonSet }: { buttonSet: Running, setButtonSet: React.Dispatch<React.SetStateAction<Running>> }) {
   const coreContext = useContext(CoreContext);

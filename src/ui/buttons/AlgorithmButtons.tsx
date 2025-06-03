@@ -1,7 +1,7 @@
 import { useContext } from "react";
-import { CoreContext } from "../../core/CoreContext";
 import { Dropdown, DropdownButton, Stack } from "react-bootstrap";
 import { Running } from "./VisualButtons";
+import { CoreContext } from "../App";
 
 export default function AlgorithmButtons({ setButtonSet }: { setButtonSet: React.Dispatch<React.SetStateAction<Running>> }) {
   const coreContext = useContext(CoreContext);

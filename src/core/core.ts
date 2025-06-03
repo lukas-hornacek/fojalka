@@ -60,6 +60,7 @@ export interface ICore {
   // get (readonly) cytoscape
   getCytoscape: () => cytoscape.Core | undefined;
 
+  
   newWindow: (type: ObjectType) => void;
 
   // these are set once and then used only internally to trigger changes in UI

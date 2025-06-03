@@ -41,6 +41,8 @@ export interface IAutomatonVisual {
 
   getCytoscape: () => cytoscape.Core | undefined;
   redrawAutomaton: (automaton: IAutomaton) => void;
+
+  callbackAfterInit: (fn: (cy: cytoscape.Core) => void) => void;
 }
 
 export class AutomatonVisual implements IAutomatonVisual {
@@ -48,10 +50,13 @@ export class AutomatonVisual implements IAutomatonVisual {
   id: string;
   cy?: cytoscape.Core;
 
-  initialJSON?: object;
   initialState: string = "";
   initialStatePosition: { x: number; y: number } = { x: 0, y: 0 };
   elems?: ElementDefinition[];
+
+  // some functions need to be called only after init
+  initialized: boolean = false;
+  toCallBack: ((cy: cytoscape.Core) => void)[] = [];
 
   constructor(
     id: string,
@@ -133,8 +138,16 @@ export class AutomatonVisual implements IAutomatonVisual {
       selectionType: "single",
     });
 
-    if (this.initialJSON != undefined) {
-      this.cy.json(this.initialJSON);
+    // init done
+    this.initialized = true;
+    this.toCallBack.forEach(fn => fn(this.cy!));
+  }
+
+  callbackAfterInit(fn: (cy: cytoscape.Core) => void) {
+    if (!this.initialized) {
+      this.toCallBack.push(fn);
+    } else {
+      fn(this.cy!);
     }
   }
 

@@ -4,13 +4,24 @@ import {
   VisualVisitor,
 } from "../engine/automaton/visitors/editCommand";
 import { ErrorMessage, IErrorMessage } from "../engine/common";
-import { AddNonterminalsCommand, AddProductionRuleCommand, AddTerminalsCommand, EditProductionRuleCommand, GrammarEditCommand, RemoveNonterminalCommand, RemoveProductionRuleCommand, RemoveTerminalCommand, SetInitialNonterminalCommand } from "../engine/grammar/commands/edit";
+import {
+  AddNonterminalsCommand,
+  AddProductionRuleCommand,
+  AddTerminalsCommand,
+  EditProductionRuleCommand,
+  GrammarEditCommand,
+  RemoveNonterminalCommand,
+  RemoveProductionRuleCommand,
+  RemoveTerminalCommand,
+  SetInitialNonterminalCommand,
+} from "../engine/grammar/commands/edit";
 import {
   AbstractGrammarFactory,
   IGrammarFactory,
 } from "../engine/grammar/factories";
 import { Grammar, GrammarType } from "../engine/grammar/grammar";
 import { IGrammarSimulation } from "../engine/grammar/simulation";
+import { SavedGrammar } from "../ui/importAndExport";
 import { GrammarVisual, IGrammarVisual } from "../visual/grammarVisual";
 import { ModeHolder, Kind, Mode } from "./core";
 
@@ -20,6 +31,7 @@ export interface IGrammarCore {
   factory: IGrammarFactory;
   grammar: Grammar;
   visual: IGrammarVisual;
+  type: GrammarType;
 
   display: () => React.ReactNode;
 
@@ -33,11 +45,11 @@ export interface IGrammarCore {
     outputSymbols: string[]
   ) => IErrorMessage | undefined;
   removeProductionRule: (id: string) => IErrorMessage | undefined;
-  addNonterminals: (nonterminals: string[]) => IErrorMessage | undefined
-  addTerminals: (terminals: string[]) => IErrorMessage | undefined
-  removeNonterminal: (nonTerminal: string) => IErrorMessage | undefined
-  removeTerminal: (terminal: string) => IErrorMessage | undefined
-  setInitialNonterminal: (nonTerminal: string) => IErrorMessage | undefined
+  addNonterminals: (nonterminals: string[]) => IErrorMessage | undefined;
+  addTerminals: (terminals: string[]) => IErrorMessage | undefined;
+  removeNonterminal: (nonTerminal: string) => IErrorMessage | undefined;
+  removeTerminal: (terminal: string) => IErrorMessage | undefined;
+  setInitialNonterminal: (nonTerminal: string) => IErrorMessage | undefined;
   undo: () => IErrorMessage | undefined;
 
   highlight: (ids: string[]) => IErrorMessage | undefined;
@@ -53,6 +65,7 @@ export interface IGrammarCore {
 export class GrammarCore implements IGrammarCore {
   kind = Kind.GRAMMAR as const;
   mode: ModeHolder;
+  type: GrammarType;
 
   factory: IGrammarFactory;
   grammar: Grammar;
@@ -62,6 +75,8 @@ export class GrammarCore implements IGrammarCore {
   visitor: IEditCommandVisitor;
 
   constructor(type: GrammarType, mode: ModeHolder) {
+    this.type = type;
+
     this.factory = new AbstractGrammarFactory(type);
     this.grammar = this.factory.createGrammar(
       [INITIAL_NONTERMINAL],
@@ -75,6 +90,18 @@ export class GrammarCore implements IGrammarCore {
     this.mode = mode;
   }
 
+  static fromSavedJSON(savedGrammar: SavedGrammar): GrammarCore {
+    const grammarCore = new GrammarCore(savedGrammar.type, { mode: Mode.EDIT });
+    grammarCore.grammar = new Grammar(
+      savedGrammar.grammar.grammarType,
+      savedGrammar.grammar.nonTerminalSymbols,
+      savedGrammar.grammar.terminalSymbols,
+      savedGrammar.grammar.initialNonTerminalSymbol
+    );
+
+    return grammarCore;
+  }
+
   display() {
     return this.visual.display();
   }
@@ -85,8 +112,15 @@ export class GrammarCore implements IGrammarCore {
     }
 
     try {
-      const rule = this.factory.createProductionRule(inputNonTerminal, outputSymbols, this.grammar);
-      const command: GrammarEditCommand = new AddProductionRuleCommand(this.grammar, rule);
+      const rule = this.factory.createProductionRule(
+        inputNonTerminal,
+        outputSymbols,
+        this.grammar
+      );
+      const command: GrammarEditCommand = new AddProductionRuleCommand(
+        this.grammar,
+        rule
+      );
 
       const error = this.grammar.executeCommand(command);
       if (error !== undefined) {
@@ -98,7 +132,6 @@ export class GrammarCore implements IGrammarCore {
       // this.visual.highlight([rule.id]);
 
       command.accept(this.visitor);
-
     } catch (e: unknown) {
       if (e instanceof Error) {
         return new ErrorMessage(e.message);
@@ -116,8 +149,16 @@ export class GrammarCore implements IGrammarCore {
     }
 
     try {
-      const rule = this.factory.createProductionRule(inputNonTerminal, outputSymbols, this.grammar);
-      const command: GrammarEditCommand = new EditProductionRuleCommand(this.grammar, id, rule);
+      const rule = this.factory.createProductionRule(
+        inputNonTerminal,
+        outputSymbols,
+        this.grammar
+      );
+      const command: GrammarEditCommand = new EditProductionRuleCommand(
+        this.grammar,
+        id,
+        rule
+      );
 
       const error = this.grammar.executeCommand(command);
       if (error !== undefined) {
@@ -125,7 +166,6 @@ export class GrammarCore implements IGrammarCore {
       }
 
       command.accept(this.visitor);
-
     } catch (e: unknown) {
       if (e instanceof Error) {
         return new ErrorMessage(e.message);
@@ -138,7 +178,10 @@ export class GrammarCore implements IGrammarCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: GrammarEditCommand = new RemoveProductionRuleCommand(this.grammar, id);
+    const command: GrammarEditCommand = new RemoveProductionRuleCommand(
+      this.grammar,
+      id
+    );
 
     const error = this.grammar.executeCommand(command);
     if (error !== undefined) {
@@ -156,11 +199,15 @@ export class GrammarCore implements IGrammarCore {
       const trimmed = symbol.trim();
 
       if (trimmed.length === 0) {
-        return new ErrorMessage("Nonterminal symbol must contain at least one non-whitespace character.");
+        return new ErrorMessage(
+          "Nonterminal symbol must contain at least one non-whitespace character."
+        );
       }
 
       if (trimmed.charAt(0) === "_") {
-        return new ErrorMessage("Nonterminal symbol cannot start with an underscore.");
+        return new ErrorMessage(
+          "Nonterminal symbol cannot start with an underscore."
+        );
       }
 
       if (trimmed.includes(" ")) {
@@ -168,7 +215,10 @@ export class GrammarCore implements IGrammarCore {
       }
     }
 
-    const command: GrammarEditCommand = new AddNonterminalsCommand(this.grammar, nonTerminals);
+    const command: GrammarEditCommand = new AddNonterminalsCommand(
+      this.grammar,
+      nonTerminals
+    );
 
     const error = this.grammar.executeCommand(command);
     if (error !== undefined) {
@@ -189,11 +239,15 @@ export class GrammarCore implements IGrammarCore {
       const trimmed = symbol.trim();
 
       if (trimmed.length === 0) {
-        return new ErrorMessage("Terminal symbol must contain at least one non-whitespace character.");
+        return new ErrorMessage(
+          "Terminal symbol must contain at least one non-whitespace character."
+        );
       }
 
       if (trimmed.charAt(0) === "_") {
-        return new ErrorMessage("Terminal symbol cannot start with an underscore.");
+        return new ErrorMessage(
+          "Terminal symbol cannot start with an underscore."
+        );
       }
 
       if (trimmed.includes(" ")) {
@@ -201,7 +255,10 @@ export class GrammarCore implements IGrammarCore {
       }
     }
 
-    const command: GrammarEditCommand = new AddTerminalsCommand(this.grammar, terminals);
+    const command: GrammarEditCommand = new AddTerminalsCommand(
+      this.grammar,
+      terminals
+    );
 
     const error = this.grammar.executeCommand(command);
     if (error !== undefined) {
@@ -219,7 +276,10 @@ export class GrammarCore implements IGrammarCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: GrammarEditCommand = new RemoveNonterminalCommand(this.grammar, nonTerminal);
+    const command: GrammarEditCommand = new RemoveNonterminalCommand(
+      this.grammar,
+      nonTerminal
+    );
 
     const error = this.grammar.executeCommand(command);
     if (error !== undefined) {
@@ -234,7 +294,10 @@ export class GrammarCore implements IGrammarCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: GrammarEditCommand = new RemoveTerminalCommand(this.grammar, terminal);
+    const command: GrammarEditCommand = new RemoveTerminalCommand(
+      this.grammar,
+      terminal
+    );
 
     const error = this.grammar.executeCommand(command);
     if (error !== undefined) {
@@ -249,7 +312,10 @@ export class GrammarCore implements IGrammarCore {
       return new ErrorMessage("Operation is only permitted in edit mode.");
     }
 
-    const command: GrammarEditCommand = new SetInitialNonterminalCommand(this.grammar, nonTerminal);
+    const command: GrammarEditCommand = new SetInitialNonterminalCommand(
+      this.grammar,
+      nonTerminal
+    );
 
     const error = this.grammar.executeCommand(command);
     if (error !== undefined) {
