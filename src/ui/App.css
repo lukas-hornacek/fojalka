@@ -1,0 +1,15 @@
+#cy-primary, #cy-secondary {
+    height: 90%;
+    border: solid;
+    border-width: 1;
+}
+
+#cy-window {
+    height: 100%;
+    min-height: 100vh;
+}
+
+.highlight {
+    color: indianred;
+    font-weight: bold;
+}

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { NondeterministicToDeterministicAlgorithm } from "../src/engine/algorithm";
+import { NondeterministicToDeterministicAlgorithm } from "../src/engine/algorithm/automatonAlgorithms";
 import { AutomatonCore } from "../src/core/automatonCore";
 import { Automaton, AutomatonType } from "../src/engine/automaton/automaton";
 import { ModeHolder } from "../src/core/core";
@@ -82,8 +82,6 @@ test("testing algorithm functions", () => {
 
   expect(algorithm.inputCore).toBe(core);
   expect(algorithm.outputCore).toBeUndefined();
-  expect(algorithm.results).toEqual([]);
-  expect(algorithm.index).toBe(0);
   expect(() => algorithm.init(new ModeHolder)).toThrowError("Cannot use algorithm, as it only works with finite automata.");
 
   core = new AutomatonCore(AutomatonType.FINITE, "test_core", new ModeHolder());
@@ -141,7 +139,7 @@ test("testing algorithm functions", () => {
   expect(core2.automaton).toEqual(core3.automaton);
 
   //testing if next + undo works in the entire algorthm
-  for (let i = 0; i < algorithm.results.length - 1; i++) {
+  for (let i = 0; i < algorithm.results!.length - 1; i++) {
     core2.automaton.executeCommand((algorithm.next()?.command as AutomatonEditCommand));
     core3.automaton.executeCommand((algorithm2.next()?.command as AutomatonEditCommand));
     expect(core2.automaton).toEqual(core3.automaton);

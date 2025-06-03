@@ -68,7 +68,7 @@ export class FiniteConfigurationMemento implements IConfigurationMemento {
 
   constructor(_stateId: string, _remainingInput: string[]) {
     this.stateId = _stateId;
-    this.remainingInput = _remainingInput;
+    this.remainingInput = [..._remainingInput];
   }
 }
 
@@ -79,7 +79,7 @@ export class PDAConfigurationMemento implements IConfigurationMemento {
 
   constructor(_stateId: string, _remainingInput: string[], _stack: string[]) {
     this.stateId = _stateId;
-    this.remainingInput = _remainingInput;
-    this.stack = _stack;
+    this.remainingInput = [..._remainingInput];
+    this.stack = [..._stack];
   }
 }

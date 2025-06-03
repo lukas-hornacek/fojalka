@@ -1,5 +1,5 @@
 import cytoscape from "cytoscape";
-import { IAlgorithm } from "../engine/algorithm";
+import { AlgorithmResult, IAlgorithm } from "../engine/algorithm/algorithm";
 import { ErrorMessage, IErrorMessage } from "../engine/common";
 import { IAutomatonCore } from "./automatonCore";
 import { IGrammarCore } from "./grammarCore";
@@ -33,7 +33,7 @@ export interface ICore {
   // switches to visual mode without immediately running any algorithm/simulation (and therefore without creating second window)
   switchToVisualMode: () => IErrorMessage | undefined;
 
-  // applies whole algorithm at once in Edit mode
+  // applies all remaining steps of the algorithm at once and shows the final result
   transform: (algorithm: IAlgorithm) => IErrorMessage | undefined;
 
   // takes algorithm object or enum that is then pushed into factory
@@ -86,12 +86,29 @@ export class Core implements ICore {
     this.mode.mode = Mode.VISUAL;
   }
 
-  transform(algorithm: IAlgorithm) {
-    if (this.mode.mode === Mode.VISUAL) {
-      return new ErrorMessage("Cannot apply algorithm all at once in visual mode.");
+  transform() {
+    if (this.mode.mode === Mode.EDIT) {
+      return new ErrorMessage("Cannot simulate algorithm in edit mode.");
     }
-    // TODO first apply all EditCommands to Automaton and then display visual changes all at once
-    return new ErrorMessage(`Not implemented. ${algorithm}`);
+    if (this.algorithm === undefined) {
+      return new ErrorMessage("Cannot simulate algorithm step before start.");
+    }
+
+    try {
+      let result = this.algorithm.next();
+      if (result === undefined) {
+        return new ErrorMessage("Algorithm is already completed.");
+      }
+      while (result !== undefined) {
+        this.algorithmStep(result);
+        result = this.algorithm.next();
+      }
+
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        return new ErrorMessage(e.message);
+      }
+    }
   }
 
   algorithmStart(algorithm: IAlgorithm) {
@@ -101,6 +118,11 @@ export class Core implements ICore {
     if (this.algorithm !== undefined) {
       return new ErrorMessage("Cannot start new algorithm when an algorithm is already in progress.");
     }
+    if (this.primary.kind === Kind.AUTOMATON) {
+      if (this.primary.simulationInProgress()) {
+        return new ErrorMessage("Cannot start algorithm when a simulation is in progress.");
+      }
+    }
 
     try {
       this.algorithm = algorithm;
@@ -109,6 +131,10 @@ export class Core implements ICore {
       if (e instanceof Error) {
         return new ErrorMessage(e.message);
       }
+    }
+
+    if (this.primary.kind === Kind.AUTOMATON) {
+      this.primary.algorithmInProgress(true);
     }
   }
 
@@ -124,47 +150,8 @@ export class Core implements ICore {
       if (result === undefined) {
         return new ErrorMessage("Algorithm is already completed.");
       }
+      this.algorithmStep(result);
 
-      if (this.algorithm.outputType === undefined) {
-        switch (this.primary.kind) {
-          case Kind.GRAMMAR:
-            if (result.command.kind !== Kind.GRAMMAR) {
-              return new ErrorMessage("Automaton command is not applicable to grammar.");
-            }
-            this.primary.grammar.executeCommand(result.command);
-            break;
-          case Kind.AUTOMATON:
-            if (result.command.kind !== Kind.AUTOMATON) {
-              return new ErrorMessage("Grammar command is not applicable to automaton.");
-            }
-            this.primary.automaton.executeCommand(result.command);
-            break;
-        }
-        // visualise edit command
-        result.command.accept(this.primary.visitor);
-      } else {
-        if (this.secondary === undefined) {
-          return new ErrorMessage("Second window does not exist.");
-        }
-        this.primary.highlight(result.highlight);
-
-        switch (this.secondary.kind) {
-          case Kind.GRAMMAR:
-            if (result.command.kind !== Kind.GRAMMAR) {
-              return new ErrorMessage("Automaton command is not applicable to grammar.");
-            }
-            this.secondary.grammar.executeCommand(result.command);
-            break;
-          case Kind.AUTOMATON:
-            if (result.command.kind !== Kind.AUTOMATON) {
-              return new ErrorMessage("Grammar command is not applicable to automaton.");
-            }
-            this.secondary.automaton.executeCommand(result.command);
-            break;
-        }
-        // visualise edit command
-        result.command.accept(this.secondary.visitor);
-      }
     } catch (e: unknown) {
       if (e instanceof Error) {
         return new ErrorMessage(e.message);
@@ -191,7 +178,54 @@ export class Core implements ICore {
       }
       this.primary = this.secondary;
     }
+    if (this.primary.kind === Kind.AUTOMATON) {
+      this.primary.algorithmInProgress(false);
+    }
     this.secondary = undefined;
     this.algorithm = undefined;
+  }
+
+  //large part of the code for next and transform is the same, so I put it in this function
+  private algorithmStep(result: AlgorithmResult) {
+    if (this.algorithm!.outputType === undefined) {
+      switch (this.primary.kind) {
+        case Kind.GRAMMAR:
+          if (result.command.kind !== Kind.GRAMMAR) {
+            return new ErrorMessage("Automaton command is not applicable to grammar.");
+          }
+          this.primary.grammar.executeCommand(result.command);
+          break;
+        case Kind.AUTOMATON:
+          if (result.command.kind !== Kind.AUTOMATON) {
+            return new ErrorMessage("Grammar command is not applicable to automaton.");
+          }
+          this.primary.automaton.executeCommand(result.command);
+          break;
+      }
+      // visualise edit command
+      result.command.accept(this.primary.visitor);
+    } else {
+      if (this.secondary === undefined) {
+        return new ErrorMessage("Second window does not exist.");
+      }
+      this.primary.highlight(result.highlight);
+
+      switch (this.secondary.kind) {
+        case Kind.GRAMMAR:
+          if (result.command.kind !== Kind.GRAMMAR) {
+            return new ErrorMessage("Automaton command is not applicable to grammar.");
+          }
+          this.secondary.grammar.executeCommand(result.command);
+          break;
+        case Kind.AUTOMATON:
+          if (result.command.kind !== Kind.AUTOMATON) {
+            return new ErrorMessage("Grammar command is not applicable to automaton.");
+          }
+          this.secondary.automaton.executeCommand(result.command);
+          break;
+      }
+      // visualise edit command
+      result.command.accept(this.secondary.visitor);
+    }
   }
 }

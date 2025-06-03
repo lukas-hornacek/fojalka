@@ -1,4 +1,4 @@
-import { IErrorMessage } from "../../common.ts";
+import { ErrorMessage, IErrorMessage } from "../../common.ts";
 import { NextStepVisitor } from "../visitors/configuration.ts";
 import { IEdge } from "../edge.ts";
 import { IAutomatonSimulation } from "../simulation.ts";
@@ -40,9 +40,15 @@ export class NextStepCommand extends AutomatonRunCommand<IEdge> {
     this.saveBackup();
     const nextStepVisitor = new NextStepVisitor(this.simulation.automaton);
 
-    this.simulation.configuration = this.simulation.configuration.accept(nextStepVisitor);
-
-    this.result = nextStepVisitor.result;
+    try {
+      const newConfiguration = this.simulation.configuration.accept(nextStepVisitor);
+      this.simulation.configuration = newConfiguration;
+      this.result = nextStepVisitor.result;
+    } catch (error) {
+      if (error instanceof Error) {
+        return new ErrorMessage(error.message);
+      }
+    }
 
     return;
   }

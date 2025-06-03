@@ -46,6 +46,6 @@ export class SententialForm {
 export class SententialFormMemento {
   sententialForm: string[];
   constructor(sententialForm: string[]) {
-    this.sententialForm = sententialForm;
+    this.sententialForm = [...sententialForm];
   }
 }

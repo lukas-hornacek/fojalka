@@ -1,8 +1,8 @@
-import { INITIAL_STACK_SYMBOL } from "../../constants.ts";
+import { EPSILON, INITIAL_STACK_SYMBOL } from "../../constants.ts";
 import { ErrorMessage, IErrorMessage } from "../common.ts";
 import { AutomatonEditCommand } from "./commands/edit.ts";
 import { FiniteConfiguration, PDAConfiguration } from "./configuration.ts";
-import { IEdge } from "./edge.ts";
+import { FiniteAutomatonEdge, IEdge, PDAEdge } from "./edge.ts";
 import { IAutomatonSimulation, AutomatonSimulation } from "./simulation.ts";
 import { cloneDeep } from "lodash";
 
@@ -91,6 +91,101 @@ export class Automaton implements IAutomaton {
     this.automatonType = memento.automatonType;
     this.initialStateId = memento.initialStateId;
     this.finalStateIds = memento.finalStateIds;
+  }
+
+  isDeterministic(): boolean {
+    const alphabet = new Set<string> ([]);
+    const stackAlphabet = new Set<string> ([]);
+
+    if (this.automatonType == AutomatonType.PDA) {
+      stackAlphabet.add(INITIAL_STACK_SYMBOL);
+    }
+
+    // goes through the entire deltaFunctionMatrix and add all the alphabet symbol to the alphabet (same for stack symbols)
+    for (const leftSymbol in this.deltaFunctionMatrix) {
+      for (const rightSymbol in this.deltaFunctionMatrix[leftSymbol]) {
+        const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
+        for (const edge of edges) {
+          alphabet.add(edge.inputChar);
+          if (this.automatonType == AutomatonType.PDA && edge instanceof PDAEdge) {
+            stackAlphabet.add(edge.readStackChar);
+            for (const symbol of edge.writeStackWord) {
+              stackAlphabet.add(symbol);
+            }
+          }
+        }
+      }
+    }
+    // if there is Epsilon it is non-deterministic
+    if (alphabet.has(EPSILON)) {
+      return false;
+    }
+    // if any state has no edges in deltafunction, automaton is non-deterministic
+    if (this.states.length != Object.keys(this.deltaFunctionMatrix).length) {
+      return false;
+    }
+    switch (this.automatonType) {
+      case AutomatonType.FINITE:
+        // now, for each node we go through the deltaMatrix a second time and for each edge we check
+        // if all the symbols are present and if the number of edges
+        // equals this number, therefore we check if each edge is used only once
+        for (const leftSymbol in this.deltaFunctionMatrix) {
+          const found = new Set<string> ([]);
+          let edgeNum = 0;
+
+          for (const rightSymbol in this.deltaFunctionMatrix[leftSymbol]) {
+            const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
+            edgeNum += edges.length;
+            for (const edge of edges) {
+              if (edge instanceof FiniteAutomatonEdge) {
+                found.add(edge.inputChar);
+              }
+              else {
+                throw new Error("Finite automaton has non-finite edge");
+              }
+            }
+          }
+          if (edgeNum != found.size || edgeNum != alphabet.size) {
+            return false;
+          }
+        }
+        return true;
+
+      case AutomatonType.PDA:
+        // Same as before only now we compare the number of unique alpha-stack combinations and actual edges
+        // and number of actual edges to all combinations (alphabet.size x stackAlphabet.size)
+        for (const leftSymbol in this.deltaFunctionMatrix) {
+          const found: Record<string, Set<string>> = {};
+          let edgeNum = 0;
+
+          for (const rightSymbol in this.deltaFunctionMatrix[leftSymbol]) {
+            const edges = this.deltaFunctionMatrix[leftSymbol][rightSymbol];
+            edgeNum += edges.length;
+            for (const edge of edges) {
+              if (edge instanceof PDAEdge) {
+                if (found[edge.inputChar] === undefined) {
+                  found[edge.inputChar] = new Set<string> ([]);
+                }
+                found[edge.inputChar].add(edge.readStackChar);
+              }
+              else {
+                throw new Error("PDA has non-PDA edge");
+              }
+            }
+          }
+          let uniqueEdges = 0;
+          for (const s in found) {
+            uniqueEdges = uniqueEdges + found[s].size;
+          }
+
+          if (edgeNum != uniqueEdges || edgeNum != alphabet.size * stackAlphabet.size) {
+            return false;
+          }
+        }
+
+        return true;
+    }
+    return false;
   }
 
   createRunSimulation(word: string[]): IAutomatonSimulation {

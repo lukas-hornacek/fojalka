@@ -1,6 +1,6 @@
 import { useEffect, useContext } from "react";
 import { Kind } from "../core/core";
-import { TestingAlgorithm } from "../engine/algorithm";
+import { TestingAlgorithm } from "../engine/algorithm/algorithm";
 import { PRIMARY_CYTOSCAPE_ID, SECONDARY_CYTOSCAPE_ID } from "../constants";
 import { CoreContext } from "./EditButtons";
 

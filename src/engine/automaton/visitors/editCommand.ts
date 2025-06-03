@@ -1,7 +1,7 @@
 import { Kind } from "../../../core/core";
 import { IAutomatonVisual } from "../../../visual/automatonVisual";
 import { IGrammarVisual } from "../../../visual/grammarVisual";
-import { AddProductionRuleCommand, RemoveProductionRuleCommand } from "../../grammar/commands/edit";
+import { AddNonterminalsCommand, AddProductionRuleCommand, AddTerminalsCommand, EditProductionRuleCommand, RemoveNonterminalCommand, RemoveProductionRuleCommand, RemoveTerminalCommand, SetInitialNonterminalCommand } from "../../grammar/commands/edit";
 import { AddEdgeCommand, AddStateCommand, EditEdgeCommand, RemoveEdgeCommand, RemoveStateCommand, RenameStateCommand, SetInitialStateCommand, SetStateFinalFlagCommand } from "../commands/edit";
 
 export interface IEditCommandVisitor {
@@ -18,6 +18,12 @@ export interface IEditCommandVisitor {
   // grammar commands
   visitAddProductionRuleCommand(command: AddProductionRuleCommand): void;
   visitRemoveProductionRuleCommand(command: RemoveProductionRuleCommand): void;
+  visitEditProductionRuleCommand(command: EditProductionRuleCommand): void;
+  visitAddNonterminalsCommand(command: AddNonterminalsCommand): void;
+  visitAddTerminalsCommand(command: AddTerminalsCommand): void;
+  visitSetInitialNonterminalCommand(command: SetInitialNonterminalCommand): void;
+  visitRemoveNonterminalCommand(command: RemoveNonterminalCommand): void;
+  visitRemoveTerminalCommand(command: RemoveTerminalCommand): void;
 }
 
 export class VisualVisitor implements IEditCommandVisitor {
@@ -84,12 +90,15 @@ export class VisualVisitor implements IEditCommandVisitor {
     this.visual.editEdge(command.edgeId, command.edge.label);
   }
 
-  // no point implementing this until we have actual grammar visualisation
+  // TODO Use the command argument to highlight the change
   visitAddProductionRuleCommand(command: AddProductionRuleCommand): void {
     if (this.visual.kind !== Kind.GRAMMAR) {
       throw new Error("Type mismatch");
     }
-    throw new Error(`Not implemented. ${command}`);
+    // throw new Error(`Not implemented. ${command}`);
+    // this.visual.setRepresentation(command.grammar.toString());
+    this.visual.storeRuleId(command.productionRule.id);
+    this.visual.refresh();
   }
 
   // no point implementing this until we have actual grammar visualisation
@@ -97,6 +106,60 @@ export class VisualVisitor implements IEditCommandVisitor {
     if (this.visual.kind !== Kind.GRAMMAR) {
       throw new Error("Type mismatch");
     }
+    this.visual.removeRuleId(command.productionRuleId);
+    this.visual.refresh();
+  }
+
+  // no point implementing this until we have actual grammar visualisation
+  visitEditProductionRuleCommand(command: EditProductionRuleCommand): void {
+    if (this.visual.kind !== Kind.GRAMMAR) {
+      throw new Error("Type mismatch");
+    }
     throw new Error(`Not implemented. ${command}`);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitAddNonterminalsCommand(_command: AddNonterminalsCommand): void {
+    if (this.visual.kind !== Kind.GRAMMAR) {
+      throw new Error("Type mismatch");
+    }
+    // throw new Error(`Not implemented. ${command}`);
+    this.visual.refresh();
+
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitAddTerminalsCommand(_command: AddTerminalsCommand): void {
+    if (this.visual.kind !== Kind.GRAMMAR) {
+      throw new Error("Type mismatch");
+    }
+    // throw new Error(`Not implemented. ${command}`);
+    this.visual.refresh();
+  }
+
+  // no point implementing this until we have actual grammar visualisation
+  visitSetInitialNonterminalCommand(command: SetInitialNonterminalCommand): void {
+    if (this.visual.kind !== Kind.GRAMMAR) {
+      throw new Error("Type mismatch");
+    }
+    throw new Error(`Not implemented. ${command}`);
+  }
+
+  // no point implementing this until we have actual grammar visualisation
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitRemoveNonterminalCommand(_command: RemoveNonterminalCommand): void {
+    if (this.visual.kind !== Kind.GRAMMAR) {
+      throw new Error("Type mismatch");
+    }
+    this.visual.refresh();
+  }
+
+  // no point implementing this until we have actual grammar visualisation
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitRemoveTerminalCommand(_command: RemoveTerminalCommand): void {
+    if (this.visual.kind !== Kind.GRAMMAR) {
+      throw new Error("Type mismatch");
+    }
+    this.visual.refresh();
   }
 }

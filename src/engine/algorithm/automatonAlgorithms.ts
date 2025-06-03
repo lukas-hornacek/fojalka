@@ -1,68 +1,23 @@
-import { SECONDARY_CYTOSCAPE_ID, EPSILON, INITIAL_STATE } from "../constants";
-import { AutomatonCore } from "../core/automatonCore";
-import { ICoreType, Kind, ModeHolder } from "../core/core";
-import { AutomatonType } from "./automaton/automaton";
-import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RemoveEdgeCommand, RenameStateCommand, SetStateFinalFlagCommand } from "./automaton/commands/edit";
-import { IErrorMessage, ErrorMessage } from "./common";
-import { GrammarEditCommand } from "./grammar/commands/edit";
-import { GrammarType } from "./grammar/grammar";
+import { SECONDARY_CYTOSCAPE_ID, EPSILON, INITIAL_STATE } from "../../constants";
+import { AutomatonCore } from "../../core/automatonCore";
+import { Kind, ModeHolder } from "../../core/core";
+import { GrammarCore } from "../../core/grammarCore";
+import { AutomatonType } from "./../automaton/automaton";
+import { AddEdgeCommand, AddStateCommand, AutomatonEditCommand, RemoveEdgeCommand, RenameStateCommand, SetStateFinalFlagCommand } from "../automaton/commands/edit";
+import { ErrorMessage } from "../common";
+import { AddProductionRuleCommand } from "../grammar/commands/edit";
+import { GrammarType } from "../grammar/grammar";
+import { Algorithm, AlgorithmParams } from "./algorithm";
 
-export type AlgorithmParams = {
-  Kind: Kind,
-  AutomatonType?: AutomatonType,
-  GrammarType?: GrammarType,
-};
-
-export type AlgorithmResult = {
-  highlight: string[],
-  command: AutomatonEditCommand | GrammarEditCommand,
-};
-
-// each algorithm has constructor that takes object of input type (taken from core.primary)
-// if outputType is not undefined, init() creates new Core, stores it (to keep access to createEdge()) and also returns it for core.secondary
-//
-// next() returns IDs of objects to be highlighted in the primary window and EditCommand for the secondary window
-// if outputType is undefined, highlights are always empty
-export interface IAlgorithm {
-  inputType: AlgorithmParams,
-  // if undefined, modifications are done in place and there is no highlighting
-  outputType?: AlgorithmParams,
-
-  init(mode: ModeHolder): ICoreType | undefined,
-  // returns undefined when algorithm is completed
-  next(): AlgorithmResult | undefined,
-  undo(): IErrorMessage | undefined,
-}
-
-// TODO remove this
-export class TestingAlgorithm implements IAlgorithm {
-  inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
-  outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
-
-  init(mode: ModeHolder): ICoreType | undefined {
-    return new AutomatonCore(this.outputType.AutomatonType!, SECONDARY_CYTOSCAPE_ID, mode);
-  }
-
-  next(): AlgorithmResult | undefined {
-    return;
-  }
-
-  undo(): IErrorMessage | undefined {
-    return;
-  }
-}
-
-export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
+export class NondeterministicToDeterministicAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
   inputCore: AutomatonCore;
   outputCore?: AutomatonCore;
 
-  results: AlgorithmResult[] = [];
-  index: number = 0;
-
   constructor(_inputCore: AutomatonCore) {
+    super();
     this.inputCore = _inputCore;
   }
 
@@ -80,18 +35,6 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
     return this.outputCore;
   }
 
-  next() {
-    if (this.outputCore === undefined) {
-      throw new Error("Cannot simulate algorithm step before start.");
-    }
-    //algorithm has already ended
-    if (this.index === this.results.length) {
-      return undefined;
-    }
-
-    return this.results[this.index++];
-  }
-
   undo() {
     if (this.outputCore === undefined) {
       return new ErrorMessage("Cannot undo algorithm step before start.");
@@ -104,7 +47,6 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
     this.index--;
   }
 
-  //function computes all commands and highlits in advance and stores it in results
   precomputeResults() {
     const visited: string[][] = [];
     const notProcessed: string[][] = [];
@@ -208,7 +150,7 @@ export class NondeterministicToDeterministicAlgorithm implements IAlgorithm {
 
 }
 
-export class RemoveEpsilonAlgorithm implements IAlgorithm {
+export class RemoveEpsilonAlgorithm extends Algorithm {
   inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
   outputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
 
@@ -217,10 +159,8 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
   //only for the mode in init, so it wont be unused variable
   outputCore?: AutomatonCore;
 
-  results?: AlgorithmResult[];
-  index: number = 0;
-
   constructor(_inputCore: AutomatonCore) {
+    super();
     this.inputCore = _inputCore;
   }
 
@@ -240,18 +180,6 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     return undefined;
   }
 
-  next() {
-    if (this.results === undefined) {
-      throw new Error("Cannot simulate algorithm step before start.");
-    }
-    //algorithm has already ended
-    if (this.index === this.results.length) {
-      return undefined;
-    }
-
-    return this.results[this.index++];
-  }
-
   undo() {
     if (this.results === undefined) {
       return new ErrorMessage("Cannot undo algorithm step before start.");
@@ -264,7 +192,6 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     this.index--;
   }
 
-  //function computes all commands and highlits in advance and stores it in results
   precomputeResults() {
     this.results = [];
     const epsilonTails: Record<string, string[]> = {};
@@ -391,4 +318,92 @@ export class RemoveEpsilonAlgorithm implements IAlgorithm {
     return endStates;
   }
 
+}
+
+export class AutomatonToGrammarAlgorithm extends Algorithm {
+  inputType: AlgorithmParams = { Kind: Kind.AUTOMATON, AutomatonType: AutomatonType.FINITE };
+  outputType: AlgorithmParams = { Kind: Kind.GRAMMAR, GrammarType: GrammarType.REGULAR };
+
+  inputCore: AutomatonCore;
+  outputCore?: GrammarCore;
+
+  constructor(_inputCore: AutomatonCore) {
+    super();
+    this.inputCore = _inputCore;
+  }
+
+  init(mode: ModeHolder) {
+    if (this.inputCore.automaton.automatonType !== this.inputType.AutomatonType) {
+      throw new Error("Cannot use algorithm, as it only works with finite automata.");
+    }
+
+    this.outputCore = new GrammarCore(GrammarType.REGULAR, mode);
+
+    this.precomputeResults();
+
+    return this.outputCore;
+  }
+
+  undo() {
+    if (this.outputCore === undefined) {
+      return new ErrorMessage("Cannot undo algorithm step before start.");
+    }
+    if (this.index === 0) {
+      return new ErrorMessage("There is nothing to undo.");
+    }
+
+    this.outputCore.grammar.undo();
+    this.index--;
+  }
+
+  precomputeResults() {
+    this.results = [];
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
+
+    //assign correct nonterminal and terminal symbols to grammar
+    this.outputCore!.grammar.nonTerminalSymbols = [...this.inputCore.automaton.states];
+    this.outputCore!.grammar.terminalSymbols = this.getAlphabet();
+    this.outputCore!.grammar.initialNonTerminalSymbol = this.inputCore.automaton.initialStateId;
+
+    //for every edge add rule from one state to a word consisting of the symbol and the other state
+    for (const from in delta) {
+      for (const to in delta[from]) {
+        for (const edge of delta [from][to]) {
+          let output = [];
+          if (edge.inputChar === EPSILON) {
+            output = [to];
+          } else {
+            output = [edge.inputChar, to];
+          }
+          const rule = this.outputCore!.factory.createProductionRule(from, output, this.outputCore!.grammar);
+          const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
+          this.results.push({ highlight: [edge.id], command: command });
+        }
+      }
+    }
+
+    //for every final state add rule from that state to epsilon
+    for (const state of this.inputCore.automaton.finalStateIds) {
+      const rule = this.outputCore!.factory.createProductionRule(state, [EPSILON], this.outputCore!.grammar);
+      const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
+      this.results.push({ highlight: [state], command: command });
+    }
+  }
+
+  getAlphabet() {
+    const delta = this.inputCore.automaton.deltaFunctionMatrix;
+
+    const alphabet: string[] = [];
+    for (const fromState in delta) {
+      for (const toState in delta[fromState]) {
+        for (const edge of delta[fromState][toState]) {
+          if (!alphabet.includes(edge.inputChar) && edge.inputChar !== EPSILON) {
+            alphabet.push(edge.inputChar);
+          }
+        }
+      }
+    }
+
+    return alphabet;
+  }
 }

@@ -71,9 +71,13 @@ export interface IAutomatonCore {
 
   // run functions
   containsWord: (word: string[]) => boolean;
-  runStart: (word: string[]) => void;
+  runStart: (word: string[]) => IErrorMessage | undefined;
   runNext: () => IErrorMessage | undefined;
   runUndo: () => IErrorMessage | undefined;
+  runEnd: () => IErrorMessage | undefined;
+
+  simulationInProgress: () => boolean;
+  algorithmInProgress: (inProgress: boolean) => void;
 
   highlight: (ids: string[]) => IErrorMessage | undefined;
 
@@ -100,6 +104,8 @@ export class AutomatonCore implements IAutomatonCore {
   // optionally hold current simulation
   // the simulation also contains configuration
   simulation?: IAutomatonSimulation;
+
+  algorithm: boolean = false;
 
   // function to be run after init
   afterInit: (automatonCore: AutomatonCore) => void = () => {};
@@ -199,6 +205,8 @@ export class AutomatonCore implements IAutomatonCore {
 
   init(): undefined {
     this.visual.init();
+    this.visual.addNode(INITIAL_STATE, { x: 0, y:0 });
+    this.visual.fit();
     this.afterInit(this);
   }
 
@@ -237,6 +245,9 @@ export class AutomatonCore implements IAutomatonCore {
 
     // this does not use visitor (at least not yet) because the visitor does not accept position
     this.visual.addNode(id, position);
+    // highlighting newly added node
+    // this.visual.clearHighlights();
+    // this.visual.highlightElements([id]);
   }
 
   removeState(id: string) {
@@ -337,6 +348,9 @@ export class AutomatonCore implements IAutomatonCore {
     }
 
     command.accept(this.visitor);
+    // highlighting newly added edge
+    // this.visual.clearHighlights();
+    // this.visual.highlightElements([edge.id]);
   }
 
   removeEdge(from: string, to: string, id: string) {
@@ -388,8 +402,8 @@ export class AutomatonCore implements IAutomatonCore {
     if (this.mode.mode !== Mode.VISUAL) {
       return new ErrorMessage("Operation is only permitted in visual mode.");
     }
-
-    return new ErrorMessage(`Not implemented ${ids}`);
+    this.visual.clearHighlights();
+    this.visual.highlightElements(ids);
   }
 
   containsWord(word: string[]) {
@@ -399,6 +413,12 @@ export class AutomatonCore implements IAutomatonCore {
   runStart(word: string[]) {
     if (this.mode.mode !== Mode.VISUAL) {
       return new ErrorMessage("Operation is only permitted in visual mode.");
+    }
+    if (this.algorithm) {
+      return new ErrorMessage("Cannot start new simulation when an algorithm is in progress.");
+    }
+    if (this.simulation !== undefined) {
+      return new ErrorMessage("Cannot start new simulation when a simulation is already in progress.");
     }
 
     this.simulation = this.automaton.createRunSimulation(word);
@@ -415,7 +435,6 @@ export class AutomatonCore implements IAutomatonCore {
       );
     }
 
-    // TODO update NextStepCommand to return error if simulation ends
     const nextCommand = new NextStepCommand(this.simulation);
     const error = this.simulation.executeCommand(nextCommand);
     if (error !== undefined) {
@@ -428,7 +447,7 @@ export class AutomatonCore implements IAutomatonCore {
       return new ErrorMessage("Command result is empty.");
     }
     this.visual.clearHighlights();
-    this.visual.highlightElements([result.id]);
+    this.visual.highlightElements([result.id, this.simulation.configuration.stateId]);
   }
 
   // TODO update visual
@@ -447,7 +466,18 @@ export class AutomatonCore implements IAutomatonCore {
     if (e !== undefined) {
       return new ErrorMessage(e.details);
     }
-    return new ErrorMessage("Not implemented.");
+  }
+
+  runEnd() {
+    if (this.mode.mode !== Mode.VISUAL) {
+      return new ErrorMessage("Operation is only permitted in visual mode.");
+    }
+    if (this.simulation === undefined) {
+      return new ErrorMessage("Run simulation does not exist. Try starting a simulation first.");
+    }
+
+    this.visual.clearHighlights();
+    this.simulation = undefined;
   }
 
   createEdge(edgeProps: IUniversalEdgeProps) {
@@ -498,4 +528,12 @@ export class AutomatonCore implements IAutomatonCore {
       }
     }
   }
+
+  simulationInProgress() {
+    return this.simulation !== undefined;
+  }
+
+  algorithmInProgress(inProgress: boolean) {
+    this.algorithm = inProgress;
+  };
 }

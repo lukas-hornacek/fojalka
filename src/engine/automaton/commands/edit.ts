@@ -3,6 +3,7 @@ import { ErrorMessage, IErrorMessage } from "../../common.ts";
 import { IEdge } from "../edge.ts";
 import { Kind } from "../../../core/core.ts";
 import { IEditCommandVisitor } from "../visitors/editCommand.ts";
+import { cloneDeep } from "lodash";
 
 export abstract class AutomatonEditCommand {
   kind = Kind.AUTOMATON as const;
@@ -66,18 +67,15 @@ export class RemoveStateCommand extends AutomatonEditCommand {
   execute(): IErrorMessage | undefined {
     const index = this.automaton.states.findIndex((id) => id === this.stateId);
     if (index === -1) {
-      return new ErrorMessage(
-        `Cannot remove state ${this.stateId}, as it does not exist.`
-      );
+      return new ErrorMessage(`Cannot remove state ${this.stateId}, as it does not exist.`);
     }
+    if (this.stateId === this.automaton.initialStateId) {
+      return new ErrorMessage(`Cannot remove state ${this.stateId}, as it is the initial state.`);
+    }
+
     this.saveBackup();
 
-    // TODO check if stateId is initialStateId or in finalStateIds
-    if (this.automaton.initialStateId === this.stateId) {
-      return new ErrorMessage(
-        `Cannot remove the initial state ${this.stateId}.`
-      );
-    }
+    this.automaton.finalStateIds = this.automaton.finalStateIds.filter(id => id !== this.stateId);
 
     // remove state
     if (
@@ -118,10 +116,11 @@ export class RenameStateCommand extends AutomatonEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    if (this.automaton.states.every((id) => id !== this.stateId)) {
-      return new ErrorMessage(
-        `Cannot edit state ${this.stateId}, as it does not exist.`
-      );
+    if (this.automaton.states.every(id => id !== this.stateId)) {
+      return new ErrorMessage(`Cannot edit state ${this.stateId}, as it does not exist.`);
+    }
+    if (this.automaton.states.some(id => id === this.newStateId) && this.newStateId !== this.stateId) {
+      return new ErrorMessage(`Cannot rename state ${this.stateId} to ${this.newStateId}, as there is already a state with that name.`);
     }
 
     this.saveBackup();
@@ -136,7 +135,17 @@ export class RenameStateCommand extends AutomatonEditCommand {
       state === this.stateId ? this.newStateId : state
     );
 
-    // TODO also rename state in delta function
+    //rename state in delta function
+    if (this.automaton.deltaFunctionMatrix[this.stateId] !== undefined) {
+      this.automaton.deltaFunctionMatrix[this.newStateId] = cloneDeep(this.automaton.deltaFunctionMatrix[this.stateId]);
+      this.automaton.deltaFunctionMatrix[this.stateId] = {};
+    }
+    for (const from in this.automaton.deltaFunctionMatrix) {
+      if (this.automaton.deltaFunctionMatrix[from][this.stateId] !== undefined) {
+        this.automaton.deltaFunctionMatrix[from][this.newStateId] = cloneDeep(this.automaton.deltaFunctionMatrix[from][this.stateId]);
+        this.automaton.deltaFunctionMatrix[from][this.stateId] = [];
+      }
+    }
   }
 }
 
@@ -339,7 +348,7 @@ export class RemoveEdgeCommand extends AutomatonEditCommand {
   }
 }
 
-// TODO replaces edge with edgeId with edge from constructor
+// replaces edge with edgeId with edge from constructor
 export class EditEdgeCommand extends AutomatonEditCommand {
   edgeId: string;
   edge: IEdge;
@@ -355,6 +364,32 @@ export class EditEdgeCommand extends AutomatonEditCommand {
   }
 
   execute(): IErrorMessage | undefined {
-    return new ErrorMessage("Not implemented.");
+    let fromState = "";
+    let toState = "";
+    let index = -1;
+
+    for (const from in this.automaton.deltaFunctionMatrix) {
+      for (const to in this.automaton.deltaFunctionMatrix[from]) {
+        const find = this.automaton.deltaFunctionMatrix[from][to].findIndex(someEdge => someEdge.id === this.edgeId);
+        if (find !== -1) {
+          fromState = from;
+          toState = to;
+          index = find;
+          break;
+        }
+      }
+
+      if (index !== -1) {
+        break;
+      }
+    }
+
+    if (index === -1) {
+      return new ErrorMessage(`Cannot edit edge ${this.edgeId}, as it does not exist.`);
+    }
+
+    this.saveBackup();
+
+    this.automaton.deltaFunctionMatrix[fromState][toState][index] = this.edge;
   }
 }
