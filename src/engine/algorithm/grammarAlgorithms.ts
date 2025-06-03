@@ -26,7 +26,7 @@ export class GrammarToAutomatonAlgorithm extends Algorithm {
       throw new Error("Cannot use algorithm, as it only works with regular grammars.");
     }
     if (!this.isGrammarInNormalForm()) {
-      throw new Error("Cannot use algorithm, as the grammar is not in required normal form.");
+      throw new Error("Cannot use algorithm, as the grammar is not in required normal form. Try running the normal form algorithm first.");
     }
 
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);

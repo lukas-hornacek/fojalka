@@ -37,8 +37,10 @@ export class VisualVisitor implements IEditCommandVisitor {
     if (this.visual.kind !== Kind.AUTOMATON) {
       throw new Error("Type mismatch");
     }
-    // TODO eventually we will probably want to get initial position from mouse position
-    this.visual.addNode(command.stateId, { x: 0, y: 0 });
+
+    const x = Math.floor((Math.random() - 0.5) * 300);
+    const y = Math.floor((Math.random() - 0.5) * 300);
+    this.visual.addNode(command.stateId, { x: x, y: y });
   }
 
   visitRemoveStateCommand(command: RemoveStateCommand): void {

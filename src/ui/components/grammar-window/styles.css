@@ -90,4 +90,5 @@ button:hover {
     overflow-x: auto;
     white-space: pre-wrap;
     font-family: "Courier New", monospace;
+    font-size: 1.3em;
 }

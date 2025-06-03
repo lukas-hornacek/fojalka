@@ -25,9 +25,11 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
     if (this.inputCore.automaton.automatonType !== this.inputType.AutomatonType) {
       throw new Error("Cannot use algorithm, as it only works with finite automata.");
     }
-
     if (this.hasEpsilonTransitions()) {
-      throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions.");
+      throw new Error("Cannot use algorithm, as the input automaton has epsilon transitions. Try running algorithm for epsilon removal first.");
+    }
+    if (!this.isContinuous()) {
+      throw new Error("Cannot use algorithm, as some of the states are not reachable from the ititial state.");
     }
 
     this.outputCore = new AutomatonCore(AutomatonType.FINITE, SECONDARY_CYTOSCAPE_ID, mode);
@@ -125,6 +127,7 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
   }
 
   stateToString(state: string[]): string {
+    state.sort();
     return "{" + state.join() + "}";
   }
 
@@ -147,6 +150,24 @@ export class NondeterministicToDeterministicAlgorithm extends Algorithm {
     }
 
     return false;
+  }
+
+  isContinuous(): boolean {
+    const visited: string[] = [this.inputCore.automaton.initialStateId];
+    const notProcessed: string[] = [this.inputCore.automaton.initialStateId];
+
+    while (notProcessed.length !== 0) {
+      const current: string = notProcessed.pop()!;
+
+      for (const state in this.inputCore.automaton.deltaFunctionMatrix[current]) {
+        if (!visited.includes(state)) {
+          visited.push(state);
+          notProcessed.push(state);
+        }
+      }
+    }
+
+    return visited.length === this.inputCore.automaton.states.length;
   }
 }
 
@@ -377,7 +398,7 @@ export class AutomatonToGrammarAlgorithm extends Algorithm {
           }
           const rule = this.outputCore!.factory.createProductionRule(from, output, this.outputCore!.grammar);
           const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
-          this.results.push({ highlight: [edge.id], command: command });
+          this.results.push({ highlight: [edge.id, from, to], command: command });
         }
       }
     }

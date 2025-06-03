@@ -99,7 +99,24 @@ export class NextStepVisitor implements IConfigurationVisitor {
   // if the list is empty, we just throw
   visitNFAConfiguration(configuration: NFAConfiguration): NFAConfiguration {
     if (configuration.remainingInput.length === 0) {
-      throw new Error("Input end reached");
+      const nextEdgeList: EdgeStatePair[] = [];
+
+      const delta = this.automaton.deltaFunctionMatrix[configuration.stateId];
+      for (const toState in delta) {
+        for (const edge of delta[toState]) {
+          if (edge.inputChar === EPSILON) {
+            nextEdgeList.push({ edge: edge, state: toState });
+          }
+        }
+      }
+
+      if (0 === nextEdgeList.length) {
+        throw new Error("Input end reached");
+      }
+      const m = Math.floor(Math.random() * nextEdgeList.length);
+      const edgeUSed = nextEdgeList[m];
+      this.result = edgeUSed.edge;
+      return new NFAConfiguration(edgeUSed.state, configuration.remainingInput);
     }
 
     if (this.automaton.automatonType != AutomatonType.FINITE) {
