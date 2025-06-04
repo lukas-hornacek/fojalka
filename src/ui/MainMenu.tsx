@@ -1,3 +1,4 @@
+import "bootstrap/dist/css/bootstrap.css";
 import { useContext, useState } from "react";
 import { ICoreType, Kind, Mode, ObjectType } from "../core/core";
 import {
