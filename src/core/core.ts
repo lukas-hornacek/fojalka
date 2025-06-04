@@ -271,7 +271,7 @@ export class Core implements ICore {
           return new ErrorMessage("Second window does not exist.");
         }
         this.primary.highlight([]);
-  
+
         switch (this.secondary.kind) {
           case Kind.GRAMMAR:
             this.secondary.visual.refresh();
