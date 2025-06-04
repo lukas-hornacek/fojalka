@@ -70,9 +70,7 @@ const DEFAULT_STYLE = [
   {
     selector: 'node[initial = "true"]',
     css: {
-      "border-style": "solid",
-      "border-color": "Black",
-      "border-width": 3,
+      "background-color": "Green"
     },
   },
   {
