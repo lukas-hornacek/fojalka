@@ -45,10 +45,10 @@ export default function AlgorithmButtons({ setButtonSet }: { setButtonSet: React
       <div className="row">
         <div className="col">
           <Stack direction="horizontal" gap={3}>
-            <button className="btn btn-primary" onClick={algorithmNext}>Next step</button>
-            <button className="btn btn-primary" onClick={algorithmUndo}>Undo step</button>
-            <button className="btn btn-primary" onClick={algorithmTransform}>Skip to the end</button>
-            {coreContext.secondary === undefined ? <button className="btn btn-primary" onClick={() => algorithmClose(false)}>Close algorithm</button> :
+            <button className="btn btn-primary m-1" onClick={algorithmNext}>Next step</button>
+            <button className="btn btn-primary m-1" onClick={algorithmUndo}>Undo step</button>
+            <button className="btn btn-primary m-1" onClick={algorithmTransform}>Skip to the end</button>
+            {coreContext.secondary === undefined ? <button className="btn btn-primary m-1" onClick={() => algorithmClose(false)}>Close algorithm</button> :
               <DropdownButton id="dropdown-algorithm-button" title="Close algorithm">
                 <Dropdown.Item onClick={() => algorithmClose(false)}>Keep first window</Dropdown.Item>
                 <Dropdown.Item onClick={() => algorithmClose(true)}>Keep second window</Dropdown.Item>

@@ -38,11 +38,12 @@ export default function MainMenu({
       <div className="d-flex">
         <SwitchModeButtons mode={mode} />
         <NewWindowButton />
-        {mode === Mode.EDIT ? (
+        {mode === Mode.EDIT ?
           <>
             <button
               type="button"
               id="import-button"
+              className="btn btn-primary m-1"
               onClick={() => {
                 // open file select dialog
                 document.getElementById("file-input")?.click();
@@ -110,19 +111,19 @@ export default function MainMenu({
               }}
             />
           </>
-        ) : null}
+          : null}
       </div>
 
       <hr />
-      {mode === Mode.EDIT ? (
-        primaryType.kind === Kind.AUTOMATON ? (
+      {mode === Mode.EDIT ?
+        primaryType.kind === Kind.AUTOMATON ?
           <AutomatonEditButtons children={""} />
-        ) : null
-      ) : primaryType.kind === Kind.AUTOMATON ? (
-        <AutomatonVisualButtons />
-      ) : (
-        <GrammarVisualButtons />
-      )}
+          : null
+        : primaryType.kind === Kind.AUTOMATON ?
+          <AutomatonVisualButtons />
+          :
+          <GrammarVisualButtons />
+      }
     </div>
   );
 }
@@ -145,7 +146,7 @@ function SwitchModeButtons({ mode }: { mode: Mode }) {
   if (mode === Mode.EDIT) {
     return (
       <button
-        className="btn btn-primary"
+        className="btn btn-primary m-1"
         onClick={() => switchMode(Mode.VISUAL)}
       >
         Switch to Visual mode
@@ -154,7 +155,7 @@ function SwitchModeButtons({ mode }: { mode: Mode }) {
   } else if (core.secondary === undefined) {
     return (
       <button
-        className="btn btn-primary"
+        className="btn btn-primary m-1"
         onClick={() => switchMode(Mode.EDIT, false)}
       >
         Switch to Edit mode
@@ -195,7 +196,7 @@ function NewWindowButton() {
 
   return (
     <>
-      <button className="btn btn-primary" onClick={() => setShow(true)}>
+      <button className="btn btn-primary m-1" onClick={() => setShow(true)}>
         New Window
       </button>
 

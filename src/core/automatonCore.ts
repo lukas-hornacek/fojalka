@@ -150,12 +150,14 @@ export class AutomatonCore implements IAutomatonCore {
         .filter((x) => x.id === savedAutomaton.automaton.initialStateId)
         .map((x) => x.position)[0],
       (automatonCore) => {
+        console.log(savedAutomaton.visuals);
+
         // run this after init
         // copy over values from the JSON
         automatonCore.automaton.automatonType =
           savedAutomaton.automaton.automatonType;
 
-        savedAutomaton.automaton.states.forEach((s) => {
+        savedAutomaton.automaton.states.filter(s => s !== savedAutomaton.automaton.initialStateId).forEach((s) => {
           // this is the ugliest frickin' code I've written this year, it's in O(n^2), but it works
           automatonCore.addState(
             s,

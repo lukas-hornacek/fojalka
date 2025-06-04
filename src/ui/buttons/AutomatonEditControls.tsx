@@ -73,8 +73,9 @@ export default function AutomatonEditControls({ children }: Props) {
 
   // handlers
   const clickNodeHandler = (e: cytoscape.EventObject) => {
-    setSelectedNodeId(e.target.id());
+    setSelectedNodeId("");
     setSelectedEdgeId("");
+    setSelectedNodeId(e.target.id());
     console.log("node edit click:", e.target.id());
   };
 
@@ -413,7 +414,7 @@ export default function AutomatonEditControls({ children }: Props) {
         <div className="col-6">
           <div className="stack">
             <button
-              className={`btn btn-primary ${
+              className={`btn btn-primary m-1 ${
                 mode === "createNode" ? "selectedButton" : ""
               }`}
               onClick={addState}
@@ -422,26 +423,26 @@ export default function AutomatonEditControls({ children }: Props) {
             </button>
 
             <button
-              className={`btn btn-primary ${
+              className={`btn btn-primary m-1 ${
                 mode === "createEdge" ? "selectedButton" : ""
               }`}
               onClick={addEdge}
             >
               Add edge
             </button>
-            <button className="btn btn-primary" onClick={removeElement}>
+            <button className="btn btn-primary m-1" onClick={removeElement}>
               Remove states or edges
             </button>
 
-            <button className="btn btn-primary" onClick={undo}>
+            <button className="btn btn-primary m-1" onClick={undo}>
               Undo
             </button>
-            <button className="btn btn-primary" onClick={fit}>
+            <button className="btn btn-primary m-1" onClick={fit}>
               Fit automaton to screen
             </button>
 
             <button
-              className="btn btn-primary"
+              className="btn btn-primary m-1"
               onClick={() => {
                 if (coreContext?.primary.kind === Kind.AUTOMATON) {
                   console.log(exportAutomaton(coreContext?.primary));
