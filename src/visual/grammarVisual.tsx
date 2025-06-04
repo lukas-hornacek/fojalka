@@ -73,6 +73,7 @@ export class GrammarVisual implements IGrammarVisual {
 
   // refresh representation according to grammar
   refresh() {
+    console.log("refreshing grammar");
     if (!this.grammar) {
       this.representation = <>No grammar set.</>;
       return;

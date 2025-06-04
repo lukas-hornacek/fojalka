@@ -62,6 +62,8 @@ export const GrammarWindow: React.FC<GrammarWindowProps> = ({ primary }) => {
     setNewTerminal("");
     grammar.visual.refresh();
     setGrammarRepr(grammar.display());
+
+    refreshRepr();
   }, [grammar]);
 
   useEffect(() => {
@@ -133,6 +135,7 @@ export const GrammarWindow: React.FC<GrammarWindowProps> = ({ primary }) => {
 
     const maybeError = grammar.addProductionRule(input, outputArr);
     if (maybeError) {
+      console.log(maybeError);
       alert(maybeError.details);
       return;
     }

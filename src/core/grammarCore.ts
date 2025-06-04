@@ -74,31 +74,35 @@ export class GrammarCore implements IGrammarCore {
   visual: IGrammarVisual;
   visitor: IEditCommandVisitor;
 
-  constructor(type: GrammarType, mode: ModeHolder) {
+  constructor(type: GrammarType, mode: ModeHolder, grammar?: Grammar) {
     this.type = type;
 
     this.factory = new AbstractGrammarFactory(type);
     this.grammar = this.factory.createGrammar(
-      [INITIAL_NONTERMINAL],
-      [],
-      INITIAL_NONTERMINAL
+      grammar?.nonTerminalSymbols ?? [INITIAL_NONTERMINAL],
+      grammar?.terminalSymbols ?? [],
+      grammar?.initialNonTerminalSymbol ?? INITIAL_NONTERMINAL
     );
 
     this.visual = new GrammarVisual();
     this.visual.setGrammar(this.grammar);
     this.visitor = new VisualVisitor(this.visual);
     this.mode = mode;
+
+    // add rules from import if exist
+    if (grammar != null) {
+      grammar.productionRules.forEach(r => this.addProductionRule(r.inputNonTerminal, r.outputSymbols));
+    }
   }
 
   static fromSavedJSON(savedGrammar: SavedGrammar): GrammarCore {
-    const grammarCore = new GrammarCore(savedGrammar.type, { mode: Mode.EDIT });
-    grammarCore.grammar = new Grammar(
+    const grammarCore = new GrammarCore(savedGrammar.type, { mode: Mode.EDIT }, new Grammar(
       savedGrammar.grammar.grammarType,
       savedGrammar.grammar.nonTerminalSymbols,
       savedGrammar.grammar.terminalSymbols,
       savedGrammar.grammar.initialNonTerminalSymbol,
       savedGrammar.grammar.productionRules
-    );
+    ));
 
     return grammarCore;
   }
