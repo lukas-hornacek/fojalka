@@ -18,7 +18,6 @@ export default function App() {
   core.setSecondaryType = setSecondaryType;
 
   useEffect(() => {
-    console.log("asdsdddddddd");
     core.setMode = setMode;
     core.setPrimaryType = setPrimaryType;
     core.setSecondaryType = setSecondaryType;
