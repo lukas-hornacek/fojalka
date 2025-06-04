@@ -196,6 +196,14 @@ export class AutomatonVisual implements IAutomatonVisual {
         wasNodeReadded = true;
       }
       this.addNode(x, pos);
+
+      if (automaton.initialStateId === x) {
+        this.setInitialNode(x);
+      }
+
+      if (automaton.finalStateIds.includes(x)) {
+        this.setIsFinalNode(x, true);
+      }
     });
 
     // add all edges
