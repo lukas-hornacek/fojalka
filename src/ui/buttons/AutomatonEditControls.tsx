@@ -72,6 +72,18 @@ export default function AutomatonEditControls({ children }: Props) {
     setMode("none");
   });
 
+  Mousetrap.bind("f", function () {
+    fit();
+  });
+
+  Mousetrap.bind("l", function () {
+    cyLayout(coreContext.getCytoscape());
+  });
+
+  Mousetrap.bind("ctrl+z", function () {
+    undo();
+  });
+
   // handlers
   const clickNodeHandler = (e: cytoscape.EventObject) => {
     setSelectedNodeId("");
@@ -437,7 +449,7 @@ export default function AutomatonEditControls({ children }: Props) {
               }`}
               onClick={addState}
             >
-              Add state
+              Add state (S)
             </button>
 
             <button
@@ -446,23 +458,23 @@ export default function AutomatonEditControls({ children }: Props) {
               }`}
               onClick={addEdge}
             >
-              Add edge
+              Add edge (E)
             </button>
             <button className="btn btn-primary m-1" onClick={removeElement}>
-              Remove states or edges
+              Remove states or edges (del)
             </button>
 
             <button className="btn btn-primary m-1" onClick={undo}>
               Undo
             </button>
             <button className="btn btn-primary m-1" onClick={fit}>
-              Fit automaton to screen
+              Fit automaton to screen (F)
             </button>
             <button
               className="btn btn-primary m-1"
-              onClick={() => cyLayout(coreContext.getCytoscape()!)}
+              onClick={() => cyLayout(coreContext.getCytoscape())}
             >
-              Re-layout
+              Re-layout (L)
             </button>
 
             <button
