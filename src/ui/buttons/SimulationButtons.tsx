@@ -1,8 +1,8 @@
 import { useContext, useState, useRef, useEffect } from "react";
-import { CoreContext } from "../../core/CoreContext";
 import { Kind } from "../../core/core";
 import { EPSILON } from "../../constants";
 import { Running } from "./VisualButtons";
+import { CoreContext } from "../App";
 
 export default function SimulationButton({ buttonSet, setButtonSet }: { buttonSet: Running, setButtonSet: React.Dispatch<React.SetStateAction<Running>> }) {
   const coreContext = useContext(CoreContext);
@@ -59,11 +59,13 @@ export default function SimulationButton({ buttonSet, setButtonSet }: { buttonSe
   };
 
   const startSimulation = () => {
+    console.log(core.mode);
     const word = simulationWord.split("");
 
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
     }
+
     const e = core.runStart(word);
     if (e !== undefined) {
       alert(e.details);

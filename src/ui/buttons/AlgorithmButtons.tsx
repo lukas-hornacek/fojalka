@@ -1,7 +1,8 @@
 import { useContext } from "react";
-import { CoreContext } from "../../core/CoreContext";
 import { Dropdown, DropdownButton, Stack } from "react-bootstrap";
 import { Running } from "./VisualButtons";
+import { CoreContext } from "../App";
+import { cyLayout } from "../../helperFunctions/cyLayoutHelper";
 
 export default function AlgorithmButtons({ setButtonSet }: { setButtonSet: React.Dispatch<React.SetStateAction<Running>> }) {
   const coreContext = useContext(CoreContext);
@@ -14,6 +15,8 @@ export default function AlgorithmButtons({ setButtonSet }: { setButtonSet: React
     const e = coreContext!.algorithmNext();
     if (e !== undefined) {
       alert(e.details);
+    } else {
+      cyLayout(coreContext?.secondary?.getCytoscape());
     }
   }
 
@@ -21,6 +24,8 @@ export default function AlgorithmButtons({ setButtonSet }: { setButtonSet: React
     const e = coreContext!.algorithmUndo();
     if (e !== undefined) {
       alert(e.details);
+    } else {
+      cyLayout(coreContext?.secondary?.getCytoscape());
     }
   }
 
@@ -28,6 +33,8 @@ export default function AlgorithmButtons({ setButtonSet }: { setButtonSet: React
     const e = coreContext!.transform();
     if (e !== undefined) {
       alert(e.details);
+    } else {
+      cyLayout(coreContext?.secondary?.getCytoscape());
     }
   }
 
@@ -45,10 +52,10 @@ export default function AlgorithmButtons({ setButtonSet }: { setButtonSet: React
       <div className="row">
         <div className="col">
           <Stack direction="horizontal" gap={3}>
-            <button className="btn btn-primary" onClick={algorithmNext}>Next step</button>
-            <button className="btn btn-primary" onClick={algorithmUndo}>Undo step</button>
-            <button className="btn btn-primary" onClick={algorithmTransform}>Skip to the end</button>
-            {coreContext.secondary === undefined ? <button className="btn btn-primary" onClick={() => algorithmClose(false)}>Close algorithm</button> :
+            <button className="btn btn-primary m-1" onClick={algorithmNext}>Next step</button>
+            <button className="btn btn-primary m-1" onClick={algorithmUndo}>Undo step</button>
+            <button className="btn btn-primary m-1" onClick={algorithmTransform}>Skip to the end</button>
+            {coreContext.secondary === undefined ? <button className="btn btn-primary m-1" onClick={() => algorithmClose(false)}>Close algorithm</button> :
               <DropdownButton id="dropdown-algorithm-button" title="Close algorithm">
                 <Dropdown.Item onClick={() => algorithmClose(false)}>Keep first window</Dropdown.Item>
                 <Dropdown.Item onClick={() => algorithmClose(true)}>Keep second window</Dropdown.Item>

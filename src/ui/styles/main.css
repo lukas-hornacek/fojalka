@@ -1,0 +1,28 @@
+#cy-primary, #cy-secondary {
+    height: 90%;
+    height: 70vh;
+    border: solid 1px black;
+}
+
+#cy-window {
+    min-height: 70vh;
+}
+
+.selectedButton {
+    background-color: lightblue;
+    color: black;
+}
+
+.highlight {
+    color: indianred;
+    font-weight: bold;
+}
+
+.editables {
+    margin: 10px;
+    padding: 10px;
+    background-color: white;
+    border: solid 1px black;
+    position: absolute;
+    z-index: 1;
+}

@@ -1,16 +1,13 @@
-import "./App.css";
-import { CoreContext } from "../core/CoreContext";
-import Buttons from "./buttons/Buttons.tsx";
+import "./styles/main.css";
+import MainMenu from "./MainMenu.tsx";
 import Windows from "./Windows.tsx";
-import { useContext, useState } from "react";
-import { ICoreType, Mode } from "../core/core.ts";
+import { createContext, useEffect, useState } from "react";
+import { Core, ICore, ICoreType, Mode } from "../core/core.ts";
+
+export const CoreContext = createContext<ICore | undefined>(undefined);
 
 export default function App() {
-  const core = useContext(CoreContext);
-
-  if (!core) {
-    throw new Error("SwitchModeButtons must be used within a CoreProvider");
-  }
+  const [core, setCore] = useState<ICore>(new Core());
 
   const [mode, setMode] = useState<Mode>(core.mode.mode);
   const [primaryType, setPrimaryType] = useState<ICoreType>(core.primary);
@@ -20,11 +17,19 @@ export default function App() {
   core.setPrimaryType = setPrimaryType;
   core.setSecondaryType = setSecondaryType;
 
+  useEffect(() => {
+    core.setMode = setMode;
+    core.setPrimaryType = setPrimaryType;
+    core.setSecondaryType = setSecondaryType;
+  }, [core]);
+
   return (
-    <div className="container-fluid">
-      <h1>Víla Fojálka</h1>
-      <Buttons mode={mode} primaryType={primaryType} />
-      <Windows primaryType={primaryType} secondaryType={secondaryType} />
-    </div>
+    <CoreContext.Provider value={core}>
+      <div className="container-fluid">
+        <h1>Víla Fojálka</h1>
+        <MainMenu mode={mode} primaryType={primaryType} setCore={setCore}/>
+        <Windows primaryType={primaryType} secondaryType={secondaryType} />
+      </div>
+    </CoreContext.Provider>
   );
 }

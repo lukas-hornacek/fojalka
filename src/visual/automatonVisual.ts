@@ -1,26 +1,29 @@
 import cytoscape, { ElementDefinition } from "cytoscape";
 import { Kind } from "../core/core";
-import { INITIAL_STATE, PRIMARY_CYTOSCAPE_ID } from "../constants";
+import { IAutomaton } from "../engine/automaton/automaton";
+import { PRIMARY_CYTOSCAPE_ID } from "../constants";
+import { cyLayout } from "../helperFunctions/cyLayoutHelper";
 
 export type NodeProps = {
-  id: string,
-  isFinal: boolean,
-  isStarting: boolean,
+  id: string;
+  isFinal: boolean;
+  isStarting: boolean;
 };
 
 export type EdgeProps = {
-  id: string,
-  from: string,
-  to: string,
-  label: string,
+  id: string;
+  from: string;
+  to: string;
+  label: string;
 };
 
 export interface IAutomatonVisual {
   kind: Kind.AUTOMATON;
+  initialJSON?: object;
 
   init: () => void;
   fit: () => void;
-  getElements: () => ElementDefinition[]
+  getElements: () => ElementDefinition[];
   reinitialize: (elements: ElementDefinition[]) => void;
 
   addNode: (id: string, position: { x: number; y: number }) => void;
@@ -30,22 +33,86 @@ export interface IAutomatonVisual {
   setInitialNode: (id: string) => void;
   setIsFinalNode: (id: string, isFinal: boolean) => void;
 
-  addEdge: (id: string, from: string, to: string, label: string,) => void;
+  addEdge: (id: string, from: string, to: string, label: string) => void;
   editEdge: (id: string, label: string) => void;
   removeEdge: (id: string) => void;
   highlightElements: (ids: string[]) => void;
   // removes all current highlights
   clearHighlights: () => void;
+
+  getCytoscape: () => cytoscape.Core | undefined;
+  redrawAutomaton: (automaton: IAutomaton) => void;
+
+  callbackAfterInit: (fn: (cy: cytoscape.Core) => void) => void;
 }
+
+const DEFAULT_STYLE = [
+  {
+    selector: "node",
+    style: {
+      "background-color": "#666",
+      label: "data(id)",
+    },
+  },
+
+  {
+    selector: "edge",
+    style: {
+      width: 3,
+      "line-color": "#999",
+      "target-arrow-color": "#999",
+      "target-arrow-shape": "triangle",
+      "curve-style": "bezier",
+      label: "data(label)",
+      "arrow-scale": 2,
+    },
+  },
+  {
+    selector: 'node[initial = "true"]',
+    css: {
+      "background-color": "Green"
+    },
+  },
+  {
+    selector: 'node[final = "true"]',
+    css: {
+      "border-style": "double",
+      "border-color": "Black",
+      "border-width": 6,
+    },
+  },
+  {
+    selector: ":selected",
+    css: {
+      "background-color": "SteelBlue",
+      "line-color": "SteelBlue",
+      "target-arrow-color": "SteelBlue",
+      "source-arrow-color": "SteelBlue",
+    },
+  },
+];
 
 export class AutomatonVisual implements IAutomatonVisual {
   kind = Kind.AUTOMATON as const;
   id: string;
   cy?: cytoscape.Core;
+
+  initialState: string = "";
+  initialStatePosition: { x: number; y: number } = { x: 0, y: 0 };
   elems?: ElementDefinition[];
 
-  constructor(id: string) {
+  // some functions need to be called only after init
+  initialized: boolean = false;
+  toCallBack: ((cy: cytoscape.Core) => void)[] = [];
+
+  constructor(
+    id: string,
+    initialState: string,
+    initialStatePosition: { x: number; y: number }
+  ) {
     this.id = id;
+    this.initialState = initialState;
+    this.initialStatePosition = initialStatePosition;
   }
 
   reinitialize(elems: ElementDefinition[]) {
@@ -54,53 +121,107 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   getElements() {
-    const nodes = this.cy?.nodes().map(node => ({
+    const nodes = this.cy?.nodes().map((node) => ({
       data: node.data(),
       group: node.group(),
       classes: node.classes(),
       position: node.position(),
     }));
-    const edges: ElementDefinition[] = this.cy!.edges().map(edge => ({
+    const edges: ElementDefinition[] = this.cy!.edges().map((edge) => ({
       data: edge.data(),
       group: edge.group(),
       classes: edge.classes(),
     }));
     // cytoscape does not play well with TypeScript...
-    return [...nodes as ElementDefinition[], ...edges];
+    return [...(nodes as ElementDefinition[]), ...edges];
   }
 
   init() {
+    console.log("init");
     this.cy?.destroy();
+
     this.cy = cytoscape({
       container: document.getElementById(this.id),
-      elements: this.elems ?? [{ group: "nodes", data: { id: INITIAL_STATE }, position: { x: 0, y: 0 } }],
-      style: [
+      elements: this.elems ?? [
         {
-          selector: "node",
-          style: {
-            "background-color": "#666",
-            label: "data(id)",
+          group: "nodes",
+          data: {
+            id: this.initialState,
+            initial: "true",
+            final: "false",
           },
-        },
-        {
-          selector: "edge",
-          style: {
-            width: 3,
-            "line-color": "#ccc",
-            "target-arrow-color": "#ccc",
-            "target-arrow-shape": "triangle",
-            "curve-style": "bezier",
-            label: "data(label)",
-          },
+          position: this.initialStatePosition,
         },
       ],
+      style: DEFAULT_STYLE,
+
       layout: { name: "preset" },
+      maxZoom: 10,
+      selectionType: "single",
     });
 
-    // for debugging only
-    this.cy.on("tap", "node, edge", (e) => {
-      console.log(e.target.id());
+    // init done
+    this.initialized = true;
+    this.toCallBack.forEach((fn) => fn(this.cy!));
+  }
+
+  callbackAfterInit(fn: (cy: cytoscape.Core) => void) {
+    if (!this.initialized) {
+      this.toCallBack.push(fn);
+    } else {
+      fn(this.cy!);
+    }
+  }
+
+  getCytoscape() {
+    return this.cy;
+  }
+
+  redrawAutomaton(automaton: IAutomaton) {
+    // remove everything
+    const oldElements = this.cy!.elements().remove();
+
+    let wasNodeReadded = false;
+
+    // add all nodes
+    automaton.states.forEach((x, index) => {
+      // unless what we are doing is readding a deleted node, everything should be in its old place
+
+      // a parabola, because layouts don't work well with lines
+      let pos = { x: 50 * index, y: index * index };
+
+      if (oldElements.getElementById(x).length != 0) {
+        pos = oldElements.getElementById(x).position();
+      } else {
+        // we are readding a previously deleted node
+        wasNodeReadded = true;
+      }
+      this.addNode(x, pos);
+
+      if (automaton.initialStateId === x) {
+        this.setInitialNode(x);
+      }
+
+      if (automaton.finalStateIds.includes(x)) {
+        this.setIsFinalNode(x, true);
+      }
     });
+
+    // add all edges
+    for (const fromEdge in automaton.deltaFunctionMatrix) {
+      for (const toEdge in automaton.deltaFunctionMatrix[fromEdge]) {
+        automaton.deltaFunctionMatrix[fromEdge][toEdge].forEach((edge) => {
+          this.addEdge(edge.id, fromEdge, toEdge, edge.label);
+        });
+      }
+    }
+
+    // well, we just apply a layout :D
+    if (wasNodeReadded) {
+      cyLayout(this.cy);
+    }
+
+    console.log("redrawn");
   }
 
   fit() {
@@ -108,34 +229,71 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   addNode(id: string, position: { x: number; y: number }) {
-    this.cy?.add({ group: "nodes", data: { id }, position });
+    this.cy?.add({
+      group: "nodes",
+      data: { id: id, initial: "false", final: "false" },
+      position,
+    });
   }
 
   removeNode(id: string) {
-    this.cy?.remove(`node#${id}`);
+    this.cy?.getElementById(id).remove();
   }
 
-  // TODO
   renameNode(id: string, newId: string) {
-    console.log(id, newId);
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
+
+    // cytoscape sent me to go frick myself when I attempted to change ID
+    // so I'll just yoink the json of the elements, manually change the ID everywhere and put it back in
+    // just fuckin' brute-force the shit out of it
+    const newJSON: any = this.cy?.json();
+
+    newJSON!.elements.nodes = newJSON!.elements.nodes?.map((n: any) =>
+      n.data.id === id ? { ...n, data: { ...n.data, id: newId } } : n
+    );
+    newJSON!.elements.edges =
+      newJSON!.elements.edges?.map((e: any) =>
+        e.data.source === id ? { ...e, data: { ...e.data, source: newId } } : e
+      ) ?? undefined;
+    newJSON!.elements.edges =
+      newJSON!.elements.edges?.map((e: any) =>
+        e.data.target === id ? { ...e, data: { ...e.data, target: newId } } : e
+      ) ?? undefined;
+
+    this.cy?.remove("*");
+    this.cy?.json(newJSON);
   }
 
-  // TODO
   setInitialNode(id: string) {
-    console.log(id);
+    // remove from the previous
+    this.cy?.nodes('[initial = "true"]').data("initial", "false");
+
+    // add to new one
+    this.cy?.getElementById(id).data("initial", "true");
   }
 
-  // TODO
   setIsFinalNode(id: string, isFinal: boolean) {
-    console.log(id, isFinal);
+    this.cy?.getElementById(id).data("final", isFinal ? "true" : "false");
   }
 
   addEdge(id: string, from: string, to: string, label: string) {
-    this.cy?.add({ group: "edges", data: { id, source: from, target: to, label } });
+    this.cy?.add({
+      group: "edges",
+      data: { id, source: from, target: to, label },
+    });
   }
 
-  // TODO
+  // delete and re-add the edge
   editEdge(id: string, label: string) {
+    const data: any = this.cy?.getElementById(id).data();
+    this.cy?.getElementById(id).remove();
+
+    data.label = label;
+
+    this.cy?.add({
+      group: "edges",
+      data: data,
+    });
     console.log(id, label);
   }
 
@@ -166,10 +324,11 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   clearHighlights() {
-    this.cy?.nodes().forEach(node => {
-      node.style({ "background-color": "#666" }); // your default node color
+    this.cy?.nodes().forEach((node) => {
+      node.removeStyle();
+      node.style(DEFAULT_STYLE); // your default node color
     });
-    this.cy?.edges().forEach(edge => {
+    this.cy?.edges().forEach((edge) => {
       edge.style({
         "line-color": "#ccc",
         "target-arrow-color": "#ccc",

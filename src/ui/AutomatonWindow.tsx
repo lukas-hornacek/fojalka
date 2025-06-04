@@ -1,7 +1,7 @@
 import { useEffect, useContext } from "react";
-import { CoreContext } from "../core/CoreContext";
 import { Kind } from "../core/core";
 import { PRIMARY_CYTOSCAPE_ID, SECONDARY_CYTOSCAPE_ID } from "../constants";
+import { CoreContext } from "./App";
 
 export default function AutomatonWindow({ primary }: { primary: boolean }) {
   const coreContext = useContext(CoreContext);
@@ -20,7 +20,9 @@ export default function AutomatonWindow({ primary }: { primary: boolean }) {
     } else {
       throw new Error("AutomatonWindow could not be initialized correctly");
     }
-  }, [primary, coreContext]);
+  }, [primary]);
+  // removed coreContext from here, because it was causing trouble - init already gets called from import
+  // nvm readded it
 
   return <div id={primary ? PRIMARY_CYTOSCAPE_ID : SECONDARY_CYTOSCAPE_ID}></div>;
 }

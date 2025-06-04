@@ -3,11 +3,11 @@ import { Running } from "./VisualButtons";
 import { AutomatonToGrammarAlgorithm, NondeterministicToDeterministicAlgorithm, RemoveEpsilonAlgorithm } from "../../engine/algorithm/automatonAlgorithms";
 import { IAlgorithm } from "../../engine/algorithm/algorithm";
 import { useContext } from "react";
-import { CoreContext } from "../../core/CoreContext";
 import { GrammarNormalFormAlgorithm, GrammarToAutomatonAlgorithm } from "../../engine/algorithm/grammarAlgorithms";
 import { Kind } from "../../core/core";
 import { GrammarType } from "../../engine/grammar/grammar";
 import { AutomatonType } from "../../engine/automaton/automaton";
+import { CoreContext } from "../App";
 
 interface AlgorithmWrapper {
   name: string,
