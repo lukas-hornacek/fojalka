@@ -144,6 +144,8 @@ export default function AutomatonEditControls({ children }: Props) {
         cy.on("tap", "node", clickNodeHandler);
         cy.on("tap", "edge", clickEdgeHandler);
         cy.on("tap", clickElsewhereHandler);
+
+        coreContext.primary.visual.clearHighlights();
       });
     }
   }, [coreContext]);
