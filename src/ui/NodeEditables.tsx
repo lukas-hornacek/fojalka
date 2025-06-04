@@ -42,7 +42,7 @@ export default function NodeEditables({
         />
 
         <br />
-        {/* 
+        {/*
       <input type="checkbox" id="state-is-initial" name="state-is-initial" defaultChecked={
         coreContext.primary.kind === Kind.AUTOMATON ? coreContext.primary.automaton.initialStateId === id : false
       }/ >
@@ -61,7 +61,7 @@ export default function NodeEditables({
 
         <br />
 
-        <button className="btn btn-primary m-1" type="submit"> 
+        <button className="btn btn-primary m-1" type="submit">
           Edit state
         </button>
         <button className="btn btn-primary m-1" type="button" onClick={setInitial}>
@@ -71,3 +71,6 @@ export default function NodeEditables({
     </div>
   );
 }
+
+// one more swear word
+// frick

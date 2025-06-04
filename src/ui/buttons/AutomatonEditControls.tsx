@@ -529,19 +529,19 @@ export default function AutomatonEditControls({ children }: Props) {
                   : "Select second node"}
               </div>
             )} */}
-          {selectedNodeId !== "" && (
+          {selectedNodeId !== "" &&
             <div>
               <NodeEditables id={selectedNodeId} formAction={formEditState} setInitial={formSetInitialState} />
             </div>
-          )}
-          {selectedEdgeId !== "" && (
+          }
+          {selectedEdgeId !== "" &&
             <div>
               <EdgeEditables
                 char={selectedEdgeChar}
                 formAction={formEditEdge}
               />
             </div>
-          )}
+          }
         </div>
       </div>
 
