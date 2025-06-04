@@ -324,15 +324,7 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   clearHighlights() {
-    this.cy?.nodes().forEach((node) => {
-      node.removeStyle();
-      node.style(DEFAULT_STYLE); // your default node color
-    });
-    this.cy?.edges().forEach((edge) => {
-      edge.style({
-        "line-color": "#ccc",
-        "target-arrow-color": "#ccc",
-      });
-    });
+    this.cy?.elements().removeStyle();
+    this.cy?.elements().style(DEFAULT_STYLE);
   }
 }

@@ -246,7 +246,6 @@ export class Core implements ICore {
     }
   }
 
-  // TODO reflect changes in visual
   algorithmUndo() {
     if (this.mode.mode === Mode.EDIT) {
       return new ErrorMessage("Cannot simulate algorithm in edit mode.");
@@ -255,7 +254,37 @@ export class Core implements ICore {
       return new ErrorMessage("Cannot undo algorithm step before start.");
     }
 
-    return this.algorithm.undo();
+    const e  = this.algorithm.undo();
+    if (e === undefined) {
+      if (this.algorithm!.outputType === undefined) {
+        switch (this.primary.kind) {
+          case Kind.GRAMMAR:
+            this.primary.visual.refresh();
+            this.primary.visual.refresher?.(this.primary.visual.display());
+            break;
+          case Kind.AUTOMATON:
+            this.primary.visual.redrawAutomaton(this.primary.automaton);
+            break;
+        }
+      } else {
+        if (this.secondary === undefined) {
+          return new ErrorMessage("Second window does not exist.");
+        }
+        this.primary.highlight([]);
+
+        switch (this.secondary.kind) {
+          case Kind.GRAMMAR:
+            this.secondary.visual.refresh();
+            this.secondary.visual.refresher?.(this.secondary.visual.display());
+            break;
+          case Kind.AUTOMATON:
+            this.secondary.visual.redrawAutomaton(this.secondary.automaton);
+            break;
+        }
+      }
+    }
+
+    return e;
   }
 
   algorithmDelete(keepSecondary: boolean) {
