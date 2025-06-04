@@ -141,12 +141,9 @@ function SwitchModeButtons({ mode }: { mode: Mode }) {
       core.mode.mode = Mode.EDIT;
       core.primary.mode.mode = Mode.EDIT;
     } else {
-      console.log(core);
       core.switchToVisualMode();
       core.mode.mode = Mode.VISUAL;
       core.primary.mode.mode = Mode.VISUAL;
-
-      console.log(core);
     }
   };
 

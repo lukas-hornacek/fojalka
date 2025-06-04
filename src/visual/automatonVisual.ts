@@ -155,7 +155,7 @@ export class AutomatonVisual implements IAutomatonVisual {
       ],
       style: DEFAULT_STYLE,
 
-      layout: { name: "grid", rows: 1 },
+      layout: { name: "preset" },
       maxZoom: 10,
       selectionType: "single",
     });
