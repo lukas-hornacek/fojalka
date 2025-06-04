@@ -310,6 +310,7 @@ export default function AutomatonEditControls({ children }: Props) {
 
     switch (core?.kind) {
       case Kind.AUTOMATON: {
+        // set as final
         const e2 = core.setIsFinalState(
           selectedNodeId,
           formData.get("state-is-final") != null
@@ -318,19 +319,9 @@ export default function AutomatonEditControls({ children }: Props) {
         if (e2 !== undefined) {
           console.error(e2.details);
           alert(`Error: ${e2.details}`);
-        } else {
-          if (formData.get("state-is-initial") != null) {
-            const e3 = core.setInitialState(selectedNodeId);
-
-            if (e3 !== undefined) {
-              console.error(e3.details);
-              alert(`Error: ${e3.details}`);
-            } else {
-              console.log("state edited successfuly");
-            }
-          }
         }
 
+        // set new name
         if (formData.get("state-name")?.toString() !== selectedNodeId) {
           const e = core.renameState(
             selectedNodeId,
@@ -340,6 +331,32 @@ export default function AutomatonEditControls({ children }: Props) {
             console.error(e.details);
             alert(`Error: ${e.details}`);
           }
+        }
+
+        closeModal();
+
+        setSelectedNodeId("");
+        break;
+      }
+      case Kind.GRAMMAR:
+        console.error("Cannot edit state in grammar.");
+        break;
+    }
+  }
+
+  function formSetInitialState() {
+    const core = coreContext?.primary;
+
+    switch (core?.kind) {
+      case Kind.AUTOMATON: {
+        // set initial
+        const e = core.setInitialState(selectedNodeId);
+
+        if (e !== undefined) {
+          console.error(e.details);
+          alert(`Error: ${e.details}`);
+        } else {
+          console.log("state successfuly set as initial");
         }
 
         closeModal();
@@ -512,19 +529,19 @@ export default function AutomatonEditControls({ children }: Props) {
                   : "Select second node"}
               </div>
             )} */}
-          {selectedNodeId !== "" &&
+          {selectedNodeId !== "" && (
             <div>
-              <NodeEditables id={selectedNodeId} formAction={formEditState} />
+              <NodeEditables id={selectedNodeId} formAction={formEditState} setInitial={formSetInitialState} />
             </div>
-          }
-          {selectedEdgeId !== "" &&
+          )}
+          {selectedEdgeId !== "" && (
             <div>
               <EdgeEditables
                 char={selectedEdgeChar}
                 formAction={formEditEdge}
               />
             </div>
-          }
+          )}
         </div>
       </div>
 
