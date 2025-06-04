@@ -195,7 +195,8 @@ export class GrammarNormalFormAlgorithm extends Algorithm {
         id++;
       }
       else {
-        const command = new AddProductionRuleCommand(this.outputCore!.grammar, rule);
+        const newRule = this.outputCore!.factory.createProductionRule(rule.inputNonTerminal, rule.outputSymbols, this.outputCore!.grammar);
+        const command = new AddProductionRuleCommand(this.outputCore!.grammar, newRule);
         this.results.push({ highlight: [rule.id], command: command });
       }
     }
