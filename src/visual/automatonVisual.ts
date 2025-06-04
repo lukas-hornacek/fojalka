@@ -187,7 +187,7 @@ export class AutomatonVisual implements IAutomatonVisual {
       // unless what we are doing is readding a deleted node, everything should be in its old place
 
       // a parabola, because layouts don't work well with lines
-      let pos = {x: 50*index, y: index*index}
+      let pos = { x: 50 * index, y: index * index };
 
       if (oldElements.getElementById(x).length != 0) {
         pos = oldElements.getElementById(x).position();

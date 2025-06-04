@@ -216,7 +216,7 @@ export class AutomatonCore implements IAutomatonCore {
 
   undo() {
     const result = this.automaton.undo();
-    
+
     // literally just redraw the thing
     if (result == undefined) {
       this.visual.redrawAutomaton(this.automaton);
