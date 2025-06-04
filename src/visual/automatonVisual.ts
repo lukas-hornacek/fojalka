@@ -237,7 +237,7 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   removeNode(id: string) {
-    this.cy?.remove(`node#${id}`);
+    this.cy?.getElementById(id).remove();
   }
 
   renameNode(id: string, newId: string) {

@@ -105,7 +105,7 @@ export default function MainMenu({
 
                       // I ..... dont know
                       clearInterval(interval);
-                    }, 200);
+                    }, 500);
                   }
                 });
               }}
