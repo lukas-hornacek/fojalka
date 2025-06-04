@@ -2,6 +2,7 @@ import cytoscape, { ElementDefinition } from "cytoscape";
 import { Kind } from "../core/core";
 import { IAutomaton } from "../engine/automaton/automaton";
 import { PRIMARY_CYTOSCAPE_ID } from "../constants";
+import { cyLayout } from "../helperFunctions/cyLayoutHelper";
 
 export type NodeProps = {
   id: string;
@@ -176,14 +177,25 @@ export class AutomatonVisual implements IAutomatonVisual {
   }
 
   redrawAutomaton(automaton: IAutomaton) {
-    // todo doesn't do what I want
-
     // remove everything
-    this.cy!.elements().remove();
+    const oldElements = this.cy!.elements().remove();
+
+    let wasNodeReadded = false;
 
     // add all nodes
     automaton.states.forEach((x, index) => {
-      this.addNode(x, { x: 50 * index, y: 0 });
+      // unless what we are doing is readding a deleted node, everything should be in its old place
+
+      // a parabola, because layouts don't work well with lines
+      let pos = {x: 50*index, y: index*index}
+
+      if (oldElements.getElementById(x).length != 0) {
+        pos = oldElements.getElementById(x).position();
+      } else {
+        // we are readding a previously deleted node
+        wasNodeReadded = true;
+      }
+      this.addNode(x, pos);
     });
 
     // add all edges
@@ -193,6 +205,11 @@ export class AutomatonVisual implements IAutomatonVisual {
           this.addEdge(edge.id, fromEdge, toEdge, edge.label);
         });
       }
+    }
+
+    // well, we just apply a layout :D
+    if (wasNodeReadded) {
+      cyLayout(this.cy);
     }
 
     console.log("redrawn");

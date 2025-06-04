@@ -215,13 +215,13 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   undo() {
-    // TODO refactor this to return information that can be used to reflect changes in visual
     const result = this.automaton.undo();
+    
+    // literally just redraw the thing
     if (result == undefined) {
       this.visual.redrawAutomaton(this.automaton);
     }
     return result;
-    //return new ErrorMessage("Not implemented.");
   }
 
   fit() {
