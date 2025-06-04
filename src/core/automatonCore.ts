@@ -26,7 +26,7 @@ import {
 } from "../engine/automaton/commands/edit";
 import { NextStepCommand } from "../engine/automaton/commands/run";
 import { INITIAL_STATE, PRIMARY_CYTOSCAPE_ID } from "../constants";
-import { SavedAutomaton } from "../ui/importAndExport";
+import { SavedAutomaton } from "../helperFunctions/importAndExport";
 
 export interface IAutomatonCore {
   kind: Kind.AUTOMATON;

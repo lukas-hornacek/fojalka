@@ -14,7 +14,7 @@ import {
   AutomatonVisualButtons,
   GrammarVisualButtons,
 } from "./buttons/VisualButtons";
-import { importAutomatonOrGrammar } from "./importAndExport";
+import { importAutomatonOrGrammar } from "../helperFunctions/importAndExport";
 import { CoreContext } from "./App";
 import { GrammarType } from "../engine/grammar/grammar";
 

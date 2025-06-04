@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { Kind, Mode } from "../../../core/core.ts";
 import GrammarRepresentation from "./GrammarRepresentation";
 import "./styles.css";
-import { exportGrammar } from "../../importAndExport.ts";
+import { exportGrammar } from "../../../helperFunctions/importAndExport.ts";
 import { CoreContext } from "../../App.tsx";
 
 interface ProductionRule {

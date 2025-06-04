@@ -21,7 +21,7 @@ import {
 } from "../engine/grammar/factories";
 import { Grammar, GrammarType } from "../engine/grammar/grammar";
 import { IGrammarSimulation } from "../engine/grammar/simulation";
-import { SavedGrammar } from "../ui/importAndExport";
+import { SavedGrammar } from "../helperFunctions/importAndExport";
 import { GrammarVisual, IGrammarVisual } from "../visual/grammarVisual";
 import { ModeHolder, Kind, Mode } from "./core";
 

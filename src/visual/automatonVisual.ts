@@ -130,7 +130,9 @@ export class AutomatonVisual implements IAutomatonVisual {
         {
           selector: 'node[initial = "true"]',
           css: {
-            "background-color": "Green",
+            "border-style": "solid",
+            "border-color": "Black",
+            "border-width": 3,
           },
         },
         {

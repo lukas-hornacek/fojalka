@@ -2,10 +2,11 @@ import { ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { Kind } from "../../core/core";
 import ReactModal, { Styles } from "react-modal";
 import Mousetrap from "mousetrap";
-import { exportAutomaton } from "../importAndExport";
+import { exportAutomaton } from "../../helperFunctions/importAndExport";
 import NodeEditables from "../NodeEditables";
 import EdgeEditables from "../EdgeEditables";
 import { CoreContext } from "../App";
+import { cyLayout } from "../../helperFunctions/cyLayoutHelper";
 
 ReactModal.setAppElement("#root");
 
@@ -439,6 +440,12 @@ export default function AutomatonEditControls({ children }: Props) {
             </button>
             <button className="btn btn-primary m-1" onClick={fit}>
               Fit automaton to screen
+            </button>
+            <button
+              className="btn btn-primary m-1"
+              onClick={() => cyLayout(coreContext.getCytoscape()!)}
+            >
+              Re-layout
             </button>
 
             <button
