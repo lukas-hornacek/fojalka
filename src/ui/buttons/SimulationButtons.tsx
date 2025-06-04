@@ -59,11 +59,13 @@ export default function SimulationButton({ buttonSet, setButtonSet }: { buttonSe
   };
 
   const startSimulation = () => {
+    console.log(core.mode);
     const word = simulationWord.split("");
 
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
     }
+
     const e = core.runStart(word);
     if (e !== undefined) {
       alert(e.details);

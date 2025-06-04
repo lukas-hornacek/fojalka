@@ -128,14 +128,6 @@ export class AutomatonVisual implements IAutomatonVisual {
           },
         },
         {
-          selector: ":selected",
-          css: {
-            "background-color": "SteelBlue",
-            "line-color": "SteelBlue",
-            "target-arrow-color": "SteelBlue",
-            "source-arrow-color": "SteelBlue",
-          },
-        }, {
           selector: 'node[initial = "true"]',
           css: {
             "background-color": "Green",
@@ -147,6 +139,15 @@ export class AutomatonVisual implements IAutomatonVisual {
             "border-style": "double",
             "border-color": "Black",
             "border-width": 6,
+          },
+        },
+        {
+          selector: ":selected",
+          css: {
+            "background-color": "SteelBlue",
+            "line-color": "SteelBlue",
+            "target-arrow-color": "SteelBlue",
+            "source-arrow-color": "SteelBlue",
           },
         },
       ],

@@ -139,12 +139,13 @@ export class AutomatonCore implements IAutomatonCore {
 
   static fromSavedJSON(
     savedAutomaton: SavedAutomaton,
+    previousModeHolder: ModeHolder,
     afterInit?: (automatonCore: AutomatonCore) => void
   ): AutomatonCore {
     const newAutomatonCore = new AutomatonCore(
       savedAutomaton.automaton.automatonType,
       PRIMARY_CYTOSCAPE_ID,
-      new ModeHolder(),
+      previousModeHolder,
       savedAutomaton.automaton.initialStateId,
       savedAutomaton.visuals
         .filter((x) => x.id === savedAutomaton.automaton.initialStateId)
@@ -418,6 +419,7 @@ export class AutomatonCore implements IAutomatonCore {
   }
 
   runStart(word: string[]) {
+    console.log(this.mode.mode);
     if (this.mode.mode !== Mode.VISUAL) {
       return new ErrorMessage("Operation is only permitted in visual mode.");
     }

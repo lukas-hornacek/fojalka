@@ -1,7 +1,7 @@
 import FileSaver from "file-saver";
 import { AutomatonCore, IAutomatonCore } from "../core/automatonCore";
 import { IAutomaton } from "../engine/automaton/automaton";
-import { Kind } from "../core/core";
+import { ICore, Kind } from "../core/core";
 import { GrammarCore, IGrammarCore } from "../core/grammarCore";
 import { GrammarType, ProductionRule } from "../engine/grammar/grammar";
 
@@ -67,7 +67,7 @@ export function exportGrammar(grammarCore: IGrammarCore) {
   return exportObject;
 }
 
-export function importAutomatonOrGrammar(data: string) {
+export function importAutomatonOrGrammar(data: string, core: ICore) {
   const imported: SavedAutomaton | SavedGrammar = JSON.parse(data);
 
   console.log("Parsed import:");
@@ -75,7 +75,7 @@ export function importAutomatonOrGrammar(data: string) {
 
   switch (imported.kind) {
     case Kind.AUTOMATON:
-      return AutomatonCore.fromSavedJSON(imported);
+      return AutomatonCore.fromSavedJSON(imported, core.mode);
     case Kind.GRAMMAR:
       return GrammarCore.fromSavedJSON(imported);
     default:

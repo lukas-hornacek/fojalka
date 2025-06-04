@@ -65,7 +65,7 @@ export default function MainMenu({
 
                 const file = files[0];
                 file.text().then((text) => {
-                  const loaded = importAutomatonOrGrammar(text);
+                  const loaded = importAutomatonOrGrammar(text, core);
                   if (loaded != null) {
                     switch (loaded.kind) {
                       case Kind.AUTOMATON:
@@ -138,8 +138,15 @@ function SwitchModeButtons({ mode }: { mode: Mode }) {
   const switchMode = (mode: Mode, keepSecondary: boolean = false) => {
     if (mode === Mode.EDIT) {
       core.switchToEditMode(keepSecondary);
+      core.mode.mode = Mode.EDIT;
+      core.primary.mode.mode = Mode.EDIT;
     } else {
+      console.log(core);
       core.switchToVisualMode();
+      core.mode.mode = Mode.VISUAL;
+      core.primary.mode.mode = Mode.VISUAL;
+
+      console.log(core);
     }
   };
 

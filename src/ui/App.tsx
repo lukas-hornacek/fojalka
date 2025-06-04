@@ -1,7 +1,7 @@
 import "./styles/main.css";
 import MainMenu from "./MainMenu.tsx";
 import Windows from "./Windows.tsx";
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { Core, ICore, ICoreType, Mode } from "../core/core.ts";
 
 export const CoreContext = createContext<ICore | undefined>(undefined);
@@ -16,6 +16,13 @@ export default function App() {
   core.setMode = setMode;
   core.setPrimaryType = setPrimaryType;
   core.setSecondaryType = setSecondaryType;
+
+  useEffect(() => {
+    console.log("asdsdddddddd");
+    core.setMode = setMode;
+    core.setPrimaryType = setPrimaryType;
+    core.setSecondaryType = setSecondaryType;
+  }, [core]);
 
   return (
     <CoreContext.Provider value={core}>

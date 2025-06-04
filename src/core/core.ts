@@ -138,8 +138,15 @@ export class Core implements ICore {
       return new ErrorMessage("Cannot switch to visual mode when already in visual mode.");
     }
 
+    console.log(this.mode.mode);
+
     this.mode.mode = Mode.VISUAL;
+
+    console.log(this.mode.mode);
+
     this.setMode?.(this.mode.mode);
+
+    console.log(this.setMode);
   }
 
   transform() {
