@@ -452,18 +452,16 @@ export class EditEdgeCommand extends AutomatonEditCommand {
     }
 
     // check whether an edge with this name already exists
-    for (const from in this.automaton.deltaFunctionMatrix) {
-      for (const to in this.automaton.deltaFunctionMatrix[from]) {
-        const find = this.automaton.deltaFunctionMatrix[from][to].findIndex(
+    
+        const find = this.automaton.deltaFunctionMatrix[fromState][toState].findIndex(
           (someEdge) => someEdge.inputChar === this.edge.inputChar
         );
         if (find !== -1) {
           return new ErrorMessage(
-            `An edge already exists for input characters ${this.edge.inputChar}.`
+            `An edge already exists for input characters ${this.edge.inputChar} between ${fromState} and ${toState}.`
           );
         }
-      }
-    }
+  
 
     this.saveBackup();
 
