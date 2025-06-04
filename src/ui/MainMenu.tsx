@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { ICoreType, Kind, Mode, ObjectType } from "../core/core";
+import { Core, ICore, ICoreType, Kind, Mode, ObjectType } from "../core/core";
 import {
   Button,
   Dropdown,
@@ -21,9 +21,11 @@ import { GrammarType } from "../engine/grammar/grammar";
 export default function MainMenu({
   mode,
   primaryType,
+  setCore,
 }: {
   mode: Mode;
   primaryType: ICoreType;
+  setCore: React.Dispatch<React.SetStateAction<ICore>>;
 }) {
   const core = useContext(CoreContext);
 
@@ -36,7 +38,7 @@ export default function MainMenu({
       <div className="d-flex">
         <SwitchModeButtons mode={mode} />
         <NewWindowButton />
-        {mode === Mode.EDIT ?
+        {mode === Mode.EDIT ? (
           <>
             <button
               type="button"
@@ -64,7 +66,6 @@ export default function MainMenu({
                 file.text().then((text) => {
                   const loaded = importAutomatonOrGrammar(text);
                   if (loaded != null) {
-
                     switch (loaded.kind) {
                       case Kind.AUTOMATON:
                         core.newWindow(ObjectType.AUTOMATON_FINITE);
@@ -83,36 +84,45 @@ export default function MainMenu({
                         }
                     }
 
-                    // force React to... react to the changes
-                    // for something that has reacting in the name
-                    // it sure is a lazy bitch
-                    //const core2 = new Core();
-                    core.setCorePrimary(loaded);
+                    // I am done with it
+                    // the audacity!
+                    // the horror!
+                    // the violation of good coding practises!
+                    // behold!
+                    // a fucking setInterval
+                    const interval = setInterval(() => {
+                      // force React to... react to the changes
+                      // for something that has reacting in the name
+                      // it sure is a lazy bitch
+                      const core2 = new Core();
+                      core2.setCorePrimary(loaded);
 
-                    //setCore(core2);
-                    if (core.primary.kind === Kind.AUTOMATON) {
-                      core.primary.init();
-                    }
+                      setCore(core2);
+                      if (core2.primary.kind === Kind.AUTOMATON) {
+                        core2.primary.init();
+                      }
 
-                    // I ..... dont know
+                      // I ..... dont know
+                      clearInterval(interval);
+                    }, 200);
                   }
                 });
               }}
             />
           </>
-          : null}
+        ) : null}
       </div>
 
       <hr />
-      {mode === Mode.EDIT ?
-        primaryType.kind === Kind.AUTOMATON ?
+      {mode === Mode.EDIT ? (
+        primaryType.kind === Kind.AUTOMATON ? (
           <AutomatonEditButtons children={""} />
-          : null
-        : primaryType.kind === Kind.AUTOMATON ?
-          <AutomatonVisualButtons />
-          :
-          <GrammarVisualButtons />
-      }
+        ) : null
+      ) : primaryType.kind === Kind.AUTOMATON ? (
+        <AutomatonVisualButtons />
+      ) : (
+        <GrammarVisualButtons />
+      )}
     </div>
   );
 }

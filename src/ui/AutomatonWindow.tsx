@@ -20,7 +20,7 @@ export default function AutomatonWindow({ primary }: { primary: boolean }) {
     } else {
       throw new Error("AutomatonWindow could not be initialized correctly");
     }
-  }, [primary, coreContext]);
+  }, [primary]);
   // removed coreContext from here, because it was causing trouble - init already gets called from import
   // nvm readded it
 

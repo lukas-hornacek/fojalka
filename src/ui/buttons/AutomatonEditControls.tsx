@@ -124,15 +124,6 @@ export default function AutomatonEditControls({ children }: Props) {
 
   // upon creation I guess
   useEffect(() => {
-    // I am done with it
-    // the audacity!
-    // the horror!
-    // the violation of good coding practises!
-    // behold!
-    // a fucking setInterval
-
-    //setInterval(() => {}, 500);
-
     console.log("activation!!!");
     if (coreContext.primary.kind === Kind.AUTOMATON) {
       coreContext.primary.callbackAfterInit((cy) => {
@@ -419,7 +410,7 @@ export default function AutomatonEditControls({ children }: Props) {
   return (
     <>
       <div className="row">
-        <div className="col-2">
+        <div className="col-6">
           <div className="stack">
             <button
               className={`btn btn-primary ${
