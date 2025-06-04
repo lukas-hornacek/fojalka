@@ -46,6 +46,54 @@ export interface IAutomatonVisual {
   callbackAfterInit: (fn: (cy: cytoscape.Core) => void) => void;
 }
 
+const DEFAULT_STYLE = [
+  {
+    selector: "node",
+    style: {
+      "background-color": "#666",
+      label: "data(id)",
+    },
+  },
+
+  {
+    selector: "edge",
+    style: {
+      width: 3,
+      "line-color": "#999",
+      "target-arrow-color": "#999",
+      "target-arrow-shape": "triangle",
+      "curve-style": "bezier",
+      label: "data(label)",
+      "arrow-scale": 2,
+    },
+  },
+  {
+    selector: 'node[initial = "true"]',
+    css: {
+      "border-style": "solid",
+      "border-color": "Black",
+      "border-width": 3,
+    },
+  },
+  {
+    selector: 'node[final = "true"]',
+    css: {
+      "border-style": "double",
+      "border-color": "Black",
+      "border-width": 6,
+    },
+  },
+  {
+    selector: ":selected",
+    css: {
+      "background-color": "SteelBlue",
+      "line-color": "SteelBlue",
+      "target-arrow-color": "SteelBlue",
+      "source-arrow-color": "SteelBlue",
+    },
+  },
+];
+
 export class AutomatonVisual implements IAutomatonVisual {
   kind = Kind.AUTOMATON as const;
   id: string;
@@ -107,53 +155,8 @@ export class AutomatonVisual implements IAutomatonVisual {
           position: this.initialStatePosition,
         },
       ],
-      style: [
-        {
-          selector: "node",
-          style: {
-            "background-color": "#666",
-            label: "data(id)",
-          },
-        },
+      style: DEFAULT_STYLE,
 
-        {
-          selector: "edge",
-          style: {
-            width: 3,
-            "line-color": "#999",
-            "target-arrow-color": "#999",
-            "target-arrow-shape": "triangle",
-            "curve-style": "bezier",
-            label: "data(label)",
-            "arrow-scale": 2,
-          },
-        },
-        {
-          selector: 'node[initial = "true"]',
-          css: {
-            "border-style": "solid",
-            "border-color": "Black",
-            "border-width": 3,
-          },
-        },
-        {
-          selector: 'node[final = "true"]',
-          css: {
-            "border-style": "double",
-            "border-color": "Black",
-            "border-width": 6,
-          },
-        },
-        {
-          selector: ":selected",
-          css: {
-            "background-color": "SteelBlue",
-            "line-color": "SteelBlue",
-            "target-arrow-color": "SteelBlue",
-            "source-arrow-color": "SteelBlue",
-          },
-        },
-      ],
       layout: { name: "grid", rows: 1 },
       maxZoom: 10,
       selectionType: "single",
@@ -324,7 +327,7 @@ export class AutomatonVisual implements IAutomatonVisual {
 
   clearHighlights() {
     this.cy?.nodes().forEach((node) => {
-      node.style({ "background-color": "#666" }); // your default node color
+      node.style(DEFAULT_STYLE); // your default node color
     });
     this.cy?.edges().forEach((edge) => {
       edge.style({
